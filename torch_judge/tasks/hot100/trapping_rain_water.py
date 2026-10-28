@@ -41,8 +41,8 @@ TASK = {
     "function_name": "trap",
     "params": [("height", "int[]")],
     "returns": "int",
-    "description_en": "You are given `n` non-negative integers `height`. Each one is the height of a bar of width 1, and the bars stand side by side. After rain, water collects in the dips between taller bars. Return the total number of units of water the bars trap.\n\n**Example 1:** `height = [0,2,0,3,1,0,4]` → `7`\n\n**Example 2:** `height = [3,0,0,2,0,4]` → `10`\n\n**Constraints:**\n- `1 <= n <= 2 * 10^4`\n- `0 <= height[i] <= 10^5`",
-    "description_zh": "给定 `n` 个非负整数 `height`，每个数表示一根宽度为 1 的柱子的高度，柱子紧挨着排列。下雨后，水会积在较高柱子之间的凹处。返回这些柱子总共能接住多少单位的水。\n\n**示例 1：** `height = [0,2,0,3,1,0,4]` → `7`\n\n**示例 2：** `height = [3,0,0,2,0,4]` → `10`\n\n**约束：**\n- `1 <= n <= 2 * 10^4`\n- `0 <= height[i] <= 10^5`",
+    "description_en": "You are given `n` non-negative integers `height`. Each one is the height of a bar of width 1, and the bars stand side by side. After rain, water collects in the dips between taller bars. Return the total number of units of water the bars trap.\n\n**Example 1:** `height = [0,2,0,3,1,0,4]` → `7`\n\n**Example 2:** `height = [3,0,0,2,0,4]` → `10`\n\n**Constraints:**\n- $1 \\le \\texttt{n} \\le 2 \\times 10^{4}$\n- $0 \\le \\texttt{height[i]} \\le 10^{5}$",
+    "description_zh": "给定 `n` 个非负整数 `height`，每个数表示一根宽度为 1 的柱子的高度，柱子紧挨着排列。下雨后，水会积在较高柱子之间的凹处。返回这些柱子总共能接住多少单位的水。\n\n**示例 1：** `height = [0,2,0,3,1,0,4]` → `7`\n\n**示例 2：** `height = [3,0,0,2,0,4]` → `10`\n\n**约束：**\n- $1 \\le \\texttt{n} \\le 2 \\times 10^{4}$\n- $0 \\le \\texttt{height[i]} \\le 10^{5}$",
     "hint": "The water above a cell is the lower of the tallest bars to its left and right, minus its own height. Keep running maxima from both ends and always settle the cell on the lower side.",
     "hint_zh": "某个位置上方的水位，是它左右两侧最高柱子中较矮的那个，减去它自己的高度。从两端维护左右最大值，每次结算较矮一侧的位置。",
     "cases": [

@@ -72,8 +72,8 @@ TASK = {
     "function_name": "isValid",
     "params": [("s", "str")],
     "returns": "bool",
-    "description_en": "Given a string `s` made only of the characters `(`, `)`, `[`, `]`, `{` and `}`, decide whether it is valid.\n\nA string is valid when every opening bracket is closed by a bracket of the same type, the closing brackets come in the right order, and every closing bracket has a matching opening bracket before it.\n\n**Example 1:** `s = \"[{}]()\"` → `true`\n\n**Example 2:** `s = \"([)]\"` → `false`\n\n**Constraints:**\n- `1 <= s.length <= 10^4`\n- `s` consists of the bracket characters `()[]{}` only",
-    "description_zh": "给定一个只由字符 `(`、`)`、`[`、`]`、`{`、`}` 组成的字符串 `s`，判断它是否有效。\n\n有效的条件是：每个左括号都必须由同类型的右括号闭合，括号闭合的顺序必须正确，并且每个右括号前面都有与之匹配的左括号。\n\n**示例 1：** `s = \"[{}]()\"` → `true`\n\n**示例 2：** `s = \"([)]\"` → `false`\n\n**约束：**\n- `1 <= s.length <= 10^4`\n- `s` 只包含括号字符 `()[]{}`",
+    "description_en": "Given a string `s` made only of the characters `(`, `)`, `[`, `]`, `{` and `}`, decide whether it is valid.\n\nA string is valid when every opening bracket is closed by a bracket of the same type, the closing brackets come in the right order, and every closing bracket has a matching opening bracket before it.\n\n**Example 1:** `s = \"[{}]()\"` → `true`\n\n**Example 2:** `s = \"([)]\"` → `false`\n\n**Constraints:**\n- $1 \\le \\texttt{s.length} \\le 10^{4}$\n- `s` consists of the bracket characters `()[]{}` only",
+    "description_zh": "给定一个只由字符 `(`、`)`、`[`、`]`、`{`、`}` 组成的字符串 `s`，判断它是否有效。\n\n有效的条件是：每个左括号都必须由同类型的右括号闭合，括号闭合的顺序必须正确，并且每个右括号前面都有与之匹配的左括号。\n\n**示例 1：** `s = \"[{}]()\"` → `true`\n\n**示例 2：** `s = \"([)]\"` → `false`\n\n**约束：**\n- $1 \\le \\texttt{s.length} \\le 10^{4}$\n- `s` 只包含括号字符 `()[]{}`",
     "hint": "Keep the opening brackets you still have to close on a stack. Each closing bracket must match the top of the stack, and at the end the stack must be empty.",
     "hint_zh": "用栈保存尚未闭合的左括号。每个右括号都必须与栈顶匹配，结束时栈必须为空。",
     "cases": [

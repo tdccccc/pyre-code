@@ -33,8 +33,8 @@ TASK = {
     "params": [("matrix", "int[][]")],
     "returns": "void",
     "inplace": "matrix",
-    "description_en": "Given an `n x n` matrix, rotate it 90 degrees clockwise **in place**. Do not return anything.\n\n**Example 1:** `matrix = [[7,8,9],[4,5,6],[1,2,3]]` → `[[1,4,7],[2,5,8],[3,6,9]]`\n\n**Example 2:** `matrix = [[1,2],[3,4]]` → `[[3,1],[4,2]]`\n\n**Constraints:**\n- `1 <= n <= 20`\n- `-1000 <= matrix[i][j] <= 1000`",
-    "description_zh": "给定一个 `n x n` 的矩阵，把它顺时针旋转 90 度，并且**原地**完成。不要返回任何值。\n\n**示例 1：** `matrix = [[7,8,9],[4,5,6],[1,2,3]]` → `[[1,4,7],[2,5,8],[3,6,9]]`\n\n**示例 2：** `matrix = [[1,2],[3,4]]` → `[[3,1],[4,2]]`\n\n**约束：**\n- `1 <= n <= 20`\n- `-1000 <= matrix[i][j] <= 1000`",
+    "description_en": "Given an `n x n` matrix, rotate it 90 degrees clockwise **in place**. Do not return anything.\n\n**Example 1:** `matrix = [[7,8,9],[4,5,6],[1,2,3]]` → `[[1,4,7],[2,5,8],[3,6,9]]`\n\n**Example 2:** `matrix = [[1,2],[3,4]]` → `[[3,1],[4,2]]`\n\n**Constraints:**\n- $1 \\le \\texttt{n} \\le 20$\n- $-1000 \\le \\texttt{matrix[i][j]} \\le 1000$",
+    "description_zh": "给定一个 `n x n` 的矩阵，把它顺时针旋转 90 度，并且**原地**完成。不要返回任何值。\n\n**示例 1：** `matrix = [[7,8,9],[4,5,6],[1,2,3]]` → `[[1,4,7],[2,5,8],[3,6,9]]`\n\n**示例 2：** `matrix = [[1,2],[3,4]]` → `[[3,1],[4,2]]`\n\n**约束：**\n- $1 \\le \\texttt{n} \\le 20$\n- $-1000 \\le \\texttt{matrix[i][j]} \\le 1000$",
     "hint": "Two simple steps make a 90-degree clockwise turn: swap across the main diagonal, then reverse every row. Each step can be done in place.",
     "hint_zh": "两个简单的步骤组合起来就是顺时针旋转 90 度：先沿主对角线交换，再把每一行反转。两步都可以原地完成。",
     "cases": [

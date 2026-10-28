@@ -35,8 +35,8 @@ TASK = {
     "params": [("matrix", "int[][]")],
     "returns": "void",
     "inplace": "matrix",
-    "description_en": "Given an `m x n` integer matrix, find every `0` and set its entire row and its entire column to `0`. Modify the matrix **in place**; do not return anything.\n\n**Example 1:** `matrix = [[2,0,3],[4,5,6]]` → `[[0,0,0],[4,0,6]]`\n\n**Example 2:** `matrix = [[1,2],[3,0],[4,5],[6,7]]` → `[[1,0],[0,0],[4,0],[6,0]]`\n\n**Constraints:**\n- `1 <= m, n <= 200`\n- `-10^9 <= matrix[i][j] <= 10^9`\n\n**Follow-up:** can you use only O(1) extra space?",
-    "description_zh": "给定 `m x n` 的整数矩阵，找出所有值为 `0` 的元素，并把它所在的整行和整列全部置为 `0`。必须**原地**修改矩阵，不要返回任何值。\n\n**示例 1：** `matrix = [[2,0,3],[4,5,6]]` → `[[0,0,0],[4,0,6]]`\n\n**示例 2：** `matrix = [[1,2],[3,0],[4,5],[6,7]]` → `[[1,0],[0,0],[4,0],[6,0]]`\n\n**约束：**\n- `1 <= m, n <= 200`\n- `-10^9 <= matrix[i][j] <= 10^9`\n\n**进阶：** 你能只使用 O(1) 的额外空间完成吗？",
+    "description_en": "Given an `m x n` integer matrix, find every `0` and set its entire row and its entire column to `0`. Modify the matrix **in place**; do not return anything.\n\n**Example 1:** `matrix = [[2,0,3],[4,5,6]]` → `[[0,0,0],[4,0,6]]`\n\n**Example 2:** `matrix = [[1,2],[3,0],[4,5],[6,7]]` → `[[1,0],[0,0],[4,0],[6,0]]`\n\n**Constraints:**\n- $1 \\le \\texttt{m},\\ \\texttt{n} \\le 200$\n- $-10^{9} \\le \\texttt{matrix[i][j]} \\le 10^{9}$\n\n**Follow-up:** can you use only O(1) extra space?",
+    "description_zh": "给定 `m x n` 的整数矩阵，找出所有值为 `0` 的元素，并把它所在的整行和整列全部置为 `0`。必须**原地**修改矩阵，不要返回任何值。\n\n**示例 1：** `matrix = [[2,0,3],[4,5,6]]` → `[[0,0,0],[4,0,6]]`\n\n**示例 2：** `matrix = [[1,2],[3,0],[4,5],[6,7]]` → `[[1,0],[0,0],[4,0],[6,0]]`\n\n**约束：**\n- $1 \\le \\texttt{m},\\ \\texttt{n} \\le 200$\n- $-10^{9} \\le \\texttt{matrix[i][j]} \\le 10^{9}$\n\n**进阶：** 你能只使用 O(1) 的额外空间完成吗？",
     "hint": "Don't clear rows and columns while you scan, or the zeros you create will spread. Note which rows and columns hold a zero first, then clear them at the end.",
     "hint_zh": "不要边扫描边清零，否则新产生的零会继续扩散。先记下哪些行和哪些列含有零，最后再统一清零。",
     "cases": [

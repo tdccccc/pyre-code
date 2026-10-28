@@ -23,8 +23,8 @@ TASK = {
     "function_name": "reverseList",
     "params": [("head", "ListNode")],
     "returns": "ListNode",
-    "description_en": "Given the head `head` of a singly linked list, reverse the list and return the new head.\n\n**Example 1:** `head = [7,3,9,2]` → `[2,9,3,7]`\n\n**Example 2:** `head = [4,8]` → `[8,4]`\n\n**Constraints:**\n- The list has `0` to `5000` nodes\n- `-5000 <= Node.val <= 5000`\n\n**Follow-up:** can you write both an iterative and a recursive version?",
-    "description_zh": "给定单链表的头节点 `head`，把链表反转，返回反转后的头节点。\n\n**示例 1：** `head = [7,3,9,2]` → `[2,9,3,7]`\n\n**示例 2：** `head = [4,8]` → `[8,4]`\n\n**约束：**\n- 链表节点数在 `0` 到 `5000` 之间\n- `-5000 <= Node.val <= 5000`\n\n**进阶：** 你能分别写出迭代和递归两种做法吗？",
+    "description_en": "Given the head `head` of a singly linked list, reverse the list and return the new head.\n\n**Example 1:** `head = [7,3,9,2]` → `[2,9,3,7]`\n\n**Example 2:** `head = [4,8]` → `[8,4]`\n\n**Constraints:**\n- The list has `0` to `5000` nodes\n- $-5000 \\le \\texttt{Node.val} \\le 5000$\n\n**Follow-up:** can you write both an iterative and a recursive version?",
+    "description_zh": "给定单链表的头节点 `head`，把链表反转，返回反转后的头节点。\n\n**示例 1：** `head = [7,3,9,2]` → `[2,9,3,7]`\n\n**示例 2：** `head = [4,8]` → `[8,4]`\n\n**约束：**\n- 链表节点数在 `0` 到 `5000` 之间\n- $-5000 \\le \\texttt{Node.val} \\le 5000$\n\n**进阶：** 你能分别写出迭代和递归两种做法吗？",
     "hint": "Walk the list keeping `prev` and `cur`. Save `cur.next` before pointing `cur.next` back at `prev`, then step both forward.",
     "hint_zh": "遍历链表，维护 `prev` 和 `cur`。先保存 `cur.next`，再把 `cur.next` 指回 `prev`，然后两个指针一起前进。",
     "cases": [

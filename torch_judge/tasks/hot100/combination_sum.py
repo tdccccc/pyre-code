@@ -55,10 +55,10 @@ TASK = {
 **Example 2:** `candidates = [6,9]`, `target = 4` → `[]`
 
 **Constraints:**
-- `1 <= candidates.length <= 20`
-- `2 <= candidates[i] <= 40`
+- $1 \\le \\texttt{candidates.length} \\le 20$
+- $2 \\le \\texttt{candidates[i]} \\le 40$
 - All values in `candidates` are distinct
-- `1 <= target <= 40`""",
+- $1 \\le \\texttt{target} \\le 40$""",
     "description_zh": """给定一个由互不相同的整数组成的列表 `candidates` 和一个整数 `target`。找出所有和为 `target` 的组合。每个数字可以被使用任意多次。如果两个组合使用的数字相同、且每个数字的次数也相同，就视为同一个组合，例如 `[2,3]` 和 `[3,2]` 是同一个。返回的组合顺序任意。
 
 **示例 1：** `candidates = [3,4,5]`，`target = 8` → `[[3,5],[4,4]]`
@@ -66,10 +66,10 @@ TASK = {
 **示例 2：** `candidates = [6,9]`，`target = 4` → `[]`
 
 **约束：**
-- `1 <= candidates.length <= 20`
-- `2 <= candidates[i] <= 40`
+- $1 \\le \\texttt{candidates.length} \\le 20$
+- $2 \\le \\texttt{candidates[i]} \\le 40$
 - `candidates` 中的值互不相同
-- `1 <= target <= 40`""",
+- $1 \\le \\texttt{target} \\le 40$""",
     "hint": "Choose the candidates in a fixed order (a start index), so each combination is generated once. Allow reusing the current candidate by passing the same index on, not the next one.",
     "hint_zh": "按固定顺序选数（用起始下标控制），让每个组合只生成一次。允许重复使用当前数字时，递归传入的是当前下标，而不是下一个下标。",
     "cases": [

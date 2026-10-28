@@ -64,8 +64,8 @@ TASK = {
     "function_name": "levelOrder",
     "params": [("root", "TreeNode")],
     "returns": "int[][]",
-    "description_en": "Given the root `root` of a binary tree, return the node values level by level: the first list holds the root, the next holds its children, and so on, each level read left to right.\n\nTrees are written in level order, with `null` for a missing child.\n\n**Example 1:** `root = [5,3,8,null,4,7,9]` → `[[5],[3,8],[4,7,9]]`\n\n**Example 2:** `root = [1]` → `[[1]]`\n\n**Constraints:**\n- The tree has `0` to `2000` nodes\n- `-1000 <= Node.val <= 1000`",
-    "description_zh": "给定二叉树的根节点 `root`，按层返回节点值：第一个列表是根节点，下一个是它的子节点，依此类推，每层从左到右。\n\n二叉树按层序写成数组，缺失的子节点写作 `null`。\n\n**示例 1：** `root = [5,3,8,null,4,7,9]` → `[[5],[3,8],[4,7,9]]`\n\n**示例 2：** `root = [1]` → `[[1]]`\n\n**约束：**\n- 节点数在 `0` 到 `2000` 之间\n- `-1000 <= Node.val <= 1000`",
+    "description_en": "Given the root `root` of a binary tree, return the node values level by level: the first list holds the root, the next holds its children, and so on, each level read left to right.\n\nTrees are written in level order, with `null` for a missing child.\n\n**Example 1:** `root = [5,3,8,null,4,7,9]` → `[[5],[3,8],[4,7,9]]`\n\n**Example 2:** `root = [1]` → `[[1]]`\n\n**Constraints:**\n- The tree has `0` to `2000` nodes\n- $-1000 \\le \\texttt{Node.val} \\le 1000$",
+    "description_zh": "给定二叉树的根节点 `root`，按层返回节点值：第一个列表是根节点，下一个是它的子节点，依此类推，每层从左到右。\n\n二叉树按层序写成数组，缺失的子节点写作 `null`。\n\n**示例 1：** `root = [5,3,8,null,4,7,9]` → `[[5],[3,8],[4,7,9]]`\n\n**示例 2：** `root = [1]` → `[[1]]`\n\n**约束：**\n- 节点数在 `0` 到 `2000` 之间\n- $-1000 \\le \\texttt{Node.val} \\le 1000$",
     "hint": "Breadth-first search with a queue. At the start of each round, the queue holds exactly one level: pop `len(queue)` nodes, record their values, and push their children.",
     "hint_zh": "用队列做广度优先搜索。每一轮开始时，队列里恰好是一整层：弹出 `len(queue)` 个节点，记录它们的值，再把它们的子节点入队。",
     "cases": [

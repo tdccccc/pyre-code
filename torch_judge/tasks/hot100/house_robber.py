@@ -32,8 +32,8 @@ TASK = {
     "function_name": "rob",
     "params": [("nums", "int[]")],
     "returns": "int",
-    "description_en": "A street has houses in a row, and `nums[i]` is the cash hidden in house `i`. You may rob any set of houses, but never two houses that sit next to each other, because adjacent houses trigger one alarm. Return the largest total you can take.\n\n**Example 1:** `nums = [4,1,3,7]` → `11` (houses 0 and 3)\n\n**Example 2:** `nums = [2,9,1,1,5,2]` → `14` (houses 1 and 4)\n\n**Constraints:**\n- `1 <= nums.length <= 100`\n- `0 <= nums[i] <= 400`",
-    "description_zh": "一条街上的房屋排成一排，`nums[i]` 为第 `i` 间屋子里藏的现金。你可以选择任意一组房屋去抢，但不能抢相邻的两间，因为相邻的屋子会共用同一套报警系统。返回能抢到的最大金额。\n\n**示例 1：** `nums = [4,1,3,7]` → `11`（抢下标 0 和 3 的屋子）\n\n**示例 2：** `nums = [2,9,1,1,5,2]` → `14`（抢下标 1 和 4 的屋子）\n\n**约束：**\n- `1 <= nums.length <= 100`\n- `0 <= nums[i] <= 400`",
+    "description_en": "A street has houses in a row, and `nums[i]` is the cash hidden in house `i`. You may rob any set of houses, but never two houses that sit next to each other, because adjacent houses trigger one alarm. Return the largest total you can take.\n\n**Example 1:** `nums = [4,1,3,7]` → `11` (houses 0 and 3)\n\n**Example 2:** `nums = [2,9,1,1,5,2]` → `14` (houses 1 and 4)\n\n**Constraints:**\n- $1 \\le \\texttt{nums.length} \\le 100$\n- $0 \\le \\texttt{nums[i]} \\le 400$",
+    "description_zh": "一条街上的房屋排成一排，`nums[i]` 为第 `i` 间屋子里藏的现金。你可以选择任意一组房屋去抢，但不能抢相邻的两间，因为相邻的屋子会共用同一套报警系统。返回能抢到的最大金额。\n\n**示例 1：** `nums = [4,1,3,7]` → `11`（抢下标 0 和 3 的屋子）\n\n**示例 2：** `nums = [2,9,1,1,5,2]` → `14`（抢下标 1 和 4 的屋子）\n\n**约束：**\n- $1 \\le \\texttt{nums.length} \\le 100$\n- $0 \\le \\texttt{nums[i]} \\le 400$",
     "hint": "For each house, the best total either skips it (keep the best up to the previous house) or robs it (add it to the best up to the house before the previous one).",
     "hint_zh": "对每间屋子，最优值要么是不抢它（沿用前一间的最优值），要么是抢它（加上前前一间的最优值）。",
     "cases": [

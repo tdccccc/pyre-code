@@ -61,8 +61,8 @@ TASK = {
     "function_name": "maxProduct",
     "params": [("nums", "int[]")],
     "returns": "int",
-    "description_en": "Given an integer array `nums`, find the contiguous, non-empty subarray whose product is largest, and return that product.\n\nThe answer is guaranteed to fit in a 32-bit signed integer.\n\n**Example 1:** `nums = [-2,5,-3,-1]` → `30` (the subarray `[-2,5,-3]`)\n\n**Example 2:** `nums = [0,-4,-2,3]` → `24` (the subarray `[-4,-2,3]`)\n\n**Constraints:**\n- `1 <= nums.length <= 2 * 10^4`\n- `-10 <= nums[i] <= 10`",
-    "description_zh": "给定整数数组 `nums`，找出乘积最大的连续非空子数组，并返回该乘积。\n\n保证答案可以用 32 位有符号整数表示。\n\n**示例 1：** `nums = [-2,5,-3,-1]` → `30`（子数组 `[-2,5,-3]`）\n\n**示例 2：** `nums = [0,-4,-2,3]` → `24`（子数组 `[-4,-2,3]`）\n\n**约束：**\n- `1 <= nums.length <= 2 * 10^4`\n- `-10 <= nums[i] <= 10`",
+    "description_en": "Given an integer array `nums`, find the contiguous, non-empty subarray whose product is largest, and return that product.\n\nThe answer is guaranteed to fit in a 32-bit signed integer.\n\n**Example 1:** `nums = [-2,5,-3,-1]` → `30` (the subarray `[-2,5,-3]`)\n\n**Example 2:** `nums = [0,-4,-2,3]` → `24` (the subarray `[-4,-2,3]`)\n\n**Constraints:**\n- $1 \\le \\texttt{nums.length} \\le 2 \\times 10^{4}$\n- $-10 \\le \\texttt{nums[i]} \\le 10$",
+    "description_zh": "给定整数数组 `nums`，找出乘积最大的连续非空子数组，并返回该乘积。\n\n保证答案可以用 32 位有符号整数表示。\n\n**示例 1：** `nums = [-2,5,-3,-1]` → `30`（子数组 `[-2,5,-3]`）\n\n**示例 2：** `nums = [0,-4,-2,3]` → `24`（子数组 `[-4,-2,3]`）\n\n**约束：**\n- $1 \\le \\texttt{nums.length} \\le 2 \\times 10^{4}$\n- $-10 \\le \\texttt{nums[i]} \\le 10$",
     "hint": "A negative number turns the smallest product so far into the largest. Track both the largest and the smallest product of subarrays ending at the current element.",
     "hint_zh": "负数会把此前最小的乘积变成最大的。因此要同时记录以当前元素结尾的最大乘积和最小乘积。",
     "cases": [

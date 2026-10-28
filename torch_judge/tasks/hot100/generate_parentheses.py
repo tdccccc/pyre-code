@@ -42,7 +42,7 @@ TASK = {
 **Example 2:** `n = 1` → `["()"]`
 
 **Constraints:**
-- `1 <= n <= 8`""",
+- $1 \\le \\texttt{n} \\le 8$""",
     "description_zh": """给定整数 `n`，写出所有由 `n` 个左括号 `(` 和 `n` 个右括号 `)` 组成的合法字符串。合法指从左到右读时，任何位置的 `)` 数量都不超过 `(` 的数量，并且最终两者数量相等。返回的字符串顺序任意。
 
 **示例 1：** `n = 2` → `["(())","()()"]`
@@ -50,7 +50,7 @@ TASK = {
 **示例 2：** `n = 1` → `["()"]`
 
 **约束：**
-- `1 <= n <= 8`""",
+- $1 \\le \\texttt{n} \\le 8$""",
     "hint": "Build the string left to right and only add a `)` when there is an unmatched `(` before it. Track how many of each you have used.",
     "hint_zh": "从左到右构造字符串，只有在前面还有未匹配的 `(` 时才能添加 `)`。记录两种括号各用了多少。",
     "cases": [

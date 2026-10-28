@@ -49,8 +49,8 @@ TASK = {
     "function_name": "maxDepth",
     "params": [("root", "TreeNode")],
     "returns": "int",
-    "description_en": "Given the `root` of a binary tree, return its depth: the number of nodes on the longest path that starts at the root and ends at a leaf.\n\nTrees are written in level order, with `null` for a missing child. An empty tree has depth `0`.\n\n**Example 1:** `root = [2,7,null,null,6]` → `3` (the path 2 → 7 → 6)\n\n**Example 2:** `root = [0,-3,1,null,-8]` → `3` (the path 0 → -3 → -8)\n\n**Constraints:**\n- The tree has `0` to `10^4` nodes\n- `-100 <= Node.val <= 100`",
-    "description_zh": "给定二叉树的根节点 `root`，返回它的深度：从根节点出发、到某个叶子节点结束的所有路径中，节点数最多的那条路径所包含的节点数。\n\n二叉树按层序写成数组，缺失的子节点写作 `null`。空树的深度为 `0`。\n\n**示例 1：** `root = [2,7,null,null,6]` → `3`（路径 2 → 7 → 6）\n\n**示例 2：** `root = [0,-3,1,null,-8]` → `3`（路径 0 → -3 → -8）\n\n**约束：**\n- 节点数在 `0` 到 `10^4` 之间\n- `-100 <= Node.val <= 100`",
+    "description_en": "Given the `root` of a binary tree, return its depth: the number of nodes on the longest path that starts at the root and ends at a leaf.\n\nTrees are written in level order, with `null` for a missing child. An empty tree has depth `0`.\n\n**Example 1:** `root = [2,7,null,null,6]` → `3` (the path 2 → 7 → 6)\n\n**Example 2:** `root = [0,-3,1,null,-8]` → `3` (the path 0 → -3 → -8)\n\n**Constraints:**\n- The tree has `0` to $10^{4}$ nodes\n- $-100 \\le \\texttt{Node.val} \\le 100$",
+    "description_zh": "给定二叉树的根节点 `root`，返回它的深度：从根节点出发、到某个叶子节点结束的所有路径中，节点数最多的那条路径所包含的节点数。\n\n二叉树按层序写成数组，缺失的子节点写作 `null`。空树的深度为 `0`。\n\n**示例 1：** `root = [2,7,null,null,6]` → `3`（路径 2 → 7 → 6）\n\n**示例 2：** `root = [0,-3,1,null,-8]` → `3`（路径 0 → -3 → -8）\n\n**约束：**\n- 节点数在 `0` 到 $10^{4}$ 之间\n- $-100 \\le \\texttt{Node.val} \\le 100$",
     "hint": "The depth of a tree is 1 plus the larger depth of its two subtrees, and the depth of an empty tree is 0. Let each node ask its children first.",
     "hint_zh": "一棵树的深度等于两个子树中较大的深度再加 1，空树的深度为 0。让每个节点先问它的子节点。",
     "cases": [

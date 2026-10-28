@@ -40,8 +40,8 @@ TASK = {
     "function_name": "maxSubArray",
     "params": [("nums", "int[]")],
     "returns": "int",
-    "description_en": "Given an integer array `nums`, find the contiguous non-empty part of the array (a subarray) whose sum is largest, and return that sum.\n\n**Example 1:** `nums = [2,-5,3,4,-1]` → `7` (the subarray `[3,4]`)\n\n**Example 2:** `nums = [-3,-1,-2]` → `-1` (every value is negative, so the best choice is the single largest element)\n\n**Constraints:**\n- `1 <= nums.length <= 10^5`\n- `-10^4 <= nums[i] <= 10^4`\n\n**Follow-up:** can you find the answer in a single pass?",
-    "description_zh": "给定整数数组 `nums`，找出和最大的连续非空子数组，返回它的和。\n\n**示例 1：** `nums = [2,-5,3,4,-1]` → `7`（子数组 `[3,4]`）\n\n**示例 2：** `nums = [-3,-1,-2]` → `-1`（所有数都是负数，最优解就是取最大的那个元素）\n\n**约束：**\n- `1 <= nums.length <= 10^5`\n- `-10^4 <= nums[i] <= 10^4`\n\n**进阶：** 你能只扫描一遍就求出答案吗？",
+    "description_en": "Given an integer array `nums`, find the contiguous non-empty part of the array (a subarray) whose sum is largest, and return that sum.\n\n**Example 1:** `nums = [2,-5,3,4,-1]` → `7` (the subarray `[3,4]`)\n\n**Example 2:** `nums = [-3,-1,-2]` → `-1` (every value is negative, so the best choice is the single largest element)\n\n**Constraints:**\n- $1 \\le \\texttt{nums.length} \\le 10^{5}$\n- $-10^{4} \\le \\texttt{nums[i]} \\le 10^{4}$\n\n**Follow-up:** can you find the answer in a single pass?",
+    "description_zh": "给定整数数组 `nums`，找出和最大的连续非空子数组，返回它的和。\n\n**示例 1：** `nums = [2,-5,3,4,-1]` → `7`（子数组 `[3,4]`）\n\n**示例 2：** `nums = [-3,-1,-2]` → `-1`（所有数都是负数，最优解就是取最大的那个元素）\n\n**约束：**\n- $1 \\le \\texttt{nums.length} \\le 10^{5}$\n- $-10^{4} \\le \\texttt{nums[i]} \\le 10^{4}$\n\n**进阶：** 你能只扫描一遍就求出答案吗？",
     "hint": "Scan left to right and keep the best sum of a subarray ending at the current element: either start fresh here or extend the previous run.",
     "hint_zh": "从左到右扫描，记录以当前元素结尾的子数组的最大和：要么从当前元素重新开始，要么接在前面的子数组后面。",
     "cases": [

@@ -30,8 +30,8 @@ TASK = {
     "function_name": "mergeKLists",
     "params": [("lists", "ListNode[]")],
     "returns": "ListNode",
-    "description_en": "You are given `lists`, an array of `k` linked lists. Each list is sorted in ascending order.\n\nMerge all the lists into one sorted linked list and return its head.\n\n**Example 1:** `lists = [[8,10],[3],[1,9,12]]` → `[1,3,8,9,10,12]`\n\n**Example 2:** `lists = [[],[-4,0]]` → `[-4,0]`\n\n**Constraints:**\n- `0 <= k <= 10^4`\n- Each list has at most `500` nodes, and the total number of nodes over all lists is at most `10^4`\n- `-10^4 <= Node.val <= 10^4`\n- Each list is sorted in ascending order",
-    "description_zh": "给定数组 `lists`，其中包含 `k` 个链表，每个链表都已按升序排列。\n\n把所有链表合并为一个升序链表，返回合并后的头节点。\n\n**示例 1：** `lists = [[8,10],[3],[1,9,12]]` → `[1,3,8,9,10,12]`\n\n**示例 2：** `lists = [[],[-4,0]]` → `[-4,0]`\n\n**约束：**\n- `0 <= k <= 10^4`\n- 每个链表最多有 `500` 个节点，所有链表的节点总数不超过 `10^4`\n- `-10^4 <= Node.val <= 10^4`\n- 每个链表都按升序排列",
+    "description_en": "You are given `lists`, an array of `k` linked lists. Each list is sorted in ascending order.\n\nMerge all the lists into one sorted linked list and return its head.\n\n**Example 1:** `lists = [[8,10],[3],[1,9,12]]` → `[1,3,8,9,10,12]`\n\n**Example 2:** `lists = [[],[-4,0]]` → `[-4,0]`\n\n**Constraints:**\n- $0 \\le \\texttt{k} \\le 10^{4}$\n- Each list has at most `500` nodes, and the total number of nodes over all lists is at most $10^{4}$\n- $-10^{4} \\le \\texttt{Node.val} \\le 10^{4}$\n- Each list is sorted in ascending order",
+    "description_zh": "给定数组 `lists`，其中包含 `k` 个链表，每个链表都已按升序排列。\n\n把所有链表合并为一个升序链表，返回合并后的头节点。\n\n**示例 1：** `lists = [[8,10],[3],[1,9,12]]` → `[1,3,8,9,10,12]`\n\n**示例 2：** `lists = [[],[-4,0]]` → `[-4,0]`\n\n**约束：**\n- $0 \\le \\texttt{k} \\le 10^{4}$\n- 每个链表最多有 `500` 个节点，所有链表的节点总数不超过 $10^{4}$\n- $-10^{4} \\le \\texttt{Node.val} \\le 10^{4}$\n- 每个链表都按升序排列",
     "hint": "Keep one candidate per list in a min-heap, the current head of each list. Pop the smallest, append it to the result, and push the next node from the same list.",
     "hint_zh": "用一个小根堆保存每个链表当前的头节点（每个链表一个候选）。每次弹出最小的节点接到结果后面，再把它所在链表的下一个节点放入堆中。",
     "cases": [

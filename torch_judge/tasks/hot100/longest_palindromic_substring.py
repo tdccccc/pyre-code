@@ -42,8 +42,8 @@ TASK = {
     s = args[0]
     return (isinstance(actual, str) and len(actual) == len(expected)
             and actual == actual[::-1] and actual in s)''',
-    "description_en": "Given a string `s`, return its longest substring that reads the same forwards and backwards. If several substrings tie for the longest, return any of them.\n\n**Example 1:** `s = \"racecars\"` → `\"racecar\"`\n\n**Example 2:** `s = \"xyyz\"` → `\"yy\"`\n\n**Constraints:**\n- `1 <= s.length <= 1000`\n- `s` consists of English letters and digits",
-    "description_zh": "给定字符串 `s`，返回它最长的回文子串（正着读和倒着读都一样）。如果有多个子串并列最长，返回其中任意一个。\n\n**示例 1：** `s = \"racecars\"` → `\"racecar\"`\n\n**示例 2：** `s = \"xyyz\"` → `\"yy\"`\n\n**约束：**\n- `1 <= s.length <= 1000`\n- `s` 只由英文字母和数字组成",
+    "description_en": "Given a string `s`, return its longest substring that reads the same forwards and backwards. If several substrings tie for the longest, return any of them.\n\n**Example 1:** `s = \"racecars\"` → `\"racecar\"`\n\n**Example 2:** `s = \"xyyz\"` → `\"yy\"`\n\n**Constraints:**\n- $1 \\le \\texttt{s.length} \\le 1000$\n- `s` consists of English letters and digits",
+    "description_zh": "给定字符串 `s`，返回它最长的回文子串（正着读和倒着读都一样）。如果有多个子串并列最长，返回其中任意一个。\n\n**示例 1：** `s = \"racecars\"` → `\"racecar\"`\n\n**示例 2：** `s = \"xyyz\"` → `\"yy\"`\n\n**约束：**\n- $1 \\le \\texttt{s.length} \\le 1000$\n- `s` 只由英文字母和数字组成",
     "hint": "Every palindrome mirrors around a center: a character (odd length) or the gap between two characters (even length). Expand outwards from each of the 2n - 1 centers.",
     "hint_zh": "每个回文串都关于一个中心对称：中心是一个字符（奇数长度）或两个字符之间的空隙（偶数长度）。从 2n - 1 个中心分别向两边扩展。",
     "cases": [

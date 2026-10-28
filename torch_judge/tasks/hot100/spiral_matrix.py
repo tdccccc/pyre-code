@@ -35,8 +35,8 @@ TASK = {
     "function_name": "spiralOrder",
     "params": [("matrix", "int[][]")],
     "returns": "int[]",
-    "description_en": "Given an `m x n` matrix, return all of its elements in spiral order: go right along the top row, down the right column, left along the bottom row, up the left column, then repeat the same walk on the inner part.\n\n**Example 1:** `matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]` → `[1,2,3,4,8,12,11,10,9,5,6,7]`\n\n**Example 2:** `matrix = [[1],[2],[3]]` → `[1,2,3]`\n\n**Constraints:**\n- `1 <= m, n <= 10`\n- `-100 <= matrix[i][j] <= 100`",
-    "description_zh": "给定 `m x n` 的矩阵，按螺旋顺序返回其中所有元素：先沿最上面一行从左到右，再沿最右边一列从上到下，然后沿最下面一行从右到左，再沿最左边一列从下到上，之后对内部重复同样的路线。\n\n**示例 1：** `matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]` → `[1,2,3,4,8,12,11,10,9,5,6,7]`\n\n**示例 2：** `matrix = [[1],[2],[3]]` → `[1,2,3]`\n\n**约束：**\n- `1 <= m, n <= 10`\n- `-100 <= matrix[i][j] <= 100`",
+    "description_en": "Given an `m x n` matrix, return all of its elements in spiral order: go right along the top row, down the right column, left along the bottom row, up the left column, then repeat the same walk on the inner part.\n\n**Example 1:** `matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]` → `[1,2,3,4,8,12,11,10,9,5,6,7]`\n\n**Example 2:** `matrix = [[1],[2],[3]]` → `[1,2,3]`\n\n**Constraints:**\n- $1 \\le \\texttt{m},\\ \\texttt{n} \\le 10$\n- $-100 \\le \\texttt{matrix[i][j]} \\le 100$",
+    "description_zh": "给定 `m x n` 的矩阵，按螺旋顺序返回其中所有元素：先沿最上面一行从左到右，再沿最右边一列从上到下，然后沿最下面一行从右到左，再沿最左边一列从下到上，之后对内部重复同样的路线。\n\n**示例 1：** `matrix = [[1,2,3,4],[5,6,7,8],[9,10,11,12]]` → `[1,2,3,4,8,12,11,10,9,5,6,7]`\n\n**示例 2：** `matrix = [[1],[2],[3]]` → `[1,2,3]`\n\n**约束：**\n- $1 \\le \\texttt{m},\\ \\texttt{n} \\le 10$\n- $-100 \\le \\texttt{matrix[i][j]} \\le 100$",
     "hint": "Peel the matrix one layer at a time with four boundaries (top, bottom, left, right), shrinking them after each lap. Once only one row or column is left, don't walk it twice.",
     "hint_zh": "用上、下、左、右四条边界一层一层地剥开矩阵，每走完一圈就向内收缩。只剩一行或一列时，不要重复访问。",
     "cases": [

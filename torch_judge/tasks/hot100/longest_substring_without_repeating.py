@@ -36,8 +36,8 @@ TASK = {
     "function_name": "lengthOfLongestSubstring",
     "params": [("s", "str")],
     "returns": "int",
-    "description_en": "Given a string `s`, return the length of its longest **substring** (a contiguous run of characters) in which no character appears twice.\n\n**Example 1:** `s = \"abacdcf\"` → `4` (the substring `\"bacd\"`)\n\n**Example 2:** `s = \"zzzz\"` → `1`\n\n**Constraints:**\n- `0 <= s.length <= 5 * 10^4`\n- `s` consists of English letters, digits, symbols and spaces",
-    "description_zh": "给定字符串 `s`，返回其中不含重复字符的最长**子串**（连续的一段字符）的长度。\n\n**示例 1：** `s = \"abacdcf\"` → `4`（子串 `\"bacd\"`）\n\n**示例 2：** `s = \"zzzz\"` → `1`\n\n**约束：**\n- `0 <= s.length <= 5 * 10^4`\n- `s` 由英文字母、数字、符号和空格组成",
+    "description_en": "Given a string `s`, return the length of its longest **substring** (a contiguous run of characters) in which no character appears twice.\n\n**Example 1:** `s = \"abacdcf\"` → `4` (the substring `\"bacd\"`)\n\n**Example 2:** `s = \"zzzz\"` → `1`\n\n**Constraints:**\n- $0 \\le \\texttt{s.length} \\le 5 \\times 10^{4}$\n- `s` consists of English letters, digits, symbols and spaces",
+    "description_zh": "给定字符串 `s`，返回其中不含重复字符的最长**子串**（连续的一段字符）的长度。\n\n**示例 1：** `s = \"abacdcf\"` → `4`（子串 `\"bacd\"`）\n\n**示例 2：** `s = \"zzzz\"` → `1`\n\n**约束：**\n- $0 \\le \\texttt{s.length} \\le 5 \\times 10^{4}$\n- `s` 由英文字母、数字、符号和空格组成",
     "hint": "Slide a window [start, i]. Remember where each character was last seen; when s[i] repeats inside the window, jump start past that earlier position.",
     "hint_zh": "维护滑动窗口 [start, i]，记录每个字符最后出现的位置。当 s[i] 在窗口内重复时，把 start 跳到上次出现位置的后一位。",
     "cases": [

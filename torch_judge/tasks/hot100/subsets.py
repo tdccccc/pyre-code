@@ -34,8 +34,8 @@ TASK = {
 **Example 2:** `nums = [-2]` → `[[],[-2]]`
 
 **Constraints:**
-- `1 <= nums.length <= 10`
-- `-10 <= nums[i] <= 10`
+- $1 \\le \\texttt{nums.length} \\le 10$
+- $-10 \\le \\texttt{nums[i]} \\le 10$
 - All values in `nums` are distinct""",
     "description_zh": """给定一个由互不相同的整数组成的列表 `nums`，返回它的所有子集：即从中选取若干元素（可以一个都不选，也可以全选）的每一种选法。子集的顺序任意，子集内部元素的顺序也任意。
 
@@ -44,8 +44,8 @@ TASK = {
 **示例 2：** `nums = [-2]` → `[[],[-2]]`
 
 **约束：**
-- `1 <= nums.length <= 10`
-- `-10 <= nums[i] <= 10`
+- $1 \\le \\texttt{nums.length} \\le 10$
+- $-10 \\le \\texttt{nums[i]} \\le 10$
 - `nums` 中的值互不相同""",
     "hint": "Process the numbers one by one. Each new number doubles the answer: every subset found so far is kept, and a copy with the new number added is made.",
     "hint_zh": "逐个处理数字。每加入一个新数字，答案翻倍：已有的每个子集保留，并复制一份加上新数字。",

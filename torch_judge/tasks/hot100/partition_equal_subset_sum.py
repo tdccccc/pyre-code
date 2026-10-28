@@ -49,8 +49,8 @@ TASK = {
     "function_name": "canPartition",
     "params": [("nums", "int[]")],
     "returns": "bool",
-    "description_en": "Given a non-empty array `nums` of positive integers, decide whether it can be split into two groups with equal sums. Every element must go into exactly one of the two groups.\n\n**Example 1:** `nums = [3,1,1,2,2,1]` → `true` (3 + 1 + 1 = 2 + 2 + 1 = 5)\n\n**Example 2:** `nums = [1,2,5]` → `false` (the total is 8, but no group sums to 4)\n\n**Constraints:**\n- `1 <= nums.length <= 200`\n- `1 <= nums[i] <= 100`",
-    "description_zh": "给定由正整数组成的非空数组 `nums`，判断能否把它分成两组，使两组的和相等。每个元素必须恰好属于其中一组。\n\n**示例 1：** `nums = [3,1,1,2,2,1]` → `true`（3 + 1 + 1 = 2 + 2 + 1 = 5）\n\n**示例 2：** `nums = [1,2,5]` → `false`（总和为 8，但没有任何一组的和是 4）\n\n**约束：**\n- `1 <= nums.length <= 200`\n- `1 <= nums[i] <= 100`",
+    "description_en": "Given a non-empty array `nums` of positive integers, decide whether it can be split into two groups with equal sums. Every element must go into exactly one of the two groups.\n\n**Example 1:** `nums = [3,1,1,2,2,1]` → `true` (3 + 1 + 1 = 2 + 2 + 1 = 5)\n\n**Example 2:** `nums = [1,2,5]` → `false` (the total is 8, but no group sums to 4)\n\n**Constraints:**\n- $1 \\le \\texttt{nums.length} \\le 200$\n- $1 \\le \\texttt{nums[i]} \\le 100$",
+    "description_zh": "给定由正整数组成的非空数组 `nums`，判断能否把它分成两组，使两组的和相等。每个元素必须恰好属于其中一组。\n\n**示例 1：** `nums = [3,1,1,2,2,1]` → `true`（3 + 1 + 1 = 2 + 2 + 1 = 5）\n\n**示例 2：** `nums = [1,2,5]` → `false`（总和为 8，但没有任何一组的和是 4）\n\n**约束：**\n- $1 \\le \\texttt{nums.length} \\le 200$\n- $1 \\le \\texttt{nums[i]} \\le 100$",
     "hint": "Each group must sum to half the total, so the total must be even. Then ask whether some subset reaches that half: a 0/1 knapsack question.",
     "hint_zh": "每组的和都必须是总和的一半，所以总和必须是偶数。之后问题变成 0/1 背包：能否选出若干数字，使其和恰好是总和的一半。",
     "cases": [

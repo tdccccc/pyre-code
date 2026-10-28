@@ -33,8 +33,8 @@ TASK = {
     "function_name": "maxProfit",
     "params": [("prices", "int[]")],
     "returns": "int",
-    "description_en": "The share price of one stock was recorded every day in `prices`, where `prices[i]` is the price on day `i`. You may buy once and sell once, with the sale on a later day than the purchase. Return the largest gain you can lock in. If every possible trade loses money, return `0`.\n\n**Example 1:** `prices = [3,8,2,6,1,5]` → `5` (buy at 3, sell at 8)\n\n**Example 2:** `prices = [9,4,4,2]` → `0` (the price only goes down)\n\n**Constraints:**\n- `1 <= prices.length <= 10^5`\n- `0 <= prices[i] <= 10^4`",
-    "description_zh": "某只股票每天的价格记录在 `prices` 中，`prices[i]` 为第 `i` 天的价格。你只能买入一次、卖出一次，且卖出日必须晚于买入日。返回能锁定的最大收益；如果任何买卖都会亏损，返回 `0`。\n\n**示例 1：** `prices = [3,8,2,6,1,5]` → `5`（价格为 3 时买入，价格为 8 时卖出）\n\n**示例 2：** `prices = [9,4,4,2]` → `0`（价格一路下跌）\n\n**约束：**\n- `1 <= prices.length <= 10^5`\n- `0 <= prices[i] <= 10^4`",
+    "description_en": "The share price of one stock was recorded every day in `prices`, where `prices[i]` is the price on day `i`. You may buy once and sell once, with the sale on a later day than the purchase. Return the largest gain you can lock in. If every possible trade loses money, return `0`.\n\n**Example 1:** `prices = [3,8,2,6,1,5]` → `5` (buy at 3, sell at 8)\n\n**Example 2:** `prices = [9,4,4,2]` → `0` (the price only goes down)\n\n**Constraints:**\n- $1 \\le \\texttt{prices.length} \\le 10^{5}$\n- $0 \\le \\texttt{prices[i]} \\le 10^{4}$",
+    "description_zh": "某只股票每天的价格记录在 `prices` 中，`prices[i]` 为第 `i` 天的价格。你只能买入一次、卖出一次，且卖出日必须晚于买入日。返回能锁定的最大收益；如果任何买卖都会亏损，返回 `0`。\n\n**示例 1：** `prices = [3,8,2,6,1,5]` → `5`（价格为 3 时买入，价格为 8 时卖出）\n\n**示例 2：** `prices = [9,4,4,2]` → `0`（价格一路下跌）\n\n**约束：**\n- $1 \\le \\texttt{prices.length} \\le 10^{5}$\n- $0 \\le \\texttt{prices[i]} \\le 10^{4}$",
     "hint": "Walk the days in order and keep the lowest price seen so far. The best sale on each day is that day's price minus this running minimum.",
     "hint_zh": "按天顺序遍历，记录到目前为止的最低价。每一天最好的卖出收益，就是当天价格减去这个最低价。",
     "cases": [

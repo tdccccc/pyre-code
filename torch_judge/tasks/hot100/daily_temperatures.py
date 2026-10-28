@@ -41,8 +41,8 @@ TASK = {
     "function_name": "dailyTemperatures",
     "params": [("temperatures", "int[]")],
     "returns": "int[]",
-    "description_en": "You are given the daily temperatures `temperatures`. For each day, return how many days you must wait until a strictly warmer day comes. If no warmer day follows, the answer for that day is `0`.\n\n**Example 1:** `temperatures = [60,50,55,70,40]` → `[3,1,1,0,0]`\n\n**Example 2:** `temperatures = [35,30,40,20]` → `[2,1,0,0]`\n\n**Constraints:**\n- `1 <= temperatures.length <= 10^5`\n- `30 <= temperatures[i] <= 100`",
-    "description_zh": "给定每日温度数组 `temperatures`。对每一天，返回还需要等待多少天才会出现一个严格更高的温度。如果之后不存在更高的温度，该天的答案为 `0`。\n\n**示例 1：** `temperatures = [60,50,55,70,40]` → `[3,1,1,0,0]`\n\n**示例 2：** `temperatures = [35,30,40,20]` → `[2,1,0,0]`\n\n**约束：**\n- `1 <= temperatures.length <= 10^5`\n- `30 <= temperatures[i] <= 100`",
+    "description_en": "You are given the daily temperatures `temperatures`. For each day, return how many days you must wait until a strictly warmer day comes. If no warmer day follows, the answer for that day is `0`.\n\n**Example 1:** `temperatures = [60,50,55,70,40]` → `[3,1,1,0,0]`\n\n**Example 2:** `temperatures = [35,30,40,20]` → `[2,1,0,0]`\n\n**Constraints:**\n- $1 \\le \\texttt{temperatures.length} \\le 10^{5}$\n- $30 \\le \\texttt{temperatures[i]} \\le 100$",
+    "description_zh": "给定每日温度数组 `temperatures`。对每一天，返回还需要等待多少天才会出现一个严格更高的温度。如果之后不存在更高的温度，该天的答案为 `0`。\n\n**示例 1：** `temperatures = [60,50,55,70,40]` → `[3,1,1,0,0]`\n\n**示例 2：** `temperatures = [35,30,40,20]` → `[2,1,0,0]`\n\n**约束：**\n- $1 \\le \\texttt{temperatures.length} \\le 10^{5}$\n- $30 \\le \\texttt{temperatures[i]} \\le 100$",
     "hint": "Keep a stack of days still waiting for a warmer day, and their temperatures decreasing from bottom to top. When a day is warmer than the top of the stack, it is the answer for every waiting day it beats.",
     "hint_zh": "用一个栈保存仍在等待更高温度的日期，栈中温度从栈底到栈顶递减。当某天比栈顶温度更高时，它就是栈中所有比它矮的等待日期的答案。",
     "cases": [

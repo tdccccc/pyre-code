@@ -25,8 +25,8 @@ TASK = {
     "function_name": "sortList",
     "params": [("head", "ListNode")],
     "returns": "ListNode",
-    "description_en": "Given the head of a linked list, return the list sorted in ascending order by value.\n\nThe sort must run in O(n log n) time.\n\n**Example 1:** `head = [9,-2,7,7,0]` → `[-2,0,7,7,9]`\n\n**Example 2:** `head = [1,1,0]` → `[0,1,1]`\n\n**Constraints:**\n- The list has `0` to `50000` nodes\n- `-10^5 <= Node.val <= 10^5`\n\n**Follow-up:** can you sort it using only O(1) extra memory (no recursion stack)?",
-    "description_zh": "给定链表的头节点 `head`，返回按值升序排好的链表。\n\n排序的时间复杂度必须为 O(n log n)。\n\n**示例 1：** `head = [9,-2,7,7,0]` → `[-2,0,7,7,9]`\n\n**示例 2：** `head = [1,1,0]` → `[0,1,1]`\n\n**约束：**\n- 链表节点数在 `0` 到 `50000` 之间\n- `-10^5 <= Node.val <= 10^5`\n\n**进阶：** 你能只使用 O(1) 的额外内存（不用递归栈）完成排序吗？",
+    "description_en": "Given the head of a linked list, return the list sorted in ascending order by value.\n\nThe sort must run in O(n log n) time.\n\n**Example 1:** `head = [9,-2,7,7,0]` → `[-2,0,7,7,9]`\n\n**Example 2:** `head = [1,1,0]` → `[0,1,1]`\n\n**Constraints:**\n- The list has `0` to `50000` nodes\n- $-10^{5} \\le \\texttt{Node.val} \\le 10^{5}$\n\n**Follow-up:** can you sort it using only O(1) extra memory (no recursion stack)?",
+    "description_zh": "给定链表的头节点 `head`，返回按值升序排好的链表。\n\n排序的时间复杂度必须为 O(n log n)。\n\n**示例 1：** `head = [9,-2,7,7,0]` → `[-2,0,7,7,9]`\n\n**示例 2：** `head = [1,1,0]` → `[0,1,1]`\n\n**约束：**\n- 链表节点数在 `0` 到 `50000` 之间\n- $-10^{5} \\le \\texttt{Node.val} \\le 10^{5}$\n\n**进阶：** 你能只使用 O(1) 的额外内存（不用递归栈）完成排序吗？",
     "hint": "Merge sort suits linked lists: find the middle with slow and fast pointers, cut the list in two, sort each half, then merge the two sorted halves. Merging needs no extra array.",
     "hint_zh": "归并排序很适合链表：用快慢指针找中点，把链表从中间断开，分别排序两半，再合并两个有序链表。合并时不需要额外的数组。",
     "cases": [
