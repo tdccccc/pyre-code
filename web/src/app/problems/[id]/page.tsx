@@ -11,6 +11,7 @@ import { FeedbackModal } from '@/components/workspace/FeedbackModal';
 import { DescriptionTab } from '@/components/workspace/DescriptionTab';
 import { SolutionTab } from '@/components/workspace/SolutionTab';
 import { AIHelpTab } from '@/components/workspace/AIHelpTab';
+import { SubmissionHistory as SubmissionHistoryTab } from '@/components/workspace/SubmissionHistory';
 import { CodeEditor } from '@/components/workspace/CodeEditor';
 import { TestPanel } from '@/components/workspace/TestPanel';
 import { ActionBar } from '@/components/workspace/ActionBar';
@@ -80,9 +81,13 @@ function WorkspacePageNew() {
     fetch('/api/progress')
       .then((r) => r.json())
       .then((d) => setProgress(d.progress || {}));
+    // Cleared up front (not in resetTestPanel after the problem loads), so a history
+    // response that beats the problem response isn't wiped
+    let cancelled = false;
+    setSubmissionHistory([]);
     fetch(`/api/submissions/${id}`)
       .then((r) => r.json())
-      .then((d: SubmissionHistory[]) => setSubmissionHistory(d))
+      .then((d: SubmissionHistory[]) => { if (!cancelled) setSubmissionHistory(d); })
       .catch(() => {});
     if (pathId) {
       fetch(`/api/paths/${pathId}`)
@@ -91,6 +96,7 @@ function WorkspacePageNew() {
     } else {
       setPathData(null);
     }
+    return () => { cancelled = true; };
   }, [id, pathId, setCurrentCode, setSubmissionResult, resetTestPanel, resetAiHelp, setSubmissionHistory]);
 
   // Keyboard shortcuts: [ / ] for prev/next problem, Esc to close drawer.
@@ -222,14 +228,17 @@ function WorkspacePageNew() {
           style={{ borderBottom: '1px solid var(--line)', background: 'var(--bg)' }}
         >
           <Tabs.List className="flex gap-0.5">
-            {(['description', 'solution', 'aiHelp'] as const).map((tab) => (
+            {(['description', 'solution', 'aiHelp', 'submissionsTab'] as const).map((tab) => (
               <Tabs.Trigger
                 key={tab}
                 value={tab}
                 className="group px-3 h-[26px] rounded-[6px] text-[13px] text-text-2 cursor-pointer inline-flex items-center gap-1.5 transition-[background,color] duration-150 data-[state=active]:bg-[color-mix(in_oklab,var(--text)_7%,transparent)] data-[state=active]:text-text"
               >
                 <span className="w-[5px] h-[5px] rounded-full bg-accent hidden group-data-[state=active]:inline-block" />
-                {t(tab === 'description' ? 'description' : tab === 'solution' ? 'solution' : 'aiHelp')}
+                {t(tab)}
+                {tab === 'submissionsTab' && submissionHistory.length > 0 && (
+                  <span className="text-[11px] text-text-3 tabular-nums">{submissionHistory.length}</span>
+                )}
               </Tabs.Trigger>
             ))}
           </Tabs.List>
@@ -242,6 +251,9 @@ function WorkspacePageNew() {
         </Tabs.Content>
         <Tabs.Content value="aiHelp" className="flex-1 min-h-0">
           <AIHelpTab problem={problem} />
+        </Tabs.Content>
+        <Tabs.Content value="submissionsTab" className="flex-1 min-h-0">
+          <SubmissionHistoryTab />
         </Tabs.Content>
       </Tabs.Root>
     </div>

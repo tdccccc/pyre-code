@@ -11,8 +11,8 @@ interface ProblemStore {
   drawerOpen: boolean;
   setDrawerOpen: (v: boolean) => void;
   // test panel
-  bottomTab: 'testcases' | 'testresults' | 'submissions';
-  setBottomTab: (tab: 'testcases' | 'testresults' | 'submissions') => void;
+  bottomTab: 'testcases' | 'testresults';
+  setBottomTab: (tab: 'testcases' | 'testresults') => void;
   selectedCaseIndex: number;
   setSelectedCaseIndex: (i: number) => void;
   customTests: CustomTest[];
@@ -92,5 +92,5 @@ export const useProblemStore = create<ProblemStore>((set, get) => ({
     get().aiHelpAbortController?.abort();
     set({ aiHelpMessages: [], aiHelpError: null, aiHelpLoading: false, aiHelpAbortController: null });
   },
-  resetTestPanel: () => set({ bottomTab: 'testcases', selectedCaseIndex: 0, customTests: [], runResult: null, submissionHistory: [] }),
+  resetTestPanel: () => set({ bottomTab: 'testcases', selectedCaseIndex: 0, customTests: [], runResult: null }),
 }));

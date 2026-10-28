@@ -11,6 +11,59 @@ const Editor = dynamic(() => import('@monaco-editor/react').then((m) => m.defaul
   loading: () => <div className="h-full w-full bg-bg-sunken animate-pulse" />,
 });
 
+const DiffEditor = dynamic(() => import('@monaco-editor/react').then((m) => m.DiffEditor), {
+  ssr: false,
+  loading: () => <div className="h-full w-full bg-bg-sunken animate-pulse" />,
+});
+
+const sharedOptions = {
+  fontSize: 14,
+  lineHeight: 22,
+  fontFamily: "'Geist Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace",
+  minimap: { enabled: false },
+  scrollBeyondLastLine: false,
+  overviewRulerBorder: false,
+  hideCursorInOverviewRuler: true,
+};
+
+function applyTheme(monaco: any, theme: string) {
+  monaco.editor.defineTheme('apple-light', appleLight);
+  monaco.editor.defineTheme('apple-dark', appleDark);
+  monaco.editor.setTheme(theme === 'dark' ? 'apple-dark' : 'apple-light');
+}
+
+/** Read-only diff: `original` on the left, `modified` on the right (inline when narrow). */
+export function CodeDiffViewer({ original, modified }: { original: string; modified: string }) {
+  const monacoRef = useRef<any>(null);
+  const { theme } = useTheme();
+
+  useEffect(() => {
+    if (monacoRef.current) applyTheme(monacoRef.current, theme);
+  }, [theme]);
+
+  return (
+    <DiffEditor
+      height="100%"
+      language="python"
+      original={original}
+      modified={modified}
+      onMount={(_editor, monaco) => {
+        monacoRef.current = monaco;
+        applyTheme(monaco, theme);
+      }}
+      options={{
+        ...sharedOptions,
+        readOnly: true,
+        originalEditable: false,
+        renderSideBySide: true,
+        useInlineViewWhenSpaceIsLimited: true,
+        renderOverviewRuler: false,
+        scrollbar: { verticalScrollbarSize: 6, horizontalScrollbarSize: 6 },
+      }}
+    />
+  );
+}
+
 interface CodeEditorProps {
   value: string;
   onChange: (value: string) => void;
@@ -44,9 +97,7 @@ export function CodeEditor({
   const handleMount: OnMount = (editor, monaco) => {
     editorRef.current = editor;
     monacoRef.current = monaco;
-    monaco.editor.defineTheme('apple-light', appleLight);
-    monaco.editor.defineTheme('apple-dark', appleDark);
-    monaco.editor.setTheme(theme === 'dark' ? 'apple-dark' : 'apple-light');
+    applyTheme(monaco, theme);
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyCode.Enter, () => runRef.current?.());
     editor.addCommand(monaco.KeyMod.CtrlCmd | monaco.KeyMod.Shift | monaco.KeyCode.Enter, () => submitRef.current?.());
   };
@@ -65,20 +116,14 @@ export function CodeEditor({
       onChange={(v) => onChange(v || '')}
       onMount={handleMount}
       options={{
+        ...sharedOptions,
         readOnly,
-        fontSize: 14,
-        lineHeight: 22,
-        fontFamily: "'Geist Mono', 'SF Mono', 'Fira Code', 'Cascadia Code', monospace",
-        minimap: { enabled: false },
-        scrollBeyondLastLine: false,
         padding: { top: 16, bottom: 16 },
         renderLineHighlight: 'line',
         smoothScrolling: true,
         cursorBlinking: 'smooth',
         cursorSmoothCaretAnimation: 'on',
         bracketPairColorization: { enabled: true },
-        overviewRulerBorder: false,
-        hideCursorInOverviewRuler: true,
         scrollbar: {
           alwaysConsumeMouseWheel: !allowParentScrollOnWheel,
           verticalScrollbarSize: 6,
