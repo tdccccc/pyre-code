@@ -36,9 +36,10 @@ def _large_case():
 
 
 def _random_case(rng):
-    # Three letters keep anagram windows common enough to matter
-    s = "".join(rng.choice("abc") for _ in range(rng.randint(1, 12)))
-    p = "".join(rng.choice("abc") for _ in range(rng.randint(1, 4)))
+    # Two letters, so a window often has the right letters in the wrong counts (p = "aab"
+    # against window "abb"), which the mistake misses. Measured: about 10 of 20 cases expose it
+    s = "".join(rng.choice("ab") for _ in range(rng.randint(6, 12)))
+    p = "".join(rng.choice("ab") for _ in range(rng.randint(3, 4)))
     return {"args": [s, p]}
 
 

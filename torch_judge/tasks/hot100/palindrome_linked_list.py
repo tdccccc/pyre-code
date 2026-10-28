@@ -19,14 +19,22 @@ def _large_case():
     return {"args": [values], "expected": _is_palindrome(values)}
 
 
+def _palindrome(rng, n: int) -> list:
+    half = [rng.randint(0, 2) for _ in range((n + 1) // 2)]
+    return half + half[: n // 2][::-1]
+
+
 def _random_case(rng):
-    n = rng.randint(1, 7)
-    if rng.random() < 0.5:
-        half = [rng.randint(0, 2) for _ in range((n + 1) // 2)]
-        values = half + half[: n // 2][::-1]
-    else:
-        values = [rng.randint(0, 2) for _ in range(n)]
-    return {"args": [values]}
+    # The mistake compares the halves without reversing one. It wrongly rejects palindromes
+    # whose first half is not itself a palindrome (1 2 2 1), and wrongly accepts block repeats
+    # like 1 2 1 2 (equal halves, not a palindrome). Measured: about 10 of 20 cases expose it
+    r = rng.random()
+    if r < 0.5:
+        return {"args": [_palindrome(rng, rng.randint(4, 8))]}
+    if r < 0.8:
+        block = [rng.randint(0, 2) for _ in range(rng.randint(1, 3))]
+        return {"args": [block + block]}
+    return {"args": [[rng.randint(0, 2) for _ in range(rng.randint(2, 8))]]}
 
 
 TASK = {

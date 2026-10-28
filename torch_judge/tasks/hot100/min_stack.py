@@ -48,9 +48,33 @@ def _large_case():
     return case
 
 
+def _min_trap(rng, count: int) -> dict:
+    # Pushes often go below the current minimum and getMin is asked often, so a pop often
+    # removes the minimum and a later getMin sees the stale value
+    ops, args, stack = ["MinStack"], [[]], []
+    for _ in range(count):
+        r = rng.random()
+        if not stack or r < 0.5:
+            if stack and rng.random() < 0.6:
+                v = min(stack) - rng.randint(1, 3)
+            else:
+                v = rng.randint(-5, 5)
+            ops.append("push")
+            args.append([v])
+            stack.append(v)
+        elif r < 0.8:
+            ops.append("pop")
+            args.append([])
+            stack.pop()
+        else:
+            ops.append("getMin" if rng.random() < 0.8 else "top")
+            args.append([])
+    return {"ops": ops, "args": args}
+
+
 def _random_case(rng):
-    # Few distinct values, so duplicate minimums (and popping one of them) come up often
-    return _operations(rng, rng.randint(8, 16), 3)
+    # Measured: about 9 of 20 cases expose the stale minimum
+    return _min_trap(rng, rng.randint(10, 16))
 
 
 TASK = {

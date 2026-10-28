@@ -21,8 +21,10 @@ def _large_case():
 
 
 def _random_case(rng):
-    coins = rng.sample(range(1, 11), rng.randint(1, 4))
-    return {"args": [coins, rng.randint(0, 30)]}
+    # No coin of 1 and amounts of 6 to 24, so largest-first greedy often uses too many coins
+    # or gives up (-1) where a combination exists. Measured: about 9 of 20 cases expose it
+    coins = rng.sample(range(2, 9), rng.randint(2, 3))
+    return {"args": [coins, rng.randint(6, 24)]}
 
 
 TASK = {

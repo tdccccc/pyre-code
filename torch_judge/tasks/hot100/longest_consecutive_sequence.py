@@ -30,9 +30,14 @@ def _large_case():
 
 
 def _random_case(rng):
-    # Values 0..6 in short arrays: repeats often fall inside a run, which is where restarting on
-    # a repeat goes wrong
-    return {"args": [[rng.randint(0, 6) for _ in range(rng.randint(0, 10))]]}
+    # One run of 3 to 5 consecutive values with one value repeated, shuffled. A repeat inside
+    # the run restarts the mistake's streak, so it undercounts. Measured: about 10 of 20 cases
+    # expose it
+    start = rng.randint(0, 3)
+    run_vals = list(range(start, start + rng.randint(3, 5)))
+    nums = run_vals + [rng.choice(run_vals)]
+    rng.shuffle(nums)
+    return {"args": [nums]}
 
 
 TASK = {

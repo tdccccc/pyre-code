@@ -28,10 +28,19 @@ def _large_case():
 
 
 def _random_case(rng):
-    return {"args": [
-        "".join(rng.choice("abc") for _ in range(rng.randint(0, 5))),
-        "".join(rng.choice("abc") for _ in range(rng.randint(0, 5))),
-    ]}
+    # word2 is word1 with some letters swapped, so a replace is the cheap edit; sometimes it
+    # also gets one insert or delete. Independent random words differ in length and rarely
+    # need a replace. Measured: about 8 of 20 cases expose the missing replace
+    w1 = "".join(rng.choice("abc") for _ in range(rng.randint(1, 6)))
+    w2 = "".join(rng.choice("abc") if rng.random() < 0.4 else ch for ch in w1)
+    r = rng.random()
+    if r < 0.25 and w2:
+        i = rng.randrange(len(w2))
+        w2 = w2[:i] + w2[i + 1:]
+    elif r < 0.5:
+        i = rng.randrange(len(w2) + 1)
+        w2 = w2[:i] + rng.choice("abc") + w2[i:]
+    return {"args": [w1, w2]}
 
 
 TASK = {
