@@ -20,6 +20,11 @@ def _large_case():
     return {"args": [coins, amount], "expected": _min_coins(coins, amount)}
 
 
+def _random_case(rng):
+    coins = rng.sample(range(1, 11), rng.randint(1, 4))
+    return {"args": [coins, rng.randint(0, 30)]}
+
+
 TASK = {
     "title": "Coin Change",
     "title_zh": "零钱兑换",
@@ -41,7 +46,11 @@ TASK = {
         {"args": [[2, 5, 10, 1], 27], "expected": 4},
         {"args": [[7, 11], 25], "expected": 3},
         {"args": [[2147483647], 2], "expected": -1},
+        # Greedy (9 + 1 + 1) uses three coins; 5 + 6 uses two
+        {"args": [[1, 5, 6, 9], 11], "expected": 2},
+        {"args": [[5, 3], 7], "expected": -1},
     ],
+    "random_case": _random_case,
     "large_case": _large_case,
     "solution": '''class Solution:
     def coinChange(self, coins: List[int], amount: int) -> int:

@@ -8,6 +8,7 @@ cases; both answer modes are generated from that, so a problem is written exactl
 from __future__ import annotations
 
 import functools
+import random
 
 from torch_judge.algo import runner
 
@@ -95,16 +96,41 @@ def _spec(task: dict) -> dict:
 # Cases
 # ---------------------------------------------------------------------------
 
+RANDOM_CASES = 20
+
+
 @functools.lru_cache(maxsize=None)
 def _large_case(task_id: str, factory) -> dict:
     return factory()
 
 
+@functools.lru_cache(maxsize=None)
+def _random_cases(task_id: str) -> tuple[dict, ...]:
+    """Small random cases from the task's ``random_case(rng)``, answered by the reference
+    solution. Seeded by task id, so every run (and the exported UI data) sees the same ones."""
+    from torch_judge.tasks import get_task
+
+    task = get_task(task_id)
+    rng = random.Random(f"{task_id}:random")
+    ns = runner.solution_namespace("__reference__")
+    exec(task["solution"], ns)
+    cases = []
+    for i in range(RANDOM_CASES):
+        case = task["random_case"](rng)
+        case["expected"] = runner.compute(ns, _spec(task), case)
+        case["name"] = f"Random {i + 1}"
+        cases.append(case)
+    return tuple(cases)
+
+
 def cases_for_mode(task_id: str, task: dict, mode: str) -> list[dict]:
-    """Ordered cases for a mode; the first two are the visible samples used by Run."""
+    """Ordered cases for a mode: hand-written (the first two are the samples Run uses),
+    then seeded random ones, then the hidden large input."""
     cases = [dict(c) for c in task["cases"] if mode == "core" or c.get("acm", True)]
     for i, case in enumerate(cases):
         case.setdefault("name", f"Example {i + 1}" if i < 2 else f"Case {i + 1}")
+    if task.get("random_case"):
+        cases.extend(dict(c) for c in _random_cases(task_id))
     if task.get("large_case"):
         large = dict(_large_case(task_id, task["large_case"]))
         large.update(name="Large input", hidden=True)

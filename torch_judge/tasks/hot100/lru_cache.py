@@ -33,6 +33,21 @@ def _large_case():
     return {"ops": ops, "args": args, "expected": expected}
 
 
+def _random_case(rng):
+    # Capacity 2 over four keys, so recency decides most evictions. Measured against
+    # mutants: about 20% of these cases expose a get or put that skips the refresh.
+    ops, args = ["LRUCache"], [[2]]
+    for _ in range(rng.randint(15, 25)):
+        key = rng.randint(0, 3)
+        if rng.random() < 0.5:
+            ops.append("put")
+            args.append([key, rng.randint(0, 99)])
+        else:
+            ops.append("get")
+            args.append([key])
+    return {"ops": ops, "args": args}
+
+
 TASK = {
     "title": "LRU Cache",
     "title_zh": "LRU 缓存",
@@ -75,7 +90,20 @@ TASK = {
             "args": [[2], [7], [7, 70], [7], [8, 80], [9, 90], [7], [9]],
             "expected": [None, -1, None, 70, None, None, -1, 90],
         },
+        {
+            # A get refreshes recency: key 1 survives, key 2 is evicted
+            "ops": ["LRUCache", "put", "put", "get", "put", "get", "get", "get"],
+            "args": [[2], [1, 1], [2, 2], [1], [3, 3], [2], [3], [1]],
+            "expected": [None, None, None, 1, None, -1, 3, 1],
+        },
+        {
+            # Re-putting the only key at capacity 1 must update in place, not evict it
+            "ops": ["LRUCache", "put", "put", "get", "put", "get", "get"],
+            "args": [[1], [5, 1], [5, 2], [5], [6, 3], [5], [6]],
+            "expected": [None, None, None, 2, None, -1, 3],
+        },
     ],
+    "random_case": _random_case,
     "large_case": _large_case,
     "solution": '''class Node:
     def __init__(self, key=0, value=0):

@@ -21,6 +21,11 @@ def _large_case():
     return {"args": [s], "expected": _longest(s)}
 
 
+def _random_case(rng):
+    # Few distinct letters force lots of repeats; no spaces, so ACM lines survive strip()
+    return {"args": ["".join(rng.choice("abcd") for _ in range(rng.randint(0, 12)))]}
+
+
 TASK = {
     "title": "Longest Substring Without Repeating Characters",
     "title_zh": "无重复字符的最长子串",
@@ -43,7 +48,11 @@ TASK = {
         {"args": [" "], "expected": 1, "acm": False},
         {"args": ["abcdeafg"], "expected": 7},
         {"args": ["abba"], "expected": 2},
+        # Restarting the window from scratch on a repeat loses "vdf"
+        {"args": ["dvdf"], "expected": 3},
+        {"args": ["bbtablud"], "expected": 6},
     ],
+    "random_case": _random_case,
     "large_case": _large_case,
     "solution": '''class Solution:
     def lengthOfLongestSubstring(self, s: str) -> int:

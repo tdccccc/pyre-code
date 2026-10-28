@@ -11,11 +11,13 @@ import subprocess
 import sys
 import tempfile
 import time
+from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 
 from torch_judge.algo import runner, spec
 
 TIME_LIMIT_S = 3.0
+PARALLEL_CASES = 4
 RUNNER_PATH = Path(runner.__file__)
 MAX_STDERR_LINES = 12
 
@@ -30,8 +32,19 @@ def _result(case: dict, task: dict, mode: str, **fields) -> dict:
     }
 
 
-def _run_core_case(code: str, task: dict, case: dict) -> dict:
-    job = {"code": code, "spec": spec.runner_spec(task), "case": {k: case[k] for k in ("args", "ops", "expected") if k in case}}
+def _tle(case: dict, task: dict, mode: str) -> dict:
+    return _result(case, task, mode, passed=False, execTimeMs=TIME_LIMIT_S * 1000,
+                   error=f"Time Limit Exceeded (> {TIME_LIMIT_S:g}s)")
+
+
+def _core_batch(code: str, task: dict, cases: list[dict]) -> list[dict] | None:
+    """Run cases in one subprocess. None if it timed out or died, so the caller can rerun
+    the cases one by one to pin the failure on a case."""
+    job = {
+        "code": code,
+        "spec": spec.runner_spec(task),
+        "cases": [{k: c[k] for k in ("args", "ops", "expected") if k in c} for c in cases],
+    }
     start = time.perf_counter()
     try:
         proc = subprocess.run(
@@ -39,24 +52,44 @@ def _run_core_case(code: str, task: dict, case: dict) -> dict:
             input=json.dumps(job), capture_output=True, text=True, timeout=TIME_LIMIT_S,
         )
     except subprocess.TimeoutExpired:
-        return _result(case, task, "core", passed=False, execTimeMs=TIME_LIMIT_S * 1000,
-                       error=f"Time Limit Exceeded (> {TIME_LIMIT_S:g}s)")
+        return None
     wall_ms = (time.perf_counter() - start) * 1000
-
-    lines = proc.stdout.rstrip("\n").split("\n")
     try:
-        outcome = json.loads(lines[-1])
+        outcomes = json.loads(proc.stdout.rstrip("\n").split("\n")[-1])
     except (json.JSONDecodeError, IndexError):
+        if len(cases) > 1:
+            return None
         stderr = _tail(proc.stderr) or "the program exited unexpectedly"
-        return _result(case, task, "core", passed=False, execTimeMs=wall_ms, error=f"Runtime Error\n{stderr}")
+        return [_result(cases[0], task, "core", passed=False, execTimeMs=wall_ms, error=f"Runtime Error\n{stderr}")]
 
-    output = outcome.get("stdout") or None
-    elapsed = outcome.get("timeMs", wall_ms)
-    if outcome["status"] == "error":
-        return _result(case, task, "core", passed=False, execTimeMs=elapsed, error=outcome["error"], output=output)
-    passed = outcome["status"] == "ok"
-    return _result(case, task, "core", passed=passed, execTimeMs=elapsed, actual=outcome["actual"],
-                   error=None if passed else "Wrong Answer", output=output)
+    results = []
+    for case, outcome in zip(cases, outcomes):
+        output = outcome.get("stdout") or None
+        elapsed = outcome.get("timeMs", 0.0)
+        if outcome["status"] == "error":
+            results.append(_result(case, task, "core", passed=False, execTimeMs=elapsed, error=outcome["error"], output=output))
+            continue
+        passed = outcome["status"] == "ok"
+        results.append(_result(case, task, "core", passed=passed, execTimeMs=elapsed, actual=outcome["actual"],
+                               error=None if passed else "Wrong Answer", output=output))
+    return results
+
+
+def _run_core_case(code: str, task: dict, case: dict) -> dict:
+    results = _core_batch(code, task, [case])
+    return results[0] if results else _tle(case, task, "core")
+
+
+def _run_core(code: str, task: dict, cases: list[dict]) -> list[dict]:
+    # Small cases share one process (one interpreter start instead of ~25); the large
+    # case gets its own time budget
+    small = [c for c in cases if not c.get("hidden")]
+    batch = _core_batch(code, task, small) if small else []
+    if batch is None:
+        with ThreadPoolExecutor(max_workers=PARALLEL_CASES) as pool:
+            batch = list(pool.map(lambda c: _run_core_case(code, task, c), small))
+    by_name = {r["name"]: r for r in batch}
+    return [by_name[c["name"]] if not c.get("hidden") else _run_core_case(code, task, c) for c in cases]
 
 
 def _tail(stderr: str, path: str | None = None) -> str:
@@ -74,8 +107,7 @@ def _run_acm_case(program: Path, task: dict, case: dict) -> dict:
             timeout=TIME_LIMIT_S, cwd=program.parent,
         )
     except subprocess.TimeoutExpired:
-        return _result(case, task, "acm", passed=False, execTimeMs=TIME_LIMIT_S * 1000,
-                       error=f"Time Limit Exceeded (> {TIME_LIMIT_S:g}s)")
+        return _tle(case, task, "acm")
     elapsed = (time.perf_counter() - start) * 1000
     actual = runner._clip(proc.stdout.rstrip("\n"))
 
@@ -109,12 +141,14 @@ def grade(task_id: str, task: dict, code: str, mode: str = "core", test_indices:
         cases = [cases[i] for i in test_indices if 0 <= i < len(cases)]
 
     if mode == "acm":
+        # Each ACM case needs its own process (its own stdin); run a few at once
         with tempfile.TemporaryDirectory(prefix="pyre-acm-") as tmp:
             program = Path(tmp) / "solution.py"
             program.write_text(code, encoding="utf-8")
-            results = [_run_acm_case(program, task, case) for case in cases]
+            with ThreadPoolExecutor(max_workers=PARALLEL_CASES) as pool:
+                results = list(pool.map(lambda c: _run_acm_case(program, task, c), cases))
     else:
-        results = [_run_core_case(code, task, case) for case in cases]
+        results = _run_core(code, task, cases)
 
     passed = sum(r["passed"] for r in results)
     return {

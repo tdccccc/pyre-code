@@ -14,6 +14,18 @@ def _large_case():
     return {"args": [nums, nums[-2] + nums[-1]], "expected": [n - 2, n - 1]}
 
 
+def _random_case(rng):
+    # Retry until exactly one pair sums to the target; any other valid pair would be
+    # graded wrong against the reference answer
+    while True:
+        nums = [rng.randint(-10, 10) for _ in range(rng.randint(2, 8))]
+        i, j = sorted(rng.sample(range(len(nums)), 2))
+        target = nums[i] + nums[j]
+        pairs = sum(nums[a] + nums[b] == target for a in range(len(nums)) for b in range(a + 1, len(nums)))
+        if pairs == 1:
+            return {"args": [nums, target]}
+
+
 TASK = {
     "title": "Two Sum",
     "title_zh": "两数之和",
@@ -35,7 +47,11 @@ TASK = {
         {"args": [[-3, 4, 1, 90], -2], "expected": [0, 2]},
         {"args": [[0, 4, 3, 0], 0], "expected": [0, 3]},
         {"args": [[1, 2, 3, 4, 5, 6], 11], "expected": [4, 5]},
+        # target - x == x with a single x: storing x before the lookup pairs it with itself
+        {"args": [[3, 2, 4], 6], "expected": [1, 2]},
+        {"args": [[-1, -2, -3, -4, -5], -8], "expected": [2, 4]},
     ],
+    "random_case": _random_case,
     "large_case": _large_case,
     "solution": '''class Solution:
     def twoSum(self, nums: List[int], target: int) -> List[int]:

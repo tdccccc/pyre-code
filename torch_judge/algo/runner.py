@@ -249,44 +249,54 @@ def _user_error(exc: BaseException) -> str:
     return f"{type(exc).__name__}: {exc}{where}"
 
 
-def run_core(job: dict) -> dict:
-    spec, case = job["spec"], job["case"]
+def solution_namespace(name: str = "__solution__") -> dict[str, Any]:
+    """Globals for core-mode code: what LeetCode predefines."""
+    return {"__name__": name, "List": List, "Optional": Optional, "ListNode": ListNode, "TreeNode": TreeNode}
+
+
+def compute(ns: dict, spec: dict, case: dict) -> Any:
+    """Run one case against loaded code and return the plain (JSON-able) answer."""
+    if spec.get("design"):
+        return _run_design(ns, spec["design"], case)
+    return _run_method(ns, spec, case)
+
+
+def run_core(job: dict) -> list[dict]:
+    """Load the learner's code once, then run each of ``job["cases"]`` in order."""
+    spec = job["spec"]
     # Like LeetCode: recursive solutions over 10^3–10^4 deep inputs shouldn't hit Python's default 1000
     sys.setrecursionlimit(20000)
-    ns: dict[str, Any] = {
-        "__name__": "__solution__",
-        "List": List, "Optional": Optional,
-        "ListNode": ListNode, "TreeNode": TreeNode,
-    }
-    captured = io.StringIO()
+    ns = solution_namespace()
     real_stdout = sys.stdout
-    sys.stdout = captured
+    sys.stdout = captured = io.StringIO()
     try:
-        try:
-            exec(compile(job["code"], "<solution>", "exec"), ns)
-        except BaseException as exc:  # noqa: BLE001 - report anything the learner's code raises
-            return {"status": "error", "error": _user_error(exc), "stdout": captured.getvalue()}
-
-        design = spec.get("design")
-        start = time.perf_counter()
-        try:
-            if design:
-                actual = _run_design(ns, design, case)
-            else:
-                actual = _run_method(ns, spec, case)
-        except BaseException as exc:  # noqa: BLE001
-            return {"status": "error", "error": _user_error(exc), "stdout": captured.getvalue()}
-        elapsed_ms = (time.perf_counter() - start) * 1000
+        exec(compile(job["code"], "<solution>", "exec"), ns)
+    except BaseException as exc:  # noqa: BLE001 - report anything the learner's code raises
+        error = {"status": "error", "error": _user_error(exc), "stdout": captured.getvalue()}
+        return [error for _ in job["cases"]]
     finally:
         sys.stdout = real_stdout
 
-    passed = check(spec.get("check", "exact"), actual, case["expected"])
-    return {
-        "status": "ok" if passed else "wrong",
-        "actual": show(actual),
-        "timeMs": elapsed_ms,
-        "stdout": captured.getvalue(),
-    }
+    results = []
+    for case in job["cases"]:
+        sys.stdout = captured = io.StringIO()
+        start = time.perf_counter()
+        try:
+            actual = compute(ns, spec, case)
+        except BaseException as exc:  # noqa: BLE001
+            results.append({"status": "error", "error": _user_error(exc), "stdout": captured.getvalue()})
+            continue
+        finally:
+            sys.stdout = real_stdout
+        elapsed_ms = (time.perf_counter() - start) * 1000
+        passed = check(spec.get("check", "exact"), actual, case["expected"])
+        results.append({
+            "status": "ok" if passed else "wrong",
+            "actual": show(actual),
+            "timeMs": elapsed_ms,
+            "stdout": captured.getvalue(),
+        })
+    return results
 
 
 def _run_method(ns: dict, spec: dict, case: dict) -> Any:
@@ -320,5 +330,5 @@ def _run_design(ns: dict, design: dict, case: dict) -> list:
 
 
 if __name__ == "__main__":
-    result = run_core(json.loads(sys.stdin.read()))
-    sys.stdout.write("\n" + json.dumps(result) + "\n")
+    results = run_core(json.loads(sys.stdin.read()))
+    sys.stdout.write("\n" + json.dumps(results) + "\n")

@@ -9,6 +9,10 @@ def _large_case():
     return {"args": [values], "expected": values[::-1]}
 
 
+def _random_case(rng):
+    return {"args": [[rng.randint(-9, 9) for _ in range(rng.randint(0, 8))]]}
+
+
 TASK = {
     "title": "Reverse Linked List",
     "title_zh": "反转链表",
@@ -30,6 +34,7 @@ TASK = {
         {"args": [[5]], "expected": [5]},
         {"args": [[1, 1, 2, 2]], "expected": [2, 2, 1, 1]},
     ],
+    "random_case": _random_case,
     "large_case": _large_case,
     "solution": '''class Solution:
     def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:

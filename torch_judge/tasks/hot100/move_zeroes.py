@@ -10,6 +10,10 @@ def _large_case():
     return {"args": [nums], "expected": nonzero + [0] * (len(nums) - len(nonzero))}
 
 
+def _random_case(rng):
+    return {"args": [[rng.choice([0, 0, rng.randint(-5, 5)]) for _ in range(rng.randint(1, 10))]]}
+
+
 TASK = {
     "title": "Move Zeroes",
     "title_zh": "移动零",
@@ -31,7 +35,10 @@ TASK = {
         {"args": [[1, 2, 3]], "expected": [1, 2, 3]},
         {"args": [[0, 0, 1]], "expected": [1, 0, 0]},
         {"args": [[-4, 0, 0, 5, 0, -6]], "expected": [-4, 5, -6, 0, 0, 0]},
+        {"args": [[0, 0, 0]], "expected": [0, 0, 0]},
+        {"args": [[1, 0]], "expected": [1, 0]},
     ],
+    "random_case": _random_case,
     "large_case": _large_case,
     "solution": '''class Solution:
     def moveZeroes(self, nums: List[int]) -> None:

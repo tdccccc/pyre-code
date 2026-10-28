@@ -2,6 +2,8 @@
 
 import random
 
+from torch_judge.algo.runner import TreeNode, tree_to_array
+
 
 def _large_case():
     # A random tree of 2000 nodes, encoded level by level
@@ -33,6 +35,25 @@ def _large_case():
     return {"args": [values], "expected": levels}
 
 
+def _random_case(rng):
+    # Insert distinct values into a BST: random shapes, including lopsided ones
+    values = rng.sample(range(-20, 21), rng.randint(0, 10))
+    root = None
+    for v in values:
+        node = TreeNode(v)
+        if root is None:
+            root = node
+            continue
+        cur = root
+        while True:
+            side = "left" if v < cur.val else "right"
+            if getattr(cur, side) is None:
+                setattr(cur, side, node)
+                break
+            cur = getattr(cur, side)
+    return {"args": [tree_to_array(root)]}
+
+
 TASK = {
     "title": "Binary Tree Level Order Traversal",
     "title_zh": "二叉树的层序遍历",
@@ -53,7 +74,9 @@ TASK = {
         {"args": [[]], "expected": []},
         {"args": [[1, 2, None, 3, None, 4]], "expected": [[1], [2], [3], [4]]},
         {"args": [[0, -1, 1, -2, None, None, 2]], "expected": [[0], [-1, 1], [-2, 2]]},
+        {"args": [[1, None, 2, None, 3]], "expected": [[1], [2], [3]]},
     ],
+    "random_case": _random_case,
     "large_case": _large_case,
     "solution": '''from collections import deque
 

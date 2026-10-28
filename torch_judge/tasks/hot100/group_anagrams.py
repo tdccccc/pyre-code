@@ -18,6 +18,15 @@ def _large_case():
     return {"args": [strs], "expected": list(groups.values())}
 
 
+def _random_case(rng):
+    # A tiny alphabet and short words make anagram collisions (and exact duplicates) common
+    words = []
+    for _ in range(rng.randint(1, 8)):
+        length = rng.randint(1, 3)
+        words.append("".join(rng.choice("abc") for _ in range(length)))
+    return {"args": [words]}
+
+
 TASK = {
     "title": "Group Anagrams",
     "title_zh": "字母异位词分组",
@@ -40,7 +49,12 @@ TASK = {
         {"args": [[""]], "expected": [[""]], "acm": False},
         {"args": [["ab", "ba", "abc", "cab", "bca", "xyz"]], "expected": [["ab", "ba"], ["abc", "cab", "bca"], ["xyz"]]},
         {"args": [["aab", "aba", "abb"]], "expected": [["aab", "aba"], ["abb"]]},
+        # Exact duplicates stay as separate entries in the same group
+        {"args": [["a", "a", "b"]], "expected": [["a", "a"], ["b"]]},
+        # Same letter multiset, different lengths: not anagrams
+        {"args": [["ab", "aab", "abb", "ba"]], "expected": [["ab", "ba"], ["aab"], ["abb"]]},
     ],
+    "random_case": _random_case,
     "large_case": _large_case,
     "solution": '''from collections import defaultdict
 

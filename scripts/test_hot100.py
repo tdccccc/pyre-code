@@ -51,6 +51,53 @@ def test_brute_force_times_out_on_large_input():
     assert "Time Limit Exceeded" in verdicts["Large input"]["error"]
 
 
+# Classic wrong solutions; each must fail somewhere in the hand-written or random cases
+MUTANTS = {
+    "two_sum": "class Solution:\n    def twoSum(self, nums, target):\n        s = {}\n        for i, x in enumerate(nums):\n            s[x] = i\n            if target - x in s:\n                return [s[target - x], i]\n",
+    "group_anagrams": "class Solution:\n    def groupAnagrams(self, strs):\n        g = {}\n        for s in strs:\n            g.setdefault(frozenset(s), []).append(s)\n        return list(g.values())\n",
+    "move_zeroes": "class Solution:\n    def moveZeroes(self, nums):\n        i, j = 0, len(nums) - 1\n        while i < j:\n            if nums[i] == 0:\n                nums[i], nums[j] = nums[j], nums[i]\n                j -= 1\n            else:\n                i += 1\n",
+    "longest_substring_without_repeating": "class Solution:\n    def lengthOfLongestSubstring(self, s):\n        last, start, best = {}, 0, 0\n        for i, ch in enumerate(s):\n            if ch in last:\n                start = last[ch] + 1\n            last[ch] = i\n            best = max(best, i - start + 1)\n        return best\n",
+    "lru_cache": "from collections import OrderedDict\nclass LRUCache:\n    def __init__(self, c):\n        self.c, self.d = c, OrderedDict()\n    def get(self, k):\n        return self.d.get(k, -1)\n    def put(self, k, v):\n        if k in self.d:\n            self.d.move_to_end(k)\n        self.d[k] = v\n        if len(self.d) > self.c:\n            self.d.popitem(last=False)\n",
+    "binary_tree_level_order": "from collections import deque\nclass Solution:\n    def levelOrder(self, root):\n        if not root:\n            return []\n        res, q = [], deque([root])\n        while q:\n            lvl = []\n            for _ in range(len(q)):\n                n = q.popleft()\n                lvl.append(n.val)\n                if n.right: q.append(n.right)\n                if n.left: q.append(n.left)\n            res.append(lvl)\n        return res\n",
+    "coin_change": "class Solution:\n    def coinChange(self, coins, amount):\n        n = 0\n        for c in sorted(coins, reverse=True):\n            n += amount // c\n            amount %= c\n        return n if amount == 0 else -1\n",
+}
+
+
+@pytest.mark.parametrize("task_id", sorted(MUTANTS))
+def test_classic_mistake_is_caught_by_random_cases_too(task_id):
+    failed = [r["name"] for r in _grade(task_id, MUTANTS[task_id])["results"] if not r["passed"]]
+    assert any(name.startswith("Random") for name in failed), failed
+
+
+def test_random_cases_are_seeded_and_visible():
+    task = HOT100_TASKS["two_sum"]
+    first = spec.cases_for_mode("two_sum", task, "core")
+    again = spec.cases_for_mode("two_sum", task, "core")
+    randoms = [c for c in first if c["name"].startswith("Random")]
+    assert len(randoms) == spec.RANDOM_CASES and not any(c.get("hidden") for c in randoms)
+    assert first == again
+
+
+def test_hung_case_in_batch_is_pinned_to_that_case():
+    # Hangs only on two-element inputs; the batch times out, then per-case reruns find them
+    code = (
+        "class Solution:\n"
+        "    def twoSum(self, nums, target):\n"
+        "        while len(nums) == 2:\n"
+        "            pass\n"
+        "        s = {}\n"
+        "        for i, x in enumerate(nums):\n"
+        "            if target - x in s:\n"
+        "                return [s[target - x], i]\n"
+        "            s[x] = i\n"
+    )
+    cases = spec.cases_for_mode("two_sum", HOT100_TASKS["two_sum"], "core")
+    results = _grade("two_sum", code)["results"]
+    for case, result in zip(cases, results):
+        two_elements = not case.get("hidden") and len(case["args"][0]) == 2
+        assert result["passed"] != two_elements, case["name"]
+
+
 def test_wrong_answer_reports_actual_value():
     result = _grade("coin_change", "class Solution:\n    def coinChange(self, coins, amount):\n        return 7\n", indices=[0])
     case = result["results"][0]
