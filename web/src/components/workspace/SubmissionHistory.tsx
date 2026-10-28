@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { ArrowLeft, Check, CheckCircle2, ChevronRight, Copy, RotateCcw, XCircle } from 'lucide-react';
+import { ArrowLeft, Check, CheckCircle2, ChevronRight, Copy, Loader2, Pencil, RotateCcw, StickyNote, XCircle } from 'lucide-react';
 import { useProblemStore } from '@/store/problemStore';
 import { useLocale } from '@/context/LocaleContext';
 import { CodeEditor, CodeDiffViewer } from './CodeEditor';
@@ -95,10 +95,113 @@ export function SubmissionHistory({ showMode = false }: { showMode?: boolean }) 
               {s.execTimeMs != null && <span>· {s.execTimeMs.toFixed(1)}ms</span>}
               <span>· {t('submissionLines', { n: s.code.split('\n').length })}</span>
             </div>
+            {s.note && (
+              <div className="flex items-center gap-1.5 text-xs text-text-2 min-w-0">
+                <StickyNote className="w-3 h-3 flex-shrink-0 text-text-3" />
+                <span className="truncate">{s.note}</span>
+              </div>
+            )}
           </div>
           <ChevronRight className="w-4 h-4 text-text-3 flex-shrink-0" />
         </button>
       ))}
+    </div>
+  );
+}
+
+const MAX_NOTE_CHARS = 2000;
+
+/** View / edit the learner's note on a submission; saved to the server. */
+function NoteEditor({ submission }: { submission: Submission }) {
+  const { t } = useLocale();
+  const setSubmissionHistory = useProblemStore((s) => s.setSubmissionHistory);
+  const [editing, setEditing] = useState(false);
+  const [draft, setDraft] = useState(submission.note ?? '');
+  const [saving, setSaving] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const note = submission.note ?? '';
+
+  const startEditing = () => {
+    setDraft(note);
+    setError(null);
+    setEditing(true);
+  };
+
+  const save = async () => {
+    if (saving) return;
+    setSaving(true);
+    setError(null);
+    try {
+      const res = await fetch(`/api/submissions/note/${submission.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ note: draft }),
+      });
+      if (!res.ok) throw new Error();
+      const data: { note: string } = await res.json();
+      // Patch the shared list so the note shows up in the overview without a refetch
+      const history = useProblemStore.getState().submissionHistory;
+      setSubmissionHistory(history.map((s) => (s.id === submission.id ? { ...s, note: data.note } : s)));
+      setEditing(false);
+    } catch {
+      setError(t('submissionNoteFailed'));
+    } finally {
+      setSaving(false);
+    }
+  };
+
+  if (!editing) {
+    return note ? (
+      <button
+        type="button"
+        onClick={startEditing}
+        title={t('submissionNoteEdit')}
+        className="w-full flex items-start gap-2 px-2.5 py-2 rounded-lg text-left text-sm text-text-2 cursor-pointer transition-colors hover:bg-[color-mix(in_oklab,var(--text)_4%,transparent)]"
+        style={{ background: 'var(--bg-sunken)' }}
+      >
+        <StickyNote className="w-3.5 h-3.5 mt-0.5 flex-shrink-0 text-text-3" />
+        <span className="flex-1 min-w-0 whitespace-pre-wrap break-words max-h-24 overflow-y-auto">{note}</span>
+        <Pencil className="w-3 h-3 mt-1 flex-shrink-0 text-text-3" />
+      </button>
+    ) : (
+      <button type="button" onClick={startEditing} className={actionClass}>
+        <StickyNote className="w-3.5 h-3.5" />
+        {t('submissionNoteAdd')}
+      </button>
+    );
+  }
+
+  return (
+    <div className="space-y-1.5">
+      <textarea
+        autoFocus
+        value={draft}
+        onChange={(e) => setDraft(e.target.value.slice(0, MAX_NOTE_CHARS))}
+        onKeyDown={(e) => {
+          if (e.key === 'Escape') setEditing(false);
+          // Cmd/Ctrl+Enter saves; stop it reaching the page's run-code shortcut
+          if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+            e.preventDefault();
+            e.stopPropagation();
+            save();
+          }
+        }}
+        rows={3}
+        placeholder={t('submissionNotePlaceholder')}
+        aria-label={t('submissionNoteAdd')}
+        className="w-full rounded-lg px-3 py-2 text-sm text-text outline-none resize-y"
+        style={{ background: 'var(--bg-elev)', border: '1px solid var(--line)' }}
+      />
+      <div className="flex items-center gap-1">
+        {error && <span className="text-xs text-hard mr-auto">{error}</span>}
+        <button type="button" onClick={() => setEditing(false)} className={cn(actionClass, !error && 'ml-auto')}>
+          {t('submissionNoteCancel')}
+        </button>
+        <button type="button" onClick={save} disabled={saving || draft.trim() === note} className={cn(actionClass, 'text-accent hover:text-accent')}>
+          {saving ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <Check className="w-3.5 h-3.5" />}
+          {t('submissionNoteSave')}
+        </button>
+      </div>
     </div>
   );
 }
@@ -198,6 +301,7 @@ function SubmissionDetail({ submission, attempt, time, onBack, showMode }: Submi
             ))}
           </div>
         </div>
+        <NoteEditor submission={submission} />
       </div>
 
       {mode === 'code' ? (

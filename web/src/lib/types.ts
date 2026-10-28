@@ -102,6 +102,7 @@ export interface SubmissionHistory {
   submittedAt: string;
   code: string;
   mode?: CodeMode;
+  note?: string;
 }
 
 export interface AiHelpConfig {

@@ -72,6 +72,9 @@ def _get_db() -> sqlite3.Connection:
     columns = {row[1] for row in conn.execute("PRAGMA table_info(submissions)")}
     if "mode" not in columns:
         conn.execute("ALTER TABLE submissions ADD COLUMN mode TEXT NOT NULL DEFAULT 'core'")
+    # Free-text note the learner attaches to a submission
+    if "note" not in columns:
+        conn.execute("ALTER TABLE submissions ADD COLUMN note TEXT NOT NULL DEFAULT ''")
     conn.commit()
     return conn
 
@@ -358,14 +361,39 @@ def save_progress(request: SaveProgressRequest) -> dict[str, str]:
 def get_submissions(user_id: int, task_id: str) -> list[dict]:
     with _get_db() as conn:
         rows = conn.execute(
-            "SELECT id, passed, exec_time_ms, submitted_at, code, mode FROM submissions "
+            "SELECT id, passed, exec_time_ms, submitted_at, code, mode, note FROM submissions "
             "WHERE user_id = ? AND task_id = ? ORDER BY submitted_at DESC LIMIT 50",
             (user_id, task_id)
         ).fetchall()
     return [
-        {"id": r[0], "passed": bool(r[1]), "execTimeMs": r[2], "submittedAt": r[3], "code": r[4], "mode": r[5]}
+        {"id": r[0], "passed": bool(r[1]), "execTimeMs": r[2], "submittedAt": r[3], "code": r[4], "mode": r[5], "note": r[6]}
         for r in rows
     ]
+
+
+MAX_NOTE_CHARS = 2000
+
+
+class SubmissionNoteRequest(BaseModel):
+    sessionToken: str
+    note: str
+
+
+@app.put("/submissions/{submission_id}/note")
+def set_submission_note(submission_id: int, request: SubmissionNoteRequest) -> dict[str, str]:
+    note = request.note.strip()
+    if len(note) > MAX_NOTE_CHARS:
+        raise HTTPException(status_code=400, detail=f"Note is longer than {MAX_NOTE_CHARS} characters")
+    with _get_db() as conn:
+        # Joining on the session token means a learner can only annotate their own submissions
+        cur = conn.execute(
+            "UPDATE submissions SET note = ? WHERE id = ? AND user_id = "
+            "(SELECT id FROM users WHERE session_token = ?)",
+            (note, submission_id, request.sessionToken),
+        )
+        if cur.rowcount == 0:
+            raise HTTPException(status_code=404, detail="Submission not found")
+    return {"note": note}
 
 
 @app.get("/health")
