@@ -1,5 +1,5 @@
 import { create } from 'zustand';
-import type { SubmissionResult, CustomTest, AiHelpConfig, SubmissionHistory } from '@/lib/types';
+import type { SubmissionResult, CustomTest, AiHelpConfig, AiChatMessage, SubmissionHistory } from '@/lib/types';
 
 interface ProblemStore {
   currentCode: string;
@@ -29,19 +29,19 @@ interface ProblemStore {
   setAiHelpConfig: (patch: Partial<AiHelpConfig>) => void;
   aiHelpConfigOpen: boolean;
   setAiHelpConfigOpen: (value: boolean) => void;
-  aiHelpCustomPrompt: string;
-  setAiHelpCustomPrompt: (value: string) => void;
-  aiHelpResponse: string | null;
-  setAiHelpResponse: (response: string | null) => void;
+  aiHelpMessages: AiChatMessage[];
+  setAiHelpMessages: (update: AiChatMessage[] | ((prev: AiChatMessage[]) => AiChatMessage[])) => void;
   aiHelpError: string | null;
   setAiHelpError: (error: string | null) => void;
   aiHelpLoading: boolean;
   setAiHelpLoading: (value: boolean) => void;
+  aiHelpAbortController: AbortController | null;
+  setAiHelpAbortController: (controller: AbortController | null) => void;
   resetAiHelp: () => void;
   resetTestPanel: () => void;
 }
 
-export const useProblemStore = create<ProblemStore>((set) => ({
+export const useProblemStore = create<ProblemStore>((set, get) => ({
   currentCode: '',
   setCurrentCode: (code) => set({ currentCode: code }),
   submissionResult: null,
@@ -73,19 +73,24 @@ export const useProblemStore = create<ProblemStore>((set) => ({
     baseUrl: '',
     apiKey: '',
     model: '',
-    includeUserCode: false,
+    includeUserCode: true,
   },
   setAiHelpConfig: (patch) => set((s) => ({ aiHelpConfig: { ...s.aiHelpConfig, ...patch } })),
   aiHelpConfigOpen: false,
   setAiHelpConfigOpen: (value) => set({ aiHelpConfigOpen: value }),
-  aiHelpCustomPrompt: '',
-  setAiHelpCustomPrompt: (value) => set({ aiHelpCustomPrompt: value }),
-  aiHelpResponse: null,
-  setAiHelpResponse: (response) => set({ aiHelpResponse: response }),
+  aiHelpMessages: [],
+  setAiHelpMessages: (update) => set((s) => ({
+    aiHelpMessages: typeof update === 'function' ? update(s.aiHelpMessages) : update,
+  })),
   aiHelpError: null,
   setAiHelpError: (error) => set({ aiHelpError: error }),
   aiHelpLoading: false,
   setAiHelpLoading: (value) => set({ aiHelpLoading: value }),
-  resetAiHelp: () => set({ aiHelpResponse: null, aiHelpError: null, aiHelpLoading: false }),
+  aiHelpAbortController: null,
+  setAiHelpAbortController: (controller) => set({ aiHelpAbortController: controller }),
+  resetAiHelp: () => {
+    get().aiHelpAbortController?.abort();
+    set({ aiHelpMessages: [], aiHelpError: null, aiHelpLoading: false, aiHelpAbortController: null });
+  },
   resetTestPanel: () => set({ bottomTab: 'testcases', selectedCaseIndex: 0, customTests: [], runResult: null, submissionHistory: [] }),
 }));
