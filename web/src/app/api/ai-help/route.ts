@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server';
+import { getSolutionCode } from '@/lib/solutions';
 import type { AiHelpRequest } from '@/lib/types';
 
 /* ── env defaults ── */
@@ -88,7 +89,8 @@ function buildSystemPrompt(request: AiHelpRequest) {
     testsText || 'No sample tests available.',
     '',
     '## Reference solution (the learner can also open it in the Solution tab)',
-    request.solutionCode || 'No reference solution available.',
+    // Looked up here rather than sent by the browser, which no longer loads every solution
+    getSolutionCode(request.problemId, isHot100 ? request.mode ?? 'core' : 'core') || 'No reference solution available.',
     '',
     '## Learner\'s current code (latest snapshot; it may have changed since earlier messages)',
     request.userCode === undefined

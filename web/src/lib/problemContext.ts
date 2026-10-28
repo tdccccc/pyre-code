@@ -1,18 +1,14 @@
-import solutionsData from '@/lib/solutions.json';
 import type { CodeMode, Problem } from '@/lib/types';
 
-interface SolutionCell {
+export interface SolutionCell {
   type: string;
   source: string;
   role: string;
 }
 
 /** Reference solution; Hot 100 problems also have a full ACM program for `mode: 'acm'`. */
-export function getSolutionCode(problemId: string, mode: CodeMode = 'core'): string {
-  const data = (solutionsData as Record<string, { cells: SolutionCell[] }>)[problemId];
-  const cells = data?.cells ?? [];
+export function solutionCodeFromCells(cells: SolutionCell[], mode: CodeMode = 'core'): string {
   const role = mode === 'acm' && cells.some((cell) => cell.role === 'solution_acm') ? 'solution_acm' : 'solution';
-
   return cells
     .filter((cell) => cell.role === role)
     .map((cell) => cell.source)

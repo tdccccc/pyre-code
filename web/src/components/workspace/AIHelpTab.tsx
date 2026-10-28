@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/context/LocaleContext';
 import { MarkdownContent } from '@/components/workspace/MarkdownContent';
 import { AI_HELP_QUICK_ACTIONS, HOT100_QUICK_ACTIONS } from '@/lib/aiHelpPrompts';
-import { getSampleTests, getSolutionCode } from '@/lib/problemContext';
+import { getSampleTests } from '@/lib/problemContext';
 import { cn } from '@/lib/utils';
 import { useProblemStore } from '@/store/problemStore';
 import type { Problem, AiChatMessage, AiHelpRequest } from '@/lib/types';
@@ -117,7 +117,6 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
         description: isAcm
           ? `${description}\n\nInput format:\n${problem.acm!.inputEn}\n\nOutput format:\n${problem.acm!.outputEn}`
           : description,
-        solutionCode: getSolutionCode(problem.id, isHot100 ? codeMode : 'core') || '',
         sampleTests: getSampleTests(problem),
         messages: history.map(({ role, content }) => ({ role, content })),
         userCode: config.includeUserCode !== false ? currentCode : undefined,

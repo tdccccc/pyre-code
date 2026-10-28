@@ -3,15 +3,9 @@
 import { CodeEditor } from './CodeEditor';
 import { MarkdownContent } from './MarkdownContent';
 import { useLocale } from '@/context/LocaleContext';
-import solutionsData from '@/lib/solutions.json';
-import { getSolutionCode } from '@/lib/problemContext';
+import { solutionCodeFromCells } from '@/lib/problemContext';
+import { useSolutionCells } from '@/lib/solutionCells';
 import { useProblemStore } from '@/store/problemStore';
-
-interface Cell {
-  type: string;
-  source: string;
-  role: string;
-}
 
 interface SolutionTabProps {
   problemId: string;
@@ -20,14 +14,16 @@ interface SolutionTabProps {
 export function SolutionTab({ problemId }: SolutionTabProps) {
   const { t, locale } = useLocale();
   const codeMode = useProblemStore((s) => s.codeMode);
-  const data = (solutionsData as Record<string, { cells: Cell[] }>)[problemId];
-  const cells = data?.cells ?? [];
+  const cells = useSolutionCells(problemId);
 
+  if (cells === null) {
+    return <div className="p-6 text-sm text-text-3">{t('loadingSolution')}</div>;
+  }
   if (cells.length === 0) {
     return <div className="p-6 text-sm text-text-3">{t('noSolution')}</div>;
   }
 
-  const solutionCode = getSolutionCode(problemId, codeMode);
+  const solutionCode = solutionCodeFromCells(cells, codeMode);
   const demoCode = cells.filter((c) => c.role === 'demo').map((c) => c.source).join('\n\n');
   // Hot 100 ships the explanation in both languages; AI problems only have 'explanation'
   const hasZh = cells.some((c) => c.role === 'explanation_zh');

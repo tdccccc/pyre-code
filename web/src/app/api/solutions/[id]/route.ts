@@ -1,14 +1,14 @@
 import { NextResponse } from 'next/server';
-import solutions from '@/lib/solutions.json';
+import { getSolutionCells } from '@/lib/solutions';
 
 export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const data = (solutions as Record<string, { cells: unknown[] }>)[id];
-  if (!data) {
+  const cells = getSolutionCells(id);
+  if (!cells) {
     return NextResponse.json({ error: 'Solution not found' }, { status: 404 });
   }
-  return NextResponse.json(data);
+  return NextResponse.json({ cells });
 }

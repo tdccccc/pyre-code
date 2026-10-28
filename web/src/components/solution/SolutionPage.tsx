@@ -4,14 +4,8 @@ import Link from 'next/link';
 import { CodeEditor } from '@/components/workspace/CodeEditor';
 import { MarkdownContent } from '@/components/workspace/MarkdownContent';
 import { useLocale } from '@/context/LocaleContext';
-import solutionsData from '@/lib/solutions.json';
-import { getSolutionCode } from '@/lib/problemContext';
-
-interface Cell {
-  type: string;
-  source: string;
-  role: string;
-}
+import { solutionCodeFromCells } from '@/lib/problemContext';
+import { useSolutionCells } from '@/lib/solutionCells';
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
@@ -24,18 +18,22 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 
 interface SolutionPageProps {
   problemId: string;
+  /** Problem list the breadcrumb leads back to (/problems or /hot100) */
+  listHref?: string;
 }
 
-export function SolutionPageContent({ problemId }: SolutionPageProps) {
+export function SolutionPageContent({ problemId, listHref = '/problems' }: SolutionPageProps) {
   const { t, locale } = useLocale();
-  const data = (solutionsData as Record<string, { cells: Cell[] }>)[problemId];
-  const cells = data?.cells ?? [];
+  const cells = useSolutionCells(problemId);
 
+  if (cells === null) {
+    return <p className="text-sm text-text-3 p-6">{t('loadingSolution')}</p>;
+  }
   if (cells.length === 0) {
     return <p className="text-sm text-text-3 p-6">{t('noSolution')}</p>;
   }
 
-  const solutionCode = getSolutionCode(problemId);
+  const solutionCode = solutionCodeFromCells(cells);
   const hasZh = cells.some((c) => c.role === 'explanation_zh');
   const explanations = cells.filter((c) => c.role === (locale === 'zh' && hasZh ? 'explanation_zh' : 'explanation'));
   const demoCode = cells.filter((c) => c.role === 'demo').map((c) => c.source).join('\n\n');
@@ -44,7 +42,9 @@ export function SolutionPageContent({ problemId }: SolutionPageProps) {
     <div>
       {/* Breadcrumbs */}
       <div className="mono text-xs text-text-3 flex items-center gap-1.5 mb-5">
-        <Link href="/problems" className="hover:text-text transition-colors">{t('problems')}</Link>
+        <Link href={listHref} className="hover:text-text transition-colors">
+          {listHref === '/hot100' ? t('hot100') : t('problems')}
+        </Link>
         <span className="opacity-60">/</span>
         <Link href={`/problems/${problemId}`} className="hover:text-text transition-colors">{problemId}</Link>
         <span className="opacity-60">/</span>

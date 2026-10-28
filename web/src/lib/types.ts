@@ -124,7 +124,6 @@ export interface AiHelpRequest {
   problemTitle: string;
   functionName: string;
   description: string;
-  solutionCode: string;
   sampleTests: Array<{ name: string; code: string }>;
   messages: Array<Pick<AiChatMessage, 'role' | 'content'>>;
   userCode?: string;
