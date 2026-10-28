@@ -51,16 +51,14 @@ def test_brute_force_times_out_on_large_input():
     assert "Time Limit Exceeded" in verdicts["Large input"]["error"]
 
 
-# Classic wrong solutions; each must fail somewhere in the hand-written or random cases
-MUTANTS = {
-    "two_sum": "class Solution:\n    def twoSum(self, nums, target):\n        s = {}\n        for i, x in enumerate(nums):\n            s[x] = i\n            if target - x in s:\n                return [s[target - x], i]\n",
-    "group_anagrams": "class Solution:\n    def groupAnagrams(self, strs):\n        g = {}\n        for s in strs:\n            g.setdefault(frozenset(s), []).append(s)\n        return list(g.values())\n",
-    "move_zeroes": "class Solution:\n    def moveZeroes(self, nums):\n        i, j = 0, len(nums) - 1\n        while i < j:\n            if nums[i] == 0:\n                nums[i], nums[j] = nums[j], nums[i]\n                j -= 1\n            else:\n                i += 1\n",
-    "longest_substring_without_repeating": "class Solution:\n    def lengthOfLongestSubstring(self, s):\n        last, start, best = {}, 0, 0\n        for i, ch in enumerate(s):\n            if ch in last:\n                start = last[ch] + 1\n            last[ch] = i\n            best = max(best, i - start + 1)\n        return best\n",
-    "lru_cache": "from collections import OrderedDict\nclass LRUCache:\n    def __init__(self, c):\n        self.c, self.d = c, OrderedDict()\n    def get(self, k):\n        return self.d.get(k, -1)\n    def put(self, k, v):\n        if k in self.d:\n            self.d.move_to_end(k)\n        self.d[k] = v\n        if len(self.d) > self.c:\n            self.d.popitem(last=False)\n",
-    "binary_tree_level_order": "from collections import deque\nclass Solution:\n    def levelOrder(self, root):\n        if not root:\n            return []\n        res, q = [], deque([root])\n        while q:\n            lvl = []\n            for _ in range(len(q)):\n                n = q.popleft()\n                lvl.append(n.val)\n                if n.right: q.append(n.right)\n                if n.left: q.append(n.left)\n            res.append(lvl)\n        return res\n",
-    "coin_change": "class Solution:\n    def coinChange(self, coins, amount):\n        n = 0\n        for c in sorted(coins, reverse=True):\n            n += amount // c\n            amount %= c\n        return n if amount == 0 else -1\n",
-}
+# Classic wrong solutions, one file per task (named like the task); each must fail somewhere
+# in the hand-written or random cases
+MUTANTS_DIR = Path(__file__).parent / "hot100_mutants"
+MUTANTS = {p.stem: p.read_text(encoding="utf-8") for p in MUTANTS_DIR.glob("*.py")}
+
+
+def test_every_task_has_a_mutant():
+    assert sorted(HOT100_TASKS) == sorted(MUTANTS)
 
 
 @pytest.mark.parametrize("task_id", sorted(MUTANTS))
@@ -144,3 +142,87 @@ def test_acm_output_round_trips(type_name, value):
 def test_tree_codec_round_trips():
     values = [1, 2, 3, None, 4, None, 5, 6]
     assert runner.tree_to_array(runner.build_tree(values)) == values
+
+
+# ---------------------------------------------------------------------------
+# Framework types without a shipped problem of their own yet: small synthetic tasks, graded
+# with their reference in both modes
+# ---------------------------------------------------------------------------
+
+def _synthetic(params, returns, solution, cases, **extra):
+    return {"function_name": "f", "params": params, "returns": returns, "solution": solution,
+            "cases": cases, **extra}
+
+
+SYNTHETIC = {
+    "char_grid": _synthetic(
+        [("grid", "char[][]")], "char[][]",
+        "class Solution:\n    def f(self, grid):\n        return [list(r) for r in zip(*grid)]\n",
+        [{"args": [[["1", "0"], ["#", "."]]], "expected": [["1", "#"], ["0", "."]]},
+         {"args": [[["a", "b", "c"]]], "expected": [["a"], ["b"], ["c"]]}],
+    ),
+    "list_of_lists": _synthetic(
+        [("lists", "ListNode[]")], "ListNode",
+        "class Solution:\n    def f(self, lists):\n        vals = []\n        for h in lists:\n"
+        "            while h:\n                vals.append(h.val)\n                h = h.next\n"
+        "        dummy = t = ListNode()\n        for v in sorted(vals):\n            t.next = ListNode(v)\n            t = t.next\n"
+        "        return dummy.next\n",
+        [{"args": [[[1, 4], [], [2, 3]]], "expected": [1, 2, 3, 4]},
+         {"args": [[]], "expected": []}],
+    ),
+    "random_pointers": _synthetic(
+        [("head", "Node")], "Node",
+        "class Solution:\n    def f(self, head):\n        copies = {None: None}\n        n = head\n"
+        "        while n:\n            copies[n] = Node(n.val)\n            n = n.next\n        n = head\n"
+        "        while n:\n            copies[n].next, copies[n].random = copies[n.next], copies[n.random]\n            n = n.next\n"
+        "        return copies[head]\n",
+        [{"args": [[[7, None], [3, 0], [5, 1]]], "expected": [[7, None], [3, 0], [5, 1]]},
+         {"args": [[]], "expected": []}],
+    ),
+    "nullable_answer": _synthetic(
+        [("nums", "int[]")], "int",
+        "class Solution:\n    def f(self, nums):\n        return max(nums) if nums else None\n",
+        [{"args": [[3, 9, 2]], "expected": 9}, {"args": [[]], "expected": None}],
+        output="int?",
+    ),
+    "float_design": {
+        "function_name": "Avg",
+        "design": {"class": "Avg", "init": {}, "methods": {"add": ({"x": "int"}, "void"), "mean": ({}, "float")}},
+        "solution": "class Avg:\n    def __init__(self):\n        self.xs = []\n"
+                    "    def add(self, x):\n        self.xs.append(x)\n    def mean(self):\n        return sum(self.xs) / len(self.xs)\n",
+        "cases": [{"ops": ["Avg", "add", "add", "mean", "add", "mean"], "args": [[], [1], [2], [], [4], []],
+                   "expected": [None, None, None, 1.5, None, 7 / 3]}],
+    },
+}
+
+
+@pytest.mark.parametrize("mode", spec.MODES)
+@pytest.mark.parametrize("name", sorted(SYNTHETIC))
+def test_framework_type_round_trips(name, mode):
+    task = SYNTHETIC[name]
+    code = task["solution"] if mode == "core" else spec.acm_solution(task)
+    result = judge.grade(name, task, code, mode)
+    assert result["allPassed"], [(r["name"], r["error"], r.get("actual")) for r in result["results"]]
+
+
+def test_design_float_output_compares_numerically():
+    task = SYNTHETIC["float_design"]
+    assert judge.grade("float_design", task, "print('1.500000')\nprint(2.3333333)\n", "acm")["allPassed"]
+    assert not judge.grade("float_design", task, "print(1.5)\nprint(2.4)\n", "acm")["allPassed"]
+
+
+def test_custom_checker_accepts_any_valid_answer():
+    # "abcd": every single character is a longest palindrome
+    case = spec.cases_for_mode("longest_palindromic_substring", HOT100_TASKS["longest_palindromic_substring"], "core")
+    index = next(i for i, c in enumerate(case) if c["args"] == ["abcd"])
+    returns_d = "class Solution:\n    def longestPalindrome(self, s):\n        return s[-1]\n"
+    returns_two = "class Solution:\n    def longestPalindrome(self, s):\n        return s[:2]\n"
+    assert _grade("longest_palindromic_substring", returns_d, indices=[index])["allPassed"]
+    assert not _grade("longest_palindromic_substring", returns_two, indices=[index])["allPassed"]
+    assert _grade("longest_palindromic_substring", "print(input()[1])\n", "acm", [index])["allPassed"]
+
+
+def test_finish_hook_rejects_a_copied_node():
+    copy = "class Solution:\n    def getIntersectionNode(self, headA, headB):\n        return ListNode(6)\n"
+    case = _grade("intersection_of_two_linked_lists", copy, indices=[0])["results"][0]
+    assert not case["passed"] and "not in both lists" in case["actual"]

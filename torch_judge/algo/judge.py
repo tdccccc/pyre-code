@@ -125,11 +125,16 @@ def _run_acm_case(program: Path, task: dict, case: dict) -> dict:
 
 def _acm_matches(task: dict, case: dict, stdout: str) -> bool:
     if task.get("design"):
+        # One line per non-void call, parsed by that method's return type (floats compare
+        # numerically, so "2.5" and "2.50000" both match)
         got = [line.strip() for line in stdout.strip().split("\n")] if stdout.strip() else []
-        want = spec.acm_expected_stdout(task, case)
-        return got == (want.split("\n") if want else [])
+        want = spec.design_outputs(task, case)
+        if len(got) != len(want):
+            return False
+        return all(runner.check("approx", runner.parse_acm_output(ret, line), value)
+                   for line, (ret, value) in zip(got, want))
     parsed = runner.parse_acm_output(spec.acm_output_type(task), stdout)
-    return runner.check(task.get("check", "exact"), parsed, case["expected"])
+    return runner.check_answer(spec.runner_spec(task), case["args"], parsed, case["expected"])
 
 
 def grade(task_id: str, task: dict, code: str, mode: str = "core", test_indices: list[int] | None = None) -> dict:

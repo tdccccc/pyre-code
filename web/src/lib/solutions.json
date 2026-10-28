@@ -1032,7 +1032,7 @@
       },
       {
         "type": "code",
-        "source": "import sys\nfrom typing import List, Optional\n\n\nfrom collections import deque\n\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\n\ndef build_tree(tokens):\n    if not tokens or tokens[0] == \"null\":\n        return None\n    root = TreeNode(int(tokens[0]))\n    queue, i = deque([root]), 1\n    while queue and i < len(tokens):\n        node = queue.popleft()\n        if i < len(tokens) and tokens[i] != \"null\":\n            node.left = TreeNode(int(tokens[i]))\n            queue.append(node.left)\n        i += 1\n        if i < len(tokens) and tokens[i] != \"null\":\n            node.right = TreeNode(int(tokens[i]))\n            queue.append(node.right)\n        i += 1\n    return root\n\n\ndef tree_tokens(root):\n    out, queue = [], deque([root])\n    while queue:\n        node = queue.popleft()\n        out.append(str(node.val) if node else \"null\")\n        if node:\n            queue.extend([node.left, node.right])\n    while out and out[-1] == \"null\":\n        out.pop()\n    return out\n\n\nfrom collections import deque\n\n\nclass Solution:\n    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:\n        if not root:\n            return []\n        result, queue = [], deque([root])\n        while queue:\n            level = []\n            for _ in range(len(queue)):\n                node = queue.popleft()\n                level.append(node.val)\n                if node.left:\n                    queue.append(node.left)\n                if node.right:\n                    queue.append(node.right)\n            result.append(level)\n        return result\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    root = build_tree(next(lines).split())\n    ans = Solution().levelOrder(root)\n    for row in ans:\n        print(\" \".join(map(str, row)))\n\n\nif __name__ == \"__main__\":\n    main()",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nfrom collections import deque\n\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\n\ndef build_tree(values):\n    \"\"\"Level-order values, None for a missing node.\"\"\"\n    if not values or values[0] is None:\n        return None\n    root = TreeNode(values[0])\n    queue, i = deque([root]), 1\n    while queue and i < len(values):\n        node = queue.popleft()\n        if i < len(values) and values[i] is not None:\n            node.left = TreeNode(values[i])\n            queue.append(node.left)\n        i += 1\n        if i < len(values) and values[i] is not None:\n            node.right = TreeNode(values[i])\n            queue.append(node.right)\n        i += 1\n    return root\n\n\ndef tree_to_array(root):\n    out, queue = [], deque([root])\n    while queue:\n        node = queue.popleft()\n        out.append(node.val if node else None)\n        if node:\n            queue.extend([node.left, node.right])\n    while out and out[-1] is None:\n        out.pop()\n    return out\n\n\ndef parse_tokens(line):\n    return [None if t == \"null\" else int(t) for t in line.split()]\n\n\ndef format_tokens(values):\n    return \" \".join(\"null\" if v is None else str(v) for v in values)\n\n\nfrom collections import deque\n\n\nclass Solution:\n    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:\n        if not root:\n            return []\n        result, queue = [], deque([root])\n        while queue:\n            level = []\n            for _ in range(len(queue)):\n                node = queue.popleft()\n                level.append(node.val)\n                if node.left:\n                    queue.append(node.left)\n                if node.right:\n                    queue.append(node.right)\n            result.append(level)\n        return result\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    root = build_tree(parse_tokens(next(lines)))\n    ans = Solution().levelOrder(root)\n    for row in ans:\n        print(\" \".join(map(str, row)))\n\n\nif __name__ == \"__main__\":\n    main()",
         "role": "solution_acm"
       },
       {
@@ -1095,6 +1095,54 @@
       }
     ]
   },
+  "intersection_of_two_linked_lists": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class Solution:\n    def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> Optional[ListNode]:\n        a, b = headA, headB\n        # Each pointer walks both lists once; they meet at the junction or at None\n        while a is not b:\n            a = a.next if a else headB\n            b = b.next if b else headA\n        return a",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\n\ndef build_list(values):\n    dummy = tail = ListNode()\n    for v in values:\n        tail.next = ListNode(v)\n        tail = tail.next\n    return dummy.next\n\n\ndef list_to_array(head):\n    out = []\n    while head:\n        out.append(head.val)\n        head = head.next\n    return out\n\n\ndef prepare(args):\n    values_a, values_b, skip_a, skip_b = args\n    head_a = build_list(values_a)\n    shared = head_a\n    for _ in range(skip_a):\n        shared = shared.next\n    head_b = build_list(values_b[:skip_b])\n    if head_b is None:\n        return [head_a, shared]\n    tail = head_b\n    while tail.next:\n        tail = tail.next\n    tail.next = shared\n    return [head_a, head_b]\n\n\ndef finish(result, args):\n    if result is None:\n        return None\n    # It must be a node of both lists, not a copy that merely has the same value\n    for head in args:\n        node = head\n        while node is not None and node is not result:\n            node = node.next\n        if node is None:\n            return \"a node that is not in both lists\"\n    return result.val\n\n\nclass Solution:\n    def getIntersectionNode(self, headA: ListNode, headB: ListNode) -> Optional[ListNode]:\n        a, b = headA, headB\n        # Each pointer walks both lists once; they meet at the junction or at None\n        while a is not b:\n            a = a.next if a else headB\n            b = b.next if b else headA\n        return a\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    next(lines)  # length of listA\n    listA = list(map(int, next(lines).split()))\n    next(lines)  # length of listB\n    listB = list(map(int, next(lines).split()))\n    skipA = int(next(lines))\n    skipB = int(next(lines))\n    args = prepare([listA, listB, skipA, skipB])\n    ans = Solution().getIntersectionNode(*args)\n    ans = finish(ans, args)\n    print(\"null\" if ans is None else ans)\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "Two pointers that switch lists. Say A has `x` nodes before the junction, B has `y`, and the shared tail has `z`. Pointer `a` walks A and then B; pointer `b` walks B and then A. After `x + z + y` steps both have reached the junction, because each has covered its own private part, the shared part and the other private part. With no junction (`z = 0`) both reach `None` after `x + y` steps, so the loop ends either way.\n\nTime O(m + n), space O(1). A hash set of A's nodes also works in O(m) space.",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "交换链表的双指针。设 A 在交点前有 `x` 个节点，B 有 `y` 个，共享部分有 `z` 个。指针 `a` 先走 A 再走 B，指针 `b` 先走 B 再走 A。走了 `x + z + y` 步后两者都到达交点，因为各自都走完了自己的独有部分、共享部分和对方的独有部分。没有交点（`z = 0`）时，两者在 `x + y` 步后同时到达 `None`，所以循环一定会结束。\n\n时间 O(m + n)，空间 O(1)。也可以用哈希集合存下 A 的所有节点，空间 O(m)。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
+  "longest_palindromic_substring": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class Solution:\n    def longestPalindrome(self, s: str) -> str:\n        start, length = 0, 1\n        # 2n - 1 centers: index c // 2 for odd lengths, the gap after it for even ones\n        for center in range(2 * len(s) - 1):\n            lo, hi = center // 2, (center + 1) // 2\n            while lo >= 0 and hi < len(s) and s[lo] == s[hi]:\n                lo, hi = lo - 1, hi + 1\n            if hi - lo - 1 > length:\n                start, length = lo + 1, hi - lo - 1\n        return s[start:start + length]",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass Solution:\n    def longestPalindrome(self, s: str) -> str:\n        start, length = 0, 1\n        # 2n - 1 centers: index c // 2 for odd lengths, the gap after it for even ones\n        for center in range(2 * len(s) - 1):\n            lo, hi = center // 2, (center + 1) // 2\n            while lo >= 0 and hi < len(s) and s[lo] == s[hi]:\n                lo, hi = lo - 1, hi + 1\n            if hi - lo - 1 > length:\n                start, length = lo + 1, hi - lo - 1\n        return s[start:start + length]\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    s = next(lines)\n    ans = Solution().longestPalindrome(s)\n    print(ans)\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "Expand around centers. A palindrome is determined by its center and radius, and there are `2n - 1` centers: each character (odd lengths) and each gap between neighbours (even lengths). From each center, grow outwards while the two ends match; the stretch reached is the longest palindrome with that center. Keep the best over all centers.\n\nThe interval DP `dp[i][j] = s[i] == s[j] and dp[i+1][j-1]` is the same O(n²) idea with O(n²) memory; Manacher's algorithm gets O(n).\n\nTime O(n²), space O(1).",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "中心扩展法。回文串由中心和半径确定，一共有 `2n - 1` 个中心：每个字符（奇数长度）和每两个相邻字符之间的空隙（偶数长度）。从每个中心向两边扩展，只要两端字符相同就继续，得到的就是以该中心为中心的最长回文串。所有中心中取最长的。\n\n区间 DP `dp[i][j] = s[i] == s[j] and dp[i+1][j-1]` 是同样的 O(n²) 思路，但要 O(n²) 空间；Manacher 算法可以做到 O(n)。\n\n时间 O(n²)，空间 O(1)。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
   "longest_substring_without_repeating": {
     "cells": [
       {
@@ -1143,6 +1191,30 @@
       }
     ]
   },
+  "min_stack": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class MinStack:\n\n    def __init__(self):\n        self.stack = []  # (value, minimum of the stack up to and including it)\n\n    def push(self, val: int) -> None:\n        low = min(val, self.stack[-1][1]) if self.stack else val\n        self.stack.append((val, low))\n\n    def pop(self) -> None:\n        self.stack.pop()\n\n    def top(self) -> int:\n        return self.stack[-1][0]\n\n    def getMin(self) -> int:\n        return self.stack[-1][1]",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass MinStack:\n\n    def __init__(self):\n        self.stack = []  # (value, minimum of the stack up to and including it)\n\n    def push(self, val: int) -> None:\n        low = min(val, self.stack[-1][1]) if self.stack else val\n        self.stack.append((val, low))\n\n    def pop(self) -> None:\n        self.stack.pop()\n\n    def top(self) -> int:\n        return self.stack[-1][0]\n\n    def getMin(self) -> int:\n        return self.stack[-1][1]\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    q = int(next(lines))\n    obj = None\n    for _ in range(q):\n        op, *args = next(lines).split()\n        if op == \"MinStack\":\n            obj = MinStack()\n        elif op == \"push\":\n            obj.push(int(args[0]))\n        elif op == \"pop\":\n            obj.pop()\n        elif op == \"top\":\n            print(obj.top())\n        elif op == \"getMin\":\n            print(obj.getMin())\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "Store pairs `(value, running minimum)`. When a value is pushed, the minimum of the stack becomes `min(value, previous minimum)`, which only depends on the pair below it. Popping removes the pair, and the pair underneath still holds the correct minimum for the smaller stack, so nothing needs recomputing.\n\nTime O(1) per operation, space O(n). A second stack that only records new minimums (pushing on `<=`, so duplicates are kept) saves memory when the minimum rarely changes.",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "栈里存 `(值, 当前最小值)` 二元组。压入一个值时，栈的最小值变为 `min(值, 之前的最小值)`，只依赖它下面那一个二元组。弹出时移除这个二元组，下面的二元组记录的仍是更小的栈的正确最小值，无需重新计算。\n\n每次操作时间 O(1)，空间 O(n)。也可以用一个辅助栈只记录新的最小值（在 `<=` 时压入，以保留重复的最小值），在最小值很少变化时更省内存。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
   "move_zeroes": {
     "cells": [
       {
@@ -1176,7 +1248,7 @@
       },
       {
         "type": "code",
-        "source": "import sys\nfrom typing import List, Optional\n\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\n\ndef build_list(values):\n    dummy = tail = ListNode()\n    for v in values:\n        tail.next = ListNode(v)\n        tail = tail.next\n    return dummy.next\n\n\ndef list_values(head):\n    out = []\n    while head:\n        out.append(head.val)\n        head = head.next\n    return out\n\n\nclass Solution:\n    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        prev, cur = None, head\n        while cur:\n            nxt = cur.next\n            cur.next = prev\n            prev, cur = cur, nxt\n        return prev\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    next(lines)  # number of nodes\n    head = build_list(list(map(int, next(lines).split())))\n    ans = Solution().reverseList(head)\n    print(\" \".join(map(str, list_values(ans))))\n\n\nif __name__ == \"__main__\":\n    main()",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\n\ndef build_list(values):\n    dummy = tail = ListNode()\n    for v in values:\n        tail.next = ListNode(v)\n        tail = tail.next\n    return dummy.next\n\n\ndef list_to_array(head):\n    out = []\n    while head:\n        out.append(head.val)\n        head = head.next\n    return out\n\n\nclass Solution:\n    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        prev, cur = None, head\n        while cur:\n            nxt = cur.next\n            cur.next = prev\n            prev, cur = cur, nxt\n        return prev\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    next(lines)  # number of nodes\n    head = build_list(list(map(int, next(lines).split())))\n    ans = Solution().reverseList(head)\n    print(\" \".join(map(str, list_to_array(ans))))\n\n\nif __name__ == \"__main__\":\n    main()",
         "role": "solution_acm"
       },
       {

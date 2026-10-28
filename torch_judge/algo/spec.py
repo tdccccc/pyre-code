@@ -40,8 +40,9 @@ MODES = ("core", "acm")
 _PY_HINTS = {
     "int": "int", "float": "float", "bool": "bool", "str": "str",
     "int[]": "List[int]", "int[][]": "List[List[int]]",
-    "str[]": "List[str]", "str[][]": "List[List[str]]",
-    "ListNode": "Optional[ListNode]", "TreeNode": "Optional[TreeNode]",
+    "str[]": "List[str]", "str[][]": "List[List[str]]", "char[][]": "List[List[str]]",
+    "ListNode": "Optional[ListNode]", "ListNode[]": "List[Optional[ListNode]]",
+    "TreeNode": "Optional[TreeNode]", "Node": "Optional[Node]",
     "void": "None",
 }
 
@@ -60,12 +61,25 @@ TREENODE_COMMENT = """# Definition for a binary tree node.
 #         self.right = right
 """
 
+NODE_COMMENT = """# Definition for a Node.
+# class Node:
+#     def __init__(self, x: int, next: 'Node' = None, random: 'Node' = None):
+#         self.val = int(x)
+#         self.next = next
+#         self.random = random
+"""
+
 
 def sort_key(task: dict) -> tuple[int, int]:
     return CATEGORY_INDEX[task["category"]], task["leetcode_id"]
 
 
-def _types_used(task: dict) -> set[str]:
+def _node_kinds(types: set[str]) -> set[str]:
+    """ListNode / TreeNode / Node among the given type names (``ListNode[]`` counts as ListNode)."""
+    return {kind for kind in ("ListNode", "TreeNode", "Node") if any(t.rstrip("[]") == kind for t in types)}
+
+
+def _signature_types(task: dict) -> set[str]:
     if task.get("design"):
         design = task["design"]
         types = set(design["init"].values())
@@ -75,20 +89,37 @@ def _types_used(task: dict) -> set[str]:
     return {t for _, t in task["params"]} | {task["returns"]}
 
 
+def _types_used(task: dict) -> set[str]:
+    if task.get("design"):
+        return _signature_types(task)
+    return _signature_types(task) | {t for _, t in inputs(task)} | {acm_output_type(task)}
+
+
+def inputs(task: dict) -> list:
+    """The plain data a case's ``args`` hold, as (name, type). Same as ``params`` unless the
+    task builds the method's arguments itself with a ``prepare`` hook."""
+    return task.get("inputs") or task["params"]
+
+
 def _spec(task: dict) -> dict:
     """The subset of the task the core-mode runner needs."""
     if task.get("design"):
         design = task["design"]
+        returns_float = any(ret == "float" for _, ret in design["methods"].values())
         return {"design": {
             "class": design["class"],
             "methods": {name: [list(params.values()), ret] for name, (params, ret) in design["methods"].items()},
-        }, "check": "exact"}
+        }, "check": "approx" if returns_float else "exact"}
     return {
         "function_name": task["function_name"],
         "params": [list(p) for p in task["params"]],
+        "inputs": [list(p) for p in inputs(task)],
         "returns": task["returns"],
         "inplace": task.get("inplace"),
+        "prepare": task.get("prepare"),
+        "finish": task.get("finish"),
         "check": task.get("check", "exact"),
+        "checker": task.get("checker"),
     }
 
 
@@ -145,12 +176,15 @@ def acm_stdin(task: dict, case: dict) -> str:
             lines.append(" ".join([op] + [runner._scalar_text(a) for a in args]))
         return "\n".join(lines) + "\n"
     lines: list[str] = []
-    for (_, type_name), arg in zip(task["params"], case["args"]):
+    for (_, type_name), arg in zip(inputs(task), case["args"]):
         lines.extend(runner.acm_input_lines(type_name, arg))
     return "\n".join(lines) + "\n"
 
 
 def acm_output_type(task: dict) -> str:
+    """Type of the plain answer: ``output`` when a ``finish`` hook converts the result."""
+    if task.get("output"):
+        return task["output"]
     if task.get("inplace"):
         return dict(task["params"])[task["inplace"]]
     return task["returns"]
@@ -163,9 +197,14 @@ def acm_expected_stdout(task: dict, case: dict) -> str:
 
 
 def _design_outputs(task: dict, case: dict) -> list:
+    return [value for _, value in design_outputs(task, case)]
+
+
+def design_outputs(task: dict, case: dict) -> list[tuple[str, object]]:
+    """(return type, expected value) of every non-void call, in order."""
     methods = task["design"]["methods"]
     return [
-        value for op, value in zip(case["ops"][1:], case["expected"][1:])
+        (methods[op][1], value) for op, value in zip(case["ops"][1:], case["expected"][1:])
         if methods[op][1] != "void"
     ]
 
@@ -175,7 +214,7 @@ def display_input(task: dict, case: dict, mode: str) -> str:
         return runner._clip(acm_stdin(task, case).rstrip("\n"))
     if task.get("design"):
         return runner._clip(f"{runner.show(case['ops'])}\n{runner.show(case['args'])}")
-    return runner.show_args(task["params"], case["args"])
+    return runner.show_args(inputs(task), case["args"])
 
 
 def display_expected(task: dict, case: dict, mode: str) -> str:
@@ -195,12 +234,14 @@ def _signature(name: str, params: dict | list, ret: str | None) -> str:
 
 
 def core_starter(task: dict) -> str:
-    types = _types_used(task)
+    kinds = _node_kinds(_signature_types(task))
     parts = ["from typing import List, Optional\n"]
-    if "ListNode" in types:
+    if "ListNode" in kinds:
         parts.append(LISTNODE_COMMENT)
-    if "TreeNode" in types:
+    if "TreeNode" in kinds:
         parts.append(TREENODE_COMMENT)
+    if "Node" in kinds:
+        parts.append(NODE_COMMENT)
     if task.get("design"):
         design = task["design"]
         body = [f"class {design['class']}:", "", f"    {_signature('__init__', design['init'], None)}", "        pass"]
@@ -254,10 +295,28 @@ def _input_lines(name: str, type_name: str) -> list[tuple[str, str, bool]]:
             (f"an integer m, the number of rows of `{name}`", f"整数 m，表示 `{name}` 的行数", True),
             (f"the next m lines: one row of `{name}` each, space-separated", f"接下来 m 行：每行是 `{name}` 的一行，以空格分隔", False),
         ]
+    if type_name == "char[][]":
+        return [
+            (f"an integer m, the number of rows of `{name}`", f"整数 m，表示 `{name}` 的行数", True),
+            (f"the next m lines: one row of `{name}` each, its characters written together without spaces",
+             f"接下来 m 行：每行是 `{name}` 的一行，字符之间没有空格", False),
+        ]
     if type_name == "str[]":
         return [
             (f"an integer n, the length of `{name}`", f"整数 n，表示 `{name}` 的长度", True),
             (f"the next n lines: one string of `{name}` each", f"接下来 n 行：每行是 `{name}` 中的一个字符串", False),
+        ]
+    if type_name == "ListNode[]":
+        return [
+            (f"an integer k, the number of linked lists in `{name}`", f"整数 k，表示 `{name}` 中链表的个数", True),
+            ("the next 2k lines: for each list, its node count n on one line and its n values, head to tail, on the next",
+             "接下来 2k 行：每个链表占两行，第一行是节点数 n，第二行是从头到尾的 n 个值，以空格分隔", False),
+        ]
+    if type_name == "Node":
+        return [
+            (f"an integer n, the number of nodes in `{name}`", f"整数 n，表示链表 `{name}` 的节点数", True),
+            ("the next n lines: one node each, head to tail: its value and the index its random pointer points to (`null` for none)",
+             "接下来 n 行：从头到尾每行一个节点，写出它的值和 random 指针指向的节点下标（为空写 `null`）", False),
         ]
     if type_name == "TreeNode":
         return [(
@@ -297,11 +356,16 @@ _OUTPUT_DESC = {
     "int[][]": ("one inner list per line, space-separated", "若干行，每行一个子列表，元素以空格分隔"),
     "str[][]": ("one group per line, strings space-separated", "若干行，每行一组，字符串以空格分隔"),
     "str[]": ("one string per line", "若干行，每行一个字符串"),
+    "char[][]": ("one row per line, characters written together without spaces", "若干行，每行是网格的一行，字符之间没有空格"),
+    "Node": ("one node per line, head to tail: its value and the index its random pointer points to (`null` for none)",
+             "若干行，从头到尾每行一个节点：它的值和 random 指针指向的节点下标（为空写 `null`）"),
 }
 
 _CHECK_NOTE = {
     "unordered": ("Elements may be printed in any order.", "元素可以按任意顺序输出。"),
-    "unordered_nested": ("Groups, and the strings within a group, may be in any order.", "组与组之间、组内元素的顺序均不限。"),
+    "unordered_nested": ("Groups, and the elements within a group, may be in any order.", "组与组之间、组内元素的顺序均不限。"),
+    "custom": ("If several answers are valid, print any one of them.", "答案不唯一时，输出任意一个正确答案即可。"),
+    "float": ("Answers within 1e-5 of the expected value are accepted.", "与标准答案相差不超过 1e-5 即视为正确。"),
 }
 
 
@@ -323,16 +387,22 @@ def acm_format(task: dict) -> dict[str, str]:
             f"- 第一个操作总是 `{construct}`，其余操作为 {ops} 之一",
         ])
         names = ", ".join(f"`{n}`" for n in returning)
-        return {
-            "inputEn": input_en,
-            "inputZh": input_zh,
-            "outputEn": f"For every {names} call, in order, print its return value on its own line.",
-            "outputZh": f"对每次 {names} 调用，按顺序各输出一行返回值。",
-        }
+        output_en = f"For every {names} call, in order, print its return value on its own line."
+        output_zh = f"对每次 {names} 调用，按顺序各输出一行返回值。"
+        if any(ret == "bool" for _, ret in design["methods"].values()):
+            output_en += " Print booleans as `true` / `false`."
+            output_zh += "布尔值输出 `true` / `false`。"
+        if any(ret == "float" for _, ret in design["methods"].values()):
+            output_en += f" {_CHECK_NOTE['float'][0]}"
+            output_zh += _CHECK_NOTE["float"][1]
+        return {"inputEn": input_en, "inputZh": input_zh, "outputEn": output_en, "outputZh": output_zh}
 
-    entries = [line for name, t in task["params"] for line in _input_lines(name, t)]
+    entries = [line for name, t in inputs(task) for line in _input_lines(name, t)]
     input_en, input_zh = _number_lines(entries)
-    out_en, out_zh = _OUTPUT_DESC[acm_output_type(task)]
+    out_type = acm_output_type(task)
+    out_en, out_zh = _OUTPUT_DESC[out_type.rstrip("?")]
+    if out_type.endswith("?"):
+        out_en, out_zh = f"{out_en}, or `null` if there is none", f"{out_zh}；不存在时输出 `null`"
     if task.get("inplace"):
         out_en = f"`{task['inplace']}` after the operation, as {out_en}"
         out_zh = f"操作完成后的 `{task['inplace']}`，格式为{out_zh}"
@@ -367,7 +437,7 @@ def build_list(values):
     return dummy.next
 
 
-def list_values(head):
+def list_to_array(head):
     out = []
     while head:
         out.append(head.val)
@@ -384,34 +454,67 @@ class TreeNode:
         self.right = right
 
 
-def build_tree(tokens):
-    if not tokens or tokens[0] == "null":
+def build_tree(values):
+    """Level-order values, None for a missing node."""
+    if not values or values[0] is None:
         return None
-    root = TreeNode(int(tokens[0]))
+    root = TreeNode(values[0])
     queue, i = deque([root]), 1
-    while queue and i < len(tokens):
+    while queue and i < len(values):
         node = queue.popleft()
-        if i < len(tokens) and tokens[i] != "null":
-            node.left = TreeNode(int(tokens[i]))
+        if i < len(values) and values[i] is not None:
+            node.left = TreeNode(values[i])
             queue.append(node.left)
         i += 1
-        if i < len(tokens) and tokens[i] != "null":
-            node.right = TreeNode(int(tokens[i]))
+        if i < len(values) and values[i] is not None:
+            node.right = TreeNode(values[i])
             queue.append(node.right)
         i += 1
     return root
 
 
-def tree_tokens(root):
+def tree_to_array(root):
     out, queue = [], deque([root])
     while queue:
         node = queue.popleft()
-        out.append(str(node.val) if node else "null")
+        out.append(node.val if node else None)
         if node:
             queue.extend([node.left, node.right])
-    while out and out[-1] == "null":
+    while out and out[-1] is None:
         out.pop()
     return out
+''',
+    "Node": '''class Node:
+    def __init__(self, x, next=None, random=None):
+        self.val = int(x)
+        self.next = next
+        self.random = random
+
+
+def build_random_list(pairs):
+    nodes = [Node(val) for val, _ in pairs]
+    for i, (_, rand) in enumerate(pairs):
+        if i + 1 < len(nodes):
+            nodes[i].next = nodes[i + 1]
+        nodes[i].random = None if rand is None else nodes[rand]
+    return nodes[0] if nodes else None
+
+
+def random_list_to_array(head):
+    nodes = []
+    while head:
+        nodes.append(head)
+        head = head.next
+    index = {id(n): i for i, n in enumerate(nodes)}
+    return [[n.val, None if n.random is None else index[id(n.random)]] for n in nodes]
+''',
+    # Lines with `null` tokens (trees, random-pointer lists)
+    "tokens": '''def parse_tokens(line):
+    return [None if t == "null" else int(t) for t in line.split()]
+
+
+def format_tokens(values):
+    return " ".join("null" if v is None else str(v) for v in values)
 ''',
 }
 
@@ -431,14 +534,28 @@ def _read_stmt(name: str, type_name: str) -> list[str]:
         return [f"next(lines)  # number of nodes", f"{name} = build_list(list(map(int, next(lines).split())))"]
     if type_name == "int[][]":
         return ["m = int(next(lines))", f"{name} = [list(map(int, next(lines).split())) for _ in range(m)]"]
+    if type_name == "char[][]":
+        return ["m = int(next(lines))", f"{name} = [list(next(lines).strip()) for _ in range(m)]"]
     if type_name == "str[]":
         return ["n = int(next(lines))", f"{name} = [next(lines) for _ in range(n)]"]
+    if type_name == "ListNode[]":
+        return [
+            "k = int(next(lines))",
+            f"{name} = []",
+            "for _ in range(k):",
+            "    next(lines)  # number of nodes",
+            f"    {name}.append(build_list(list(map(int, next(lines).split()))))",
+        ]
     if type_name == "TreeNode":
-        return [f"{name} = build_tree(next(lines).split())"]
+        return [f"{name} = build_tree(parse_tokens(next(lines)))"]
+    if type_name == "Node":
+        return ["n = int(next(lines))", f"{name} = build_random_list([parse_tokens(next(lines)) for _ in range(n)])"]
     raise NotImplementedError(type_name)
 
 
 def _print_stmt(expr: str, type_name: str) -> list[str]:
+    if type_name.endswith("?"):
+        return [f'print("null" if {expr} is None else {expr})']
     if type_name in ("int", "float", "str"):
         return [f"print({expr})"]
     if type_name == "bool":
@@ -446,11 +563,15 @@ def _print_stmt(expr: str, type_name: str) -> list[str]:
     if type_name == "int[]":
         return [f'print(" ".join(map(str, {expr})))']
     if type_name == "ListNode":
-        return [f'print(" ".join(map(str, list_values({expr}))))']
+        return [f'print(" ".join(map(str, list_to_array({expr}))))']
     if type_name == "TreeNode":
-        return [f'print(" ".join(tree_tokens({expr})))']
+        return [f"print(format_tokens(tree_to_array({expr})))"]
     if type_name in ("int[][]", "str[][]"):
         return [f"for row in {expr}:", '    print(" ".join(map(str, row)))']
+    if type_name == "char[][]":
+        return [f"for row in {expr}:", '    print("".join(row))']
+    if type_name == "Node":
+        return [f"for row in random_list_to_array({expr}):", "    print(format_tokens(row))"]
     if type_name == "str[]":
         return [f"for item in {expr}:", "    print(item)"]
     raise NotImplementedError(type_name)
@@ -460,9 +581,13 @@ _CAST = {"int": "int({})", "float": "float({})", "str": "{}", "bool": '{} == "tr
 
 
 def acm_solution(task: dict) -> str:
-    types = _types_used(task)
+    kinds = _node_kinds(_types_used(task))
+    if kinds & {"TreeNode", "Node"}:
+        kinds.add("tokens")
     header = ["import sys", "from typing import List, Optional", ""]
-    helpers = [_HELPERS[t] for t in ("ListNode", "TreeNode") if t in types]
+    helpers = [_HELPERS[t] for t in ("ListNode", "TreeNode", "Node", "tokens") if t in kinds]
+    # Hooks use the same helper names as in the runner, so they run here unchanged
+    hooks = [task[k].strip() + "\n" for k in ("prepare", "finish") if task.get(k)]
     core = task["solution"].strip()
 
     body = ["def main():", '    lines = iter(sys.stdin.read().split("\\n"))']
@@ -481,18 +606,28 @@ def acm_solution(task: dict) -> str:
             else:
                 body += [f"            {s}" for s in _print_stmt(f"obj.{name}({call_args})", ret)]
     else:
-        for name, type_name in task["params"]:
+        for name, type_name in inputs(task):
             body += [f"    {s}" for s in _read_stmt(name, type_name)]
-        call = f"Solution().{task['function_name']}({', '.join(n for n, _ in task['params'])})"
+        names = ", ".join(n for n, _ in inputs(task))
+        method = f"Solution().{task['function_name']}"
+        if task.get("prepare"):
+            body.append(f"    args = prepare([{names}])")
+            call = f"{method}(*args)"
+        else:
+            if task.get("finish"):
+                body.append(f"    args = [{names}]")
+            call = f"{method}({names})"
         if task.get("inplace"):
             body.append(f"    {call}")
             body += [f"    {s}" for s in _print_stmt(task["inplace"], acm_output_type(task))]
         else:
             body.append(f"    ans = {call}")
-            body += [f"    {s}" for s in _print_stmt("ans", task["returns"])]
+            if task.get("finish"):
+                body.append("    ans = finish(ans, args)")
+            body += [f"    {s}" for s in _print_stmt("ans", acm_output_type(task))]
 
     footer = ["", "", 'if __name__ == "__main__":', "    main()", ""]
-    sections = ["\n".join(header)] + helpers + [core, "\n".join(body)]
+    sections = ["\n".join(header)] + helpers + hooks + [core, "\n".join(body)]
     return "\n\n".join(s.rstrip("\n") + "\n" for s in sections).rstrip("\n") + "\n" + "\n".join(footer)
 
 

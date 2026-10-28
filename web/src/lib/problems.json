@@ -2978,7 +2978,7 @@
       "acm": {
         "inputEn": "- Line 1: an integer n, the length of `strs`\n- The next n lines: one string of `strs` each",
         "inputZh": "- 第 1 行：整数 n，表示 `strs` 的长度\n- 接下来 n 行：每行是 `strs` 中的一个字符串",
-        "outputEn": "Print one group per line, strings space-separated. Groups, and the strings within a group, may be in any order.",
+        "outputEn": "Print one group per line, strings space-separated. Groups, and the elements within a group, may be in any order.",
         "outputZh": "输出若干行，每行一组，字符串以空格分隔。组与组之间、组内元素的顺序均不限。"
       },
       "cases": {
@@ -4524,6 +4524,427 @@
       }
     },
     {
+      "id": "intersection_of_two_linked_lists",
+      "title": "Intersection of Two Linked Lists",
+      "titleZh": "相交链表",
+      "difficulty": "Easy",
+      "functionName": "getIntersectionNode",
+      "hint": "Let pointer a walk A then B, and pointer b walk B then A. Both cover the same total length, so they arrive at the first shared node together (or at the end, None, together).",
+      "hintZh": "让指针 a 先走 A 再走 B，指针 b 先走 B 再走 A。两者走过的总长度相同，所以会同时到达第一个共享节点（没有交点时同时走到末尾 None）。",
+      "descriptionEn": "Two singly linked lists `headA` and `headB` may merge: from some node on, they continue through the very same nodes to the end. Return the first node the two lists share, or `null` if they share none.\n\nThe lists have no cycles, and they must keep their original structure after the function returns.\n\n**How the tests describe a case:** `listA` and `listB` are the values of the two lists; the first `skipA` nodes of A and the first `skipB` nodes of B belong to one list only, and everything after them is shared. The expected answer is the value of the first shared node. Sharing is by node, not by value: two separate nodes holding equal values are not an intersection.\n\n**Example 1:** `listA = [3,9,6,2], listB = [5,6,2], skipA = 2, skipB = 1` → `6` (both lists end with the same nodes `6 → 2`)\n\n**Example 2:** `listA = [1,4], listB = [7], skipA = 2, skipB = 1` → `null`\n\n**Constraints:**\n- `1 <= listA.length, listB.length <= 3 * 10^4`\n- `1 <= Node.val <= 10^5`\n- `0 <= skipA <= listA.length`, `0 <= skipB <= listB.length`\n- `skipA == listA.length` exactly when `skipB == listB.length` (no shared part)\n\n**Follow-up:** can you solve it in O(m + n) time with O(1) extra space?",
+      "descriptionZh": "两个单链表 `headA` 和 `headB` 可能会相交：从某个节点开始，它们经过完全相同的节点一直走到末尾。返回两个链表共有的第一个节点；如果没有，返回 `null`。\n\n链表中没有环，函数返回后两个链表必须保持原来的结构。\n\n**用例的表示方式：** `listA` 和 `listB` 是两个链表的值；A 的前 `skipA` 个节点和 B 的前 `skipB` 个节点只属于各自的链表，之后的部分是共享的。期望答案是第一个共享节点的值。共享指的是同一个节点，而不是值相等：两个值相同的不同节点不算相交。\n\n**示例 1：** `listA = [3,9,6,2], listB = [5,6,2], skipA = 2, skipB = 1` → `6`（两个链表都以同样的节点 `6 → 2` 结尾）\n\n**示例 2：** `listA = [1,4], listB = [7], skipA = 2, skipB = 1` → `null`\n\n**约束：**\n- `1 <= listA.length, listB.length <= 3 * 10^4`\n- `1 <= Node.val <= 10^5`\n- `0 <= skipA <= listA.length`，`0 <= skipB <= listB.length`\n- `skipA == listA.length` 当且仅当 `skipB == listB.length`（此时没有共享部分）\n\n**进阶：** 你能用 O(m + n) 时间、O(1) 额外空间解决吗？",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: listA = [3,9,6,2], listB = [5,6,2], skipA = 2, skipB = 1\nExpected: 6"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: listA = [1,4], listB = [7], skipA = 2, skipB = 1\nExpected: null"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: listA = [4,1,8,4,5], listB = [5,6,1,8,4,5], skipA = 2, skipB = 3\nExpected: 8"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: listA = [2,6,4], listB = [1,5], skipA = 3, skipB = 2\nExpected: null"
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: listA = [8,3,5], listB = [3,5], skipA = 1, skipB = 0\nExpected: 3"
+        },
+        {
+          "name": "Case 6",
+          "code": "Input: listA = [7], listB = [7], skipA = 0, skipB = 0\nExpected: 7"
+        },
+        {
+          "name": "Case 7",
+          "code": "Input: listA = [1,2,3,4,5,6,7], listB = [9,7], skipA = 6, skipB = 1\nExpected: 7"
+        },
+        {
+          "name": "Random 1",
+          "code": "Input: listA = [93,32], listB = [57,30,89,32], skipA = 1, skipB = 3\nExpected: 32"
+        },
+        {
+          "name": "Random 2",
+          "code": "Input: listA = [57,76,49], listB = [79], skipA = 3, skipB = 1\nExpected: null"
+        },
+        {
+          "name": "Random 3",
+          "code": "Input: listA = [65,39,99], listB = [28,21,99], skipA = 2, skipB = 2\nExpected: 99"
+        },
+        {
+          "name": "Random 4",
+          "code": "Input: listA = [80,63,29,98,38,90,42,77], listB = [60,38,90,42,77], skipA = 4, skipB = 1\nExpected: 38"
+        },
+        {
+          "name": "Random 5",
+          "code": "Input: listA = [8,71,80,72,48,15,38], listB = [79,98,93,48,15,38], skipA = 4, skipB = 3\nExpected: 48"
+        },
+        {
+          "name": "Random 6",
+          "code": "Input: listA = [9,12,80,97,49,33], listB = [50,49,33], skipA = 4, skipB = 1\nExpected: 49"
+        },
+        {
+          "name": "Random 7",
+          "code": "Input: listA = [], listB = [20,47,34,32], skipA = 0, skipB = 4\nExpected: null"
+        },
+        {
+          "name": "Random 8",
+          "code": "Input: listA = [52,99,92,86], listB = [81,54,7,86], skipA = 3, skipB = 3\nExpected: 86"
+        },
+        {
+          "name": "Random 9",
+          "code": "Input: listA = [59,66,35,7,75], listB = [17,29,35,7,75], skipA = 2, skipB = 2\nExpected: 35"
+        },
+        {
+          "name": "Random 10",
+          "code": "Input: listA = [21,7,90], listB = [27,95,3,21,7,90], skipA = 0, skipB = 3\nExpected: 21"
+        },
+        {
+          "name": "Random 11",
+          "code": "Input: listA = [61,84,37,94,99,7,11,31], listB = [53,72,90,79,99,7,11,31], skipA = 4, skipB = 4\nExpected: 99"
+        },
+        {
+          "name": "Random 12",
+          "code": "Input: listA = [54,19,43], listB = [27,36,54,19,43], skipA = 0, skipB = 2\nExpected: 54"
+        },
+        {
+          "name": "Random 13",
+          "code": "Input: listA = [22,98], listB = [68,99,43,71,22,98], skipA = 0, skipB = 4\nExpected: 22"
+        },
+        {
+          "name": "Random 14",
+          "code": "Input: listA = [34,59,90,4,61,43], listB = [80,36,90,4,61,43], skipA = 2, skipB = 2\nExpected: 90"
+        },
+        {
+          "name": "Random 15",
+          "code": "Input: listA = [77,53], listB = [19,95,44], skipA = 2, skipB = 3\nExpected: null"
+        },
+        {
+          "name": "Random 16",
+          "code": "Input: listA = [25,99,35,51,86], listB = [40,35,51,86], skipA = 2, skipB = 1\nExpected: 35"
+        },
+        {
+          "name": "Random 17",
+          "code": "Input: listA = [5], listB = [], skipA = 1, skipB = 0\nExpected: null"
+        },
+        {
+          "name": "Random 18",
+          "code": "Input: listA = [2,93,91,70], listB = [82,52,9,38], skipA = 4, skipB = 4\nExpected: null"
+        },
+        {
+          "name": "Random 19",
+          "code": "Input: listA = [74,55,73,27], listB = [82,7], skipA = 4, skipB = 2\nExpected: null"
+        },
+        {
+          "name": "Random 20",
+          "code": "Input: listA = [69,58,22,67,93,89,23], listB = [47,5,67,93,89,23], skipA = 3, skipB = 2\nExpected: 67"
+        }
+      ],
+      "track": "hot100",
+      "category": "Linked List",
+      "categoryZh": "链表",
+      "order": 6,
+      "leetcodeId": 160,
+      "leetcodeSlug": "intersection-of-two-linked-lists",
+      "acm": {
+        "inputEn": "- Line 1: an integer n, the length of `listA`\n- Line 2: n space-separated integers: `listA`\n- Line 3: an integer n, the length of `listB`\n- Line 4: n space-separated integers: `listB`\n- Line 5: an integer `skipA`\n- Line 6: an integer `skipB`",
+        "inputZh": "- 第 1 行：整数 n，表示 `listA` 的长度\n- 第 2 行：n 个以空格分隔的整数，即 `listA`\n- 第 3 行：整数 n，表示 `listB` 的长度\n- 第 4 行：n 个以空格分隔的整数，即 `listB`\n- 第 5 行：整数 `skipA`\n- 第 6 行：整数 `skipB`",
+        "outputEn": "Print one integer, or `null` if there is none.",
+        "outputZh": "输出一个整数；不存在时输出 `null`。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "listA = [3,9,6,2], listB = [5,6,2], skipA = 2, skipB = 1",
+            "expected": "6"
+          },
+          {
+            "name": "Example 2",
+            "input": "listA = [1,4], listB = [7], skipA = 2, skipB = 1",
+            "expected": "null"
+          },
+          {
+            "name": "Case 3",
+            "input": "listA = [4,1,8,4,5], listB = [5,6,1,8,4,5], skipA = 2, skipB = 3",
+            "expected": "8"
+          },
+          {
+            "name": "Case 4",
+            "input": "listA = [2,6,4], listB = [1,5], skipA = 3, skipB = 2",
+            "expected": "null"
+          },
+          {
+            "name": "Case 5",
+            "input": "listA = [8,3,5], listB = [3,5], skipA = 1, skipB = 0",
+            "expected": "3"
+          },
+          {
+            "name": "Case 6",
+            "input": "listA = [7], listB = [7], skipA = 0, skipB = 0",
+            "expected": "7"
+          },
+          {
+            "name": "Case 7",
+            "input": "listA = [1,2,3,4,5,6,7], listB = [9,7], skipA = 6, skipB = 1",
+            "expected": "7"
+          },
+          {
+            "name": "Random 1",
+            "input": "listA = [93,32], listB = [57,30,89,32], skipA = 1, skipB = 3",
+            "expected": "32"
+          },
+          {
+            "name": "Random 2",
+            "input": "listA = [57,76,49], listB = [79], skipA = 3, skipB = 1",
+            "expected": "null"
+          },
+          {
+            "name": "Random 3",
+            "input": "listA = [65,39,99], listB = [28,21,99], skipA = 2, skipB = 2",
+            "expected": "99"
+          },
+          {
+            "name": "Random 4",
+            "input": "listA = [80,63,29,98,38,90,42,77], listB = [60,38,90,42,77], skipA = 4, skipB = 1",
+            "expected": "38"
+          },
+          {
+            "name": "Random 5",
+            "input": "listA = [8,71,80,72,48,15,38], listB = [79,98,93,48,15,38], skipA = 4, skipB = 3",
+            "expected": "48"
+          },
+          {
+            "name": "Random 6",
+            "input": "listA = [9,12,80,97,49,33], listB = [50,49,33], skipA = 4, skipB = 1",
+            "expected": "49"
+          },
+          {
+            "name": "Random 7",
+            "input": "listA = [], listB = [20,47,34,32], skipA = 0, skipB = 4",
+            "expected": "null"
+          },
+          {
+            "name": "Random 8",
+            "input": "listA = [52,99,92,86], listB = [81,54,7,86], skipA = 3, skipB = 3",
+            "expected": "86"
+          },
+          {
+            "name": "Random 9",
+            "input": "listA = [59,66,35,7,75], listB = [17,29,35,7,75], skipA = 2, skipB = 2",
+            "expected": "35"
+          },
+          {
+            "name": "Random 10",
+            "input": "listA = [21,7,90], listB = [27,95,3,21,7,90], skipA = 0, skipB = 3",
+            "expected": "21"
+          },
+          {
+            "name": "Random 11",
+            "input": "listA = [61,84,37,94,99,7,11,31], listB = [53,72,90,79,99,7,11,31], skipA = 4, skipB = 4",
+            "expected": "99"
+          },
+          {
+            "name": "Random 12",
+            "input": "listA = [54,19,43], listB = [27,36,54,19,43], skipA = 0, skipB = 2",
+            "expected": "54"
+          },
+          {
+            "name": "Random 13",
+            "input": "listA = [22,98], listB = [68,99,43,71,22,98], skipA = 0, skipB = 4",
+            "expected": "22"
+          },
+          {
+            "name": "Random 14",
+            "input": "listA = [34,59,90,4,61,43], listB = [80,36,90,4,61,43], skipA = 2, skipB = 2",
+            "expected": "90"
+          },
+          {
+            "name": "Random 15",
+            "input": "listA = [77,53], listB = [19,95,44], skipA = 2, skipB = 3",
+            "expected": "null"
+          },
+          {
+            "name": "Random 16",
+            "input": "listA = [25,99,35,51,86], listB = [40,35,51,86], skipA = 2, skipB = 1",
+            "expected": "35"
+          },
+          {
+            "name": "Random 17",
+            "input": "listA = [5], listB = [], skipA = 1, skipB = 0",
+            "expected": "null"
+          },
+          {
+            "name": "Random 18",
+            "input": "listA = [2,93,91,70], listB = [82,52,9,38], skipA = 4, skipB = 4",
+            "expected": "null"
+          },
+          {
+            "name": "Random 19",
+            "input": "listA = [74,55,73,27], listB = [82,7], skipA = 4, skipB = 2",
+            "expected": "null"
+          },
+          {
+            "name": "Random 20",
+            "input": "listA = [69,58,22,67,93,89,23], listB = [47,5,67,93,89,23], skipA = 3, skipB = 2",
+            "expected": "67"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "4\n3 9 6 2\n3\n5 6 2\n2\n1",
+            "expected": "6"
+          },
+          {
+            "name": "Example 2",
+            "input": "2\n1 4\n1\n7\n2\n1",
+            "expected": "null"
+          },
+          {
+            "name": "Case 3",
+            "input": "5\n4 1 8 4 5\n6\n5 6 1 8 4 5\n2\n3",
+            "expected": "8"
+          },
+          {
+            "name": "Case 4",
+            "input": "3\n2 6 4\n2\n1 5\n3\n2",
+            "expected": "null"
+          },
+          {
+            "name": "Case 5",
+            "input": "3\n8 3 5\n2\n3 5\n1\n0",
+            "expected": "3"
+          },
+          {
+            "name": "Case 6",
+            "input": "1\n7\n1\n7\n0\n0",
+            "expected": "7"
+          },
+          {
+            "name": "Case 7",
+            "input": "7\n1 2 3 4 5 6 7\n2\n9 7\n6\n1",
+            "expected": "7"
+          },
+          {
+            "name": "Random 1",
+            "input": "2\n93 32\n4\n57 30 89 32\n1\n3",
+            "expected": "32"
+          },
+          {
+            "name": "Random 2",
+            "input": "3\n57 76 49\n1\n79\n3\n1",
+            "expected": "null"
+          },
+          {
+            "name": "Random 3",
+            "input": "3\n65 39 99\n3\n28 21 99\n2\n2",
+            "expected": "99"
+          },
+          {
+            "name": "Random 4",
+            "input": "8\n80 63 29 98 38 90 42 77\n5\n60 38 90 42 77\n4\n1",
+            "expected": "38"
+          },
+          {
+            "name": "Random 5",
+            "input": "7\n8 71 80 72 48 15 38\n6\n79 98 93 48 15 38\n4\n3",
+            "expected": "48"
+          },
+          {
+            "name": "Random 6",
+            "input": "6\n9 12 80 97 49 33\n3\n50 49 33\n4\n1",
+            "expected": "49"
+          },
+          {
+            "name": "Random 7",
+            "input": "0\n\n4\n20 47 34 32\n0\n4",
+            "expected": "null"
+          },
+          {
+            "name": "Random 8",
+            "input": "4\n52 99 92 86\n4\n81 54 7 86\n3\n3",
+            "expected": "86"
+          },
+          {
+            "name": "Random 9",
+            "input": "5\n59 66 35 7 75\n5\n17 29 35 7 75\n2\n2",
+            "expected": "35"
+          },
+          {
+            "name": "Random 10",
+            "input": "3\n21 7 90\n6\n27 95 3 21 7 90\n0\n3",
+            "expected": "21"
+          },
+          {
+            "name": "Random 11",
+            "input": "8\n61 84 37 94 99 7 11 31\n8\n53 72 90 79 99 7 11 31\n4\n4",
+            "expected": "99"
+          },
+          {
+            "name": "Random 12",
+            "input": "3\n54 19 43\n5\n27 36 54 19 43\n0\n2",
+            "expected": "54"
+          },
+          {
+            "name": "Random 13",
+            "input": "2\n22 98\n6\n68 99 43 71 22 98\n0\n4",
+            "expected": "22"
+          },
+          {
+            "name": "Random 14",
+            "input": "6\n34 59 90 4 61 43\n6\n80 36 90 4 61 43\n2\n2",
+            "expected": "90"
+          },
+          {
+            "name": "Random 15",
+            "input": "2\n77 53\n3\n19 95 44\n2\n3",
+            "expected": "null"
+          },
+          {
+            "name": "Random 16",
+            "input": "5\n25 99 35 51 86\n4\n40 35 51 86\n2\n1",
+            "expected": "35"
+          },
+          {
+            "name": "Random 17",
+            "input": "1\n5\n0\n\n1\n0",
+            "expected": "null"
+          },
+          {
+            "name": "Random 18",
+            "input": "4\n2 93 91 70\n4\n82 52 9 38\n4\n4",
+            "expected": "null"
+          },
+          {
+            "name": "Random 19",
+            "input": "4\n74 55 73 27\n2\n82 7\n4\n2",
+            "expected": "null"
+          },
+          {
+            "name": "Random 20",
+            "input": "7\n69 58 22 67 93 89 23\n6\n47 5 67 93 89 23\n3\n2",
+            "expected": "67"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\n# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\nclass Solution:\n    def getIntersectionNode(self, headA: Optional[ListNode], headB: Optional[ListNode]) -> Optional[ListNode]:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
       "id": "reverse_linked_list",
       "title": "Reverse Linked List",
       "titleZh": "反转链表",
@@ -4638,7 +5059,7 @@
       "track": "hot100",
       "category": "Linked List",
       "categoryZh": "链表",
-      "order": 6,
+      "order": 7,
       "leetcodeId": 206,
       "leetcodeSlug": "reverse-linked-list",
       "acm": {
@@ -5035,7 +5456,7 @@
       "track": "hot100",
       "category": "Binary Tree",
       "categoryZh": "二叉树",
-      "order": 7,
+      "order": 8,
       "leetcodeId": 102,
       "leetcodeSlug": "binary-tree-level-order-traversal",
       "acm": {
@@ -5324,6 +5745,399 @@
       }
     },
     {
+      "id": "min_stack",
+      "title": "Min Stack",
+      "titleZh": "最小栈",
+      "difficulty": "Medium",
+      "functionName": "MinStack",
+      "hint": "Next to each element, store the minimum of the stack at the moment it was pushed. Popping an element then restores the previous minimum for free.",
+      "hintZh": "每压入一个元素，同时记下压入那一刻整个栈的最小值。这样弹出元素时，之前的最小值自然就恢复了。",
+      "descriptionEn": "Design a stack that can also report its smallest element in constant time. Implement the class `MinStack`:\n\n- `MinStack()` creates an empty stack\n- `push(val)` puts `val` on top\n- `pop()` removes the top element\n- `top()` returns the top element\n- `getMin()` returns the smallest element currently in the stack\n\nEvery method must run in **O(1)** time.\n\n**Example:** `push(4)`, `push(1)`, `push(6)`, `getMin()` → `1`, `pop()`, `top()` → `1`, `pop()`, `getMin()` → `4`\n\n**Constraints:**\n- `-2^31 <= val <= 2^31 - 1`\n- `pop`, `top` and `getMin` are only called on a non-empty stack\n- At most `3 * 10^4` calls in total",
+      "descriptionZh": "设计一个栈，除了常规操作外，还能在常数时间内给出栈中的最小元素。实现 `MinStack` 类：\n\n- `MinStack()`：创建一个空栈\n- `push(val)`：把 `val` 压入栈顶\n- `pop()`：删除栈顶元素\n- `top()`：返回栈顶元素\n- `getMin()`：返回栈中当前最小的元素\n\n每个方法的时间复杂度都必须是 **O(1)**。\n\n**示例：** `push(4)`、`push(1)`、`push(6)`、`getMin()` → `1`，`pop()`，`top()` → `1`，`pop()`，`getMin()` → `4`\n\n**约束：**\n- `-2^31 <= val <= 2^31 - 1`\n- 只会在栈非空时调用 `pop`、`top` 和 `getMin`\n- 总调用次数不超过 `3 * 10^4`",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"push\",\"getMin\",\"pop\",\"top\",\"pop\",\"getMin\"]\n[[],[4],[1],[6],[],[],[],[],[]]\nExpected: [null,null,null,null,1,null,1,null,4]"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"getMin\",\"top\",\"pop\",\"getMin\"]\n[[],[-3],[5],[],[],[],[]]\nExpected: [null,null,null,-3,5,null,-3]"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"push\",\"pop\",\"getMin\",\"pop\",\"getMin\"]\n[[],[2],[0],[0],[],[],[],[]]\nExpected: [null,null,null,null,null,0,null,2]"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: [\"MinStack\",\"push\",\"pop\",\"push\",\"push\",\"getMin\",\"top\"]\n[[],[-7],[],[9],[3],[],[]]\nExpected: [null,null,null,null,null,3,3]"
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"getMin\",\"pop\",\"getMin\"]\n[[],[2147483647],[-2147483648],[],[],[]]\nExpected: [null,null,null,-2147483648,null,2147483647]"
+        },
+        {
+          "name": "Random 1",
+          "code": "Input: [\"MinStack\",\"push\",\"top\",\"getMin\",\"getMin\",\"pop\",\"push\",\"push\",\"push\",\"push\",\"top\",\"pop\",\"getMin\",\"push\",\"push\",\"pop\",\"getMin\"]\n[[],[-3],[],[],[],[],[1],[0],[-3],[3],[],[],[],[-3],[3],[],[]]\nExpected: [null,null,-3,-3,-3,null,null,null,null,null,3,null,-3,null,null,null,-3]"
+        },
+        {
+          "name": "Random 2",
+          "code": "Input: [\"MinStack\",\"push\",\"top\",\"getMin\",\"top\",\"top\",\"push\",\"push\",\"pop\",\"getMin\",\"push\",\"top\",\"push\",\"pop\",\"getMin\"]\n[[],[-2],[],[],[],[],[-1],[3],[],[],[1],[],[2],[],[]]\nExpected: [null,null,-2,-2,-2,-2,null,null,null,-2,null,1,null,null,-2]"
+        },
+        {
+          "name": "Random 3",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"top\",\"push\",\"getMin\",\"top\",\"top\",\"push\",\"top\",\"push\",\"top\",\"top\",\"pop\",\"push\",\"push\"]\n[[],[-3],[-1],[],[-3],[],[],[],[3],[],[-2],[],[],[],[3],[1]]\nExpected: [null,null,null,-1,null,-3,-3,-3,null,3,null,-2,-2,null,null,null]"
+        },
+        {
+          "name": "Random 4",
+          "code": "Input: [\"MinStack\",\"push\",\"getMin\",\"pop\",\"push\",\"pop\",\"push\",\"top\",\"top\",\"top\"]\n[[],[3],[],[],[0],[],[-1],[],[],[]]\nExpected: [null,null,3,null,null,null,null,-1,-1,-1]"
+        },
+        {
+          "name": "Random 5",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"pop\",\"getMin\",\"top\",\"getMin\",\"push\",\"pop\",\"top\",\"push\",\"push\",\"push\"]\n[[],[-1],[3],[],[],[],[],[-2],[],[],[0],[0],[1]]\nExpected: [null,null,null,null,-1,-1,-1,null,null,-1,null,null,null]"
+        },
+        {
+          "name": "Random 6",
+          "code": "Input: [\"MinStack\",\"push\",\"pop\",\"push\",\"pop\",\"push\",\"push\",\"top\",\"top\",\"getMin\",\"push\",\"pop\",\"top\",\"pop\",\"top\",\"pop\",\"push\"]\n[[],[1],[],[1],[],[2],[-2],[],[],[],[-3],[],[],[],[],[],[-1]]\nExpected: [null,null,null,null,null,null,null,-2,-2,-2,null,null,-2,null,2,null,null]"
+        },
+        {
+          "name": "Random 7",
+          "code": "Input: [\"MinStack\",\"push\",\"pop\",\"push\",\"push\",\"push\",\"push\",\"pop\",\"top\",\"push\",\"push\",\"top\",\"top\"]\n[[],[3],[],[-3],[3],[0],[0],[],[],[0],[-2],[],[]]\nExpected: [null,null,null,null,null,null,null,null,0,null,null,-2,-2]"
+        },
+        {
+          "name": "Random 8",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"push\",\"top\",\"push\",\"top\",\"pop\",\"pop\"]\n[[],[1],[2],[-1],[],[-1],[],[],[]]\nExpected: [null,null,null,null,-1,null,-1,null,null]"
+        },
+        {
+          "name": "Random 9",
+          "code": "Input: [\"MinStack\",\"push\",\"pop\",\"push\",\"getMin\",\"getMin\",\"top\",\"push\",\"top\",\"getMin\",\"top\",\"pop\",\"pop\",\"push\",\"pop\"]\n[[],[-2],[],[1],[],[],[],[3],[],[],[],[],[],[0],[]]\nExpected: [null,null,null,null,1,1,1,null,3,1,3,null,null,null,null]"
+        },
+        {
+          "name": "Random 10",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"pop\",\"getMin\",\"top\",\"top\",\"push\",\"push\",\"pop\",\"push\"]\n[[],[1],[2],[],[],[],[],[2],[0],[],[-2]]\nExpected: [null,null,null,null,1,1,1,null,null,null,null]"
+        },
+        {
+          "name": "Random 11",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"pop\",\"push\",\"pop\",\"push\",\"top\",\"push\",\"pop\",\"top\",\"getMin\",\"getMin\",\"push\",\"pop\",\"push\"]\n[[],[0],[1],[],[0],[],[-3],[],[1],[],[],[],[],[-2],[],[-2]]\nExpected: [null,null,null,null,null,null,null,-3,null,null,-3,-3,-3,null,null,null]"
+        },
+        {
+          "name": "Random 12",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"getMin\",\"push\",\"push\",\"pop\",\"getMin\",\"getMin\",\"pop\",\"getMin\"]\n[[],[3],[3],[],[-1],[3],[],[],[],[],[]]\nExpected: [null,null,null,3,null,null,null,-1,-1,null,3]"
+        },
+        {
+          "name": "Random 13",
+          "code": "Input: [\"MinStack\",\"push\",\"getMin\",\"push\",\"push\",\"top\",\"pop\",\"push\",\"push\",\"push\",\"top\",\"pop\",\"getMin\",\"top\"]\n[[],[1],[],[-2],[3],[],[],[-2],[-2],[-1],[],[],[],[]]\nExpected: [null,null,1,null,null,3,null,null,null,null,-1,null,-2,-2]"
+        },
+        {
+          "name": "Random 14",
+          "code": "Input: [\"MinStack\",\"push\",\"top\",\"push\",\"getMin\",\"push\",\"push\",\"getMin\",\"getMin\",\"push\",\"push\",\"push\"]\n[[],[1],[],[-2],[],[-1],[0],[],[],[-3],[3],[-2]]\nExpected: [null,null,1,null,-2,null,null,-2,-2,null,null,null]"
+        },
+        {
+          "name": "Random 15",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"top\",\"push\",\"push\",\"push\",\"getMin\",\"push\"]\n[[],[1],[0],[],[0],[-3],[3],[],[-1]]\nExpected: [null,null,null,0,null,null,null,-3,null]"
+        },
+        {
+          "name": "Random 16",
+          "code": "Input: [\"MinStack\",\"push\",\"push\",\"top\",\"getMin\",\"pop\",\"getMin\",\"push\",\"getMin\",\"pop\",\"getMin\"]\n[[],[-1],[2],[],[],[],[],[2],[],[],[]]\nExpected: [null,null,null,2,-1,null,-1,null,-1,null,-1]"
+        },
+        {
+          "name": "Random 17",
+          "code": "Input: [\"MinStack\",\"push\",\"pop\",\"push\",\"pop\",\"push\",\"top\",\"push\",\"top\",\"getMin\",\"pop\",\"getMin\",\"push\"]\n[[],[2],[],[3],[],[3],[],[2],[],[],[],[],[3]]\nExpected: [null,null,null,null,null,null,3,null,2,2,null,3,null]"
+        },
+        {
+          "name": "Random 18",
+          "code": "Input: [\"MinStack\",\"push\",\"top\",\"push\",\"push\",\"getMin\",\"pop\",\"push\",\"pop\",\"push\"]\n[[],[-1],[],[-3],[-1],[],[],[2],[],[3]]\nExpected: [null,null,-1,null,null,-3,null,null,null,null]"
+        },
+        {
+          "name": "Random 19",
+          "code": "Input: [\"MinStack\",\"push\",\"getMin\",\"push\",\"top\",\"pop\",\"pop\",\"push\",\"pop\",\"push\",\"push\",\"push\",\"getMin\",\"push\"]\n[[],[2],[],[2],[],[],[],[2],[],[-1],[-1],[1],[],[2]]\nExpected: [null,null,2,null,2,null,null,null,null,null,null,null,-1,null]"
+        },
+        {
+          "name": "Random 20",
+          "code": "Input: [\"MinStack\",\"push\",\"getMin\",\"push\",\"push\",\"top\",\"pop\",\"push\",\"pop\",\"getMin\",\"getMin\",\"push\",\"pop\",\"pop\"]\n[[],[-1],[],[0],[-3],[],[],[-2],[],[],[],[0],[],[]]\nExpected: [null,null,-1,null,null,-3,null,null,null,-1,-1,null,null,null]"
+        }
+      ],
+      "track": "hot100",
+      "category": "Stack",
+      "categoryZh": "栈",
+      "order": 9,
+      "leetcodeId": 155,
+      "leetcodeSlug": "min-stack",
+      "acm": {
+        "inputEn": "- Line 1: an integer q, the number of operations (including construction)\n- The next q lines: one operation each, the name followed by its arguments, space-separated\n- The first operation is always `MinStack`; the rest are among `push val`, `pop`, `top`, `getMin`",
+        "inputZh": "- 第 1 行：整数 q，表示操作数（包含构造）\n- 接下来 q 行：每行一个操作，先写操作名，再写参数，以空格分隔\n- 第一个操作总是 `MinStack`，其余操作为 `push val`, `pop`, `top`, `getMin` 之一",
+        "outputEn": "For every `top`, `getMin` call, in order, print its return value on its own line.",
+        "outputZh": "对每次 `top`, `getMin` 调用，按顺序各输出一行返回值。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "[\"MinStack\",\"push\",\"push\",\"push\",\"getMin\",\"pop\",\"top\",\"pop\",\"getMin\"]\n[[],[4],[1],[6],[],[],[],[],[]]",
+            "expected": "[null,null,null,null,1,null,1,null,4]"
+          },
+          {
+            "name": "Example 2",
+            "input": "[\"MinStack\",\"push\",\"push\",\"getMin\",\"top\",\"pop\",\"getMin\"]\n[[],[-3],[5],[],[],[],[]]",
+            "expected": "[null,null,null,-3,5,null,-3]"
+          },
+          {
+            "name": "Case 3",
+            "input": "[\"MinStack\",\"push\",\"push\",\"push\",\"pop\",\"getMin\",\"pop\",\"getMin\"]\n[[],[2],[0],[0],[],[],[],[]]",
+            "expected": "[null,null,null,null,null,0,null,2]"
+          },
+          {
+            "name": "Case 4",
+            "input": "[\"MinStack\",\"push\",\"pop\",\"push\",\"push\",\"getMin\",\"top\"]\n[[],[-7],[],[9],[3],[],[]]",
+            "expected": "[null,null,null,null,null,3,3]"
+          },
+          {
+            "name": "Case 5",
+            "input": "[\"MinStack\",\"push\",\"push\",\"getMin\",\"pop\",\"getMin\"]\n[[],[2147483647],[-2147483648],[],[],[]]",
+            "expected": "[null,null,null,-2147483648,null,2147483647]"
+          },
+          {
+            "name": "Random 1",
+            "input": "[\"MinStack\",\"push\",\"top\",\"getMin\",\"getMin\",\"pop\",\"push\",\"push\",\"push\",\"push\",\"top\",\"pop\",\"getMin\",\"push\",\"push\",\"pop\",\"getMin\"]\n[[],[-3],[],[],[],[],[1],[0],[-3],[3],[],[],[],[-3],[3],[],[]]",
+            "expected": "[null,null,-3,-3,-3,null,null,null,null,null,3,null,-3,null,null,null,-3]"
+          },
+          {
+            "name": "Random 2",
+            "input": "[\"MinStack\",\"push\",\"top\",\"getMin\",\"top\",\"top\",\"push\",\"push\",\"pop\",\"getMin\",\"push\",\"top\",\"push\",\"pop\",\"getMin\"]\n[[],[-2],[],[],[],[],[-1],[3],[],[],[1],[],[2],[],[]]",
+            "expected": "[null,null,-2,-2,-2,-2,null,null,null,-2,null,1,null,null,-2]"
+          },
+          {
+            "name": "Random 3",
+            "input": "[\"MinStack\",\"push\",\"push\",\"top\",\"push\",\"getMin\",\"top\",\"top\",\"push\",\"top\",\"push\",\"top\",\"top\",\"pop\",\"push\",\"push\"]\n[[],[-3],[-1],[],[-3],[],[],[],[3],[],[-2],[],[],[],[3],[1]]",
+            "expected": "[null,null,null,-1,null,-3,-3,-3,null,3,null,-2,-2,null,null,null]"
+          },
+          {
+            "name": "Random 4",
+            "input": "[\"MinStack\",\"push\",\"getMin\",\"pop\",\"push\",\"pop\",\"push\",\"top\",\"top\",\"top\"]\n[[],[3],[],[],[0],[],[-1],[],[],[]]",
+            "expected": "[null,null,3,null,null,null,null,-1,-1,-1]"
+          },
+          {
+            "name": "Random 5",
+            "input": "[\"MinStack\",\"push\",\"push\",\"pop\",\"getMin\",\"top\",\"getMin\",\"push\",\"pop\",\"top\",\"push\",\"push\",\"push\"]\n[[],[-1],[3],[],[],[],[],[-2],[],[],[0],[0],[1]]",
+            "expected": "[null,null,null,null,-1,-1,-1,null,null,-1,null,null,null]"
+          },
+          {
+            "name": "Random 6",
+            "input": "[\"MinStack\",\"push\",\"pop\",\"push\",\"pop\",\"push\",\"push\",\"top\",\"top\",\"getMin\",\"push\",\"pop\",\"top\",\"pop\",\"top\",\"pop\",\"push\"]\n[[],[1],[],[1],[],[2],[-2],[],[],[],[-3],[],[],[],[],[],[-1]]",
+            "expected": "[null,null,null,null,null,null,null,-2,-2,-2,null,null,-2,null,2,null,null]"
+          },
+          {
+            "name": "Random 7",
+            "input": "[\"MinStack\",\"push\",\"pop\",\"push\",\"push\",\"push\",\"push\",\"pop\",\"top\",\"push\",\"push\",\"top\",\"top\"]\n[[],[3],[],[-3],[3],[0],[0],[],[],[0],[-2],[],[]]",
+            "expected": "[null,null,null,null,null,null,null,null,0,null,null,-2,-2]"
+          },
+          {
+            "name": "Random 8",
+            "input": "[\"MinStack\",\"push\",\"push\",\"push\",\"top\",\"push\",\"top\",\"pop\",\"pop\"]\n[[],[1],[2],[-1],[],[-1],[],[],[]]",
+            "expected": "[null,null,null,null,-1,null,-1,null,null]"
+          },
+          {
+            "name": "Random 9",
+            "input": "[\"MinStack\",\"push\",\"pop\",\"push\",\"getMin\",\"getMin\",\"top\",\"push\",\"top\",\"getMin\",\"top\",\"pop\",\"pop\",\"push\",\"pop\"]\n[[],[-2],[],[1],[],[],[],[3],[],[],[],[],[],[0],[]]",
+            "expected": "[null,null,null,null,1,1,1,null,3,1,3,null,null,null,null]"
+          },
+          {
+            "name": "Random 10",
+            "input": "[\"MinStack\",\"push\",\"push\",\"pop\",\"getMin\",\"top\",\"top\",\"push\",\"push\",\"pop\",\"push\"]\n[[],[1],[2],[],[],[],[],[2],[0],[],[-2]]",
+            "expected": "[null,null,null,null,1,1,1,null,null,null,null]"
+          },
+          {
+            "name": "Random 11",
+            "input": "[\"MinStack\",\"push\",\"push\",\"pop\",\"push\",\"pop\",\"push\",\"top\",\"push\",\"pop\",\"top\",\"getMin\",\"getMin\",\"push\",\"pop\",\"push\"]\n[[],[0],[1],[],[0],[],[-3],[],[1],[],[],[],[],[-2],[],[-2]]",
+            "expected": "[null,null,null,null,null,null,null,-3,null,null,-3,-3,-3,null,null,null]"
+          },
+          {
+            "name": "Random 12",
+            "input": "[\"MinStack\",\"push\",\"push\",\"getMin\",\"push\",\"push\",\"pop\",\"getMin\",\"getMin\",\"pop\",\"getMin\"]\n[[],[3],[3],[],[-1],[3],[],[],[],[],[]]",
+            "expected": "[null,null,null,3,null,null,null,-1,-1,null,3]"
+          },
+          {
+            "name": "Random 13",
+            "input": "[\"MinStack\",\"push\",\"getMin\",\"push\",\"push\",\"top\",\"pop\",\"push\",\"push\",\"push\",\"top\",\"pop\",\"getMin\",\"top\"]\n[[],[1],[],[-2],[3],[],[],[-2],[-2],[-1],[],[],[],[]]",
+            "expected": "[null,null,1,null,null,3,null,null,null,null,-1,null,-2,-2]"
+          },
+          {
+            "name": "Random 14",
+            "input": "[\"MinStack\",\"push\",\"top\",\"push\",\"getMin\",\"push\",\"push\",\"getMin\",\"getMin\",\"push\",\"push\",\"push\"]\n[[],[1],[],[-2],[],[-1],[0],[],[],[-3],[3],[-2]]",
+            "expected": "[null,null,1,null,-2,null,null,-2,-2,null,null,null]"
+          },
+          {
+            "name": "Random 15",
+            "input": "[\"MinStack\",\"push\",\"push\",\"top\",\"push\",\"push\",\"push\",\"getMin\",\"push\"]\n[[],[1],[0],[],[0],[-3],[3],[],[-1]]",
+            "expected": "[null,null,null,0,null,null,null,-3,null]"
+          },
+          {
+            "name": "Random 16",
+            "input": "[\"MinStack\",\"push\",\"push\",\"top\",\"getMin\",\"pop\",\"getMin\",\"push\",\"getMin\",\"pop\",\"getMin\"]\n[[],[-1],[2],[],[],[],[],[2],[],[],[]]",
+            "expected": "[null,null,null,2,-1,null,-1,null,-1,null,-1]"
+          },
+          {
+            "name": "Random 17",
+            "input": "[\"MinStack\",\"push\",\"pop\",\"push\",\"pop\",\"push\",\"top\",\"push\",\"top\",\"getMin\",\"pop\",\"getMin\",\"push\"]\n[[],[2],[],[3],[],[3],[],[2],[],[],[],[],[3]]",
+            "expected": "[null,null,null,null,null,null,3,null,2,2,null,3,null]"
+          },
+          {
+            "name": "Random 18",
+            "input": "[\"MinStack\",\"push\",\"top\",\"push\",\"push\",\"getMin\",\"pop\",\"push\",\"pop\",\"push\"]\n[[],[-1],[],[-3],[-1],[],[],[2],[],[3]]",
+            "expected": "[null,null,-1,null,null,-3,null,null,null,null]"
+          },
+          {
+            "name": "Random 19",
+            "input": "[\"MinStack\",\"push\",\"getMin\",\"push\",\"top\",\"pop\",\"pop\",\"push\",\"pop\",\"push\",\"push\",\"push\",\"getMin\",\"push\"]\n[[],[2],[],[2],[],[],[],[2],[],[-1],[-1],[1],[],[2]]",
+            "expected": "[null,null,2,null,2,null,null,null,null,null,null,null,-1,null]"
+          },
+          {
+            "name": "Random 20",
+            "input": "[\"MinStack\",\"push\",\"getMin\",\"push\",\"push\",\"top\",\"pop\",\"push\",\"pop\",\"getMin\",\"getMin\",\"push\",\"pop\",\"pop\"]\n[[],[-1],[],[0],[-3],[],[],[-2],[],[],[],[0],[],[]]",
+            "expected": "[null,null,-1,null,null,-3,null,null,null,-1,-1,null,null,null]"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "9\nMinStack\npush 4\npush 1\npush 6\ngetMin\npop\ntop\npop\ngetMin",
+            "expected": "1\n1\n4"
+          },
+          {
+            "name": "Example 2",
+            "input": "7\nMinStack\npush -3\npush 5\ngetMin\ntop\npop\ngetMin",
+            "expected": "-3\n5\n-3"
+          },
+          {
+            "name": "Case 3",
+            "input": "8\nMinStack\npush 2\npush 0\npush 0\npop\ngetMin\npop\ngetMin",
+            "expected": "0\n2"
+          },
+          {
+            "name": "Case 4",
+            "input": "7\nMinStack\npush -7\npop\npush 9\npush 3\ngetMin\ntop",
+            "expected": "3\n3"
+          },
+          {
+            "name": "Case 5",
+            "input": "6\nMinStack\npush 2147483647\npush -2147483648\ngetMin\npop\ngetMin",
+            "expected": "-2147483648\n2147483647"
+          },
+          {
+            "name": "Random 1",
+            "input": "17\nMinStack\npush -3\ntop\ngetMin\ngetMin\npop\npush 1\npush 0\npush -3\npush 3\ntop\npop\ngetMin\npush -3\npush 3\npop\ngetMin",
+            "expected": "-3\n-3\n-3\n3\n-3\n-3"
+          },
+          {
+            "name": "Random 2",
+            "input": "15\nMinStack\npush -2\ntop\ngetMin\ntop\ntop\npush -1\npush 3\npop\ngetMin\npush 1\ntop\npush 2\npop\ngetMin",
+            "expected": "-2\n-2\n-2\n-2\n-2\n1\n-2"
+          },
+          {
+            "name": "Random 3",
+            "input": "16\nMinStack\npush -3\npush -1\ntop\npush -3\ngetMin\ntop\ntop\npush 3\ntop\npush -2\ntop\ntop\npop\npush 3\npush 1",
+            "expected": "-1\n-3\n-3\n-3\n3\n-2\n-2"
+          },
+          {
+            "name": "Random 4",
+            "input": "10\nMinStack\npush 3\ngetMin\npop\npush 0\npop\npush -1\ntop\ntop\ntop",
+            "expected": "3\n-1\n-1\n-1"
+          },
+          {
+            "name": "Random 5",
+            "input": "13\nMinStack\npush -1\npush 3\npop\ngetMin\ntop\ngetMin\npush -2\npop\ntop\npush 0\npush 0\npush 1",
+            "expected": "-1\n-1\n-1\n-1"
+          },
+          {
+            "name": "Random 6",
+            "input": "17\nMinStack\npush 1\npop\npush 1\npop\npush 2\npush -2\ntop\ntop\ngetMin\npush -3\npop\ntop\npop\ntop\npop\npush -1",
+            "expected": "-2\n-2\n-2\n-2\n2"
+          },
+          {
+            "name": "Random 7",
+            "input": "13\nMinStack\npush 3\npop\npush -3\npush 3\npush 0\npush 0\npop\ntop\npush 0\npush -2\ntop\ntop",
+            "expected": "0\n-2\n-2"
+          },
+          {
+            "name": "Random 8",
+            "input": "9\nMinStack\npush 1\npush 2\npush -1\ntop\npush -1\ntop\npop\npop",
+            "expected": "-1\n-1"
+          },
+          {
+            "name": "Random 9",
+            "input": "15\nMinStack\npush -2\npop\npush 1\ngetMin\ngetMin\ntop\npush 3\ntop\ngetMin\ntop\npop\npop\npush 0\npop",
+            "expected": "1\n1\n1\n3\n1\n3"
+          },
+          {
+            "name": "Random 10",
+            "input": "11\nMinStack\npush 1\npush 2\npop\ngetMin\ntop\ntop\npush 2\npush 0\npop\npush -2",
+            "expected": "1\n1\n1"
+          },
+          {
+            "name": "Random 11",
+            "input": "16\nMinStack\npush 0\npush 1\npop\npush 0\npop\npush -3\ntop\npush 1\npop\ntop\ngetMin\ngetMin\npush -2\npop\npush -2",
+            "expected": "-3\n-3\n-3\n-3"
+          },
+          {
+            "name": "Random 12",
+            "input": "11\nMinStack\npush 3\npush 3\ngetMin\npush -1\npush 3\npop\ngetMin\ngetMin\npop\ngetMin",
+            "expected": "3\n-1\n-1\n3"
+          },
+          {
+            "name": "Random 13",
+            "input": "14\nMinStack\npush 1\ngetMin\npush -2\npush 3\ntop\npop\npush -2\npush -2\npush -1\ntop\npop\ngetMin\ntop",
+            "expected": "1\n3\n-1\n-2\n-2"
+          },
+          {
+            "name": "Random 14",
+            "input": "12\nMinStack\npush 1\ntop\npush -2\ngetMin\npush -1\npush 0\ngetMin\ngetMin\npush -3\npush 3\npush -2",
+            "expected": "1\n-2\n-2\n-2"
+          },
+          {
+            "name": "Random 15",
+            "input": "9\nMinStack\npush 1\npush 0\ntop\npush 0\npush -3\npush 3\ngetMin\npush -1",
+            "expected": "0\n-3"
+          },
+          {
+            "name": "Random 16",
+            "input": "11\nMinStack\npush -1\npush 2\ntop\ngetMin\npop\ngetMin\npush 2\ngetMin\npop\ngetMin",
+            "expected": "2\n-1\n-1\n-1\n-1"
+          },
+          {
+            "name": "Random 17",
+            "input": "13\nMinStack\npush 2\npop\npush 3\npop\npush 3\ntop\npush 2\ntop\ngetMin\npop\ngetMin\npush 3",
+            "expected": "3\n2\n2\n3"
+          },
+          {
+            "name": "Random 18",
+            "input": "10\nMinStack\npush -1\ntop\npush -3\npush -1\ngetMin\npop\npush 2\npop\npush 3",
+            "expected": "-1\n-3"
+          },
+          {
+            "name": "Random 19",
+            "input": "14\nMinStack\npush 2\ngetMin\npush 2\ntop\npop\npop\npush 2\npop\npush -1\npush -1\npush 1\ngetMin\npush 2",
+            "expected": "2\n2\n-1"
+          },
+          {
+            "name": "Random 20",
+            "input": "14\nMinStack\npush -1\ngetMin\npush 0\npush -3\ntop\npop\npush -2\npop\ngetMin\ngetMin\npush 0\npop\npop",
+            "expected": "-1\n-3\n-1\n-1"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\nclass MinStack:\n\n    def __init__(self):\n        pass\n\n    def push(self, val: int) -> None:\n        pass\n\n    def pop(self) -> None:\n        pass\n\n    def top(self) -> int:\n        pass\n\n    def getMin(self) -> int:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
       "id": "coin_change",
       "title": "Coin Change",
       "titleZh": "零钱兑换",
@@ -5450,7 +6264,7 @@
       "track": "hot100",
       "category": "Dynamic Programming",
       "categoryZh": "动态规划",
-      "order": 8,
+      "order": 10,
       "leetcodeId": 322,
       "leetcodeSlug": "coin-change",
       "acm": {
@@ -5755,6 +6569,441 @@
       },
       "starters": {
         "core": "from typing import List, Optional\n\nclass Solution:\n    def coinChange(self, coins: List[int], amount: int) -> int:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
+      "id": "longest_palindromic_substring",
+      "title": "Longest Palindromic Substring",
+      "titleZh": "最长回文子串",
+      "difficulty": "Medium",
+      "functionName": "longestPalindrome",
+      "hint": "Every palindrome mirrors around a center: a character (odd length) or the gap between two characters (even length). Expand outwards from each of the 2n - 1 centers.",
+      "hintZh": "每个回文串都关于一个中心对称：中心是一个字符（奇数长度）或两个字符之间的空隙（偶数长度）。从 2n - 1 个中心分别向两边扩展。",
+      "descriptionEn": "Given a string `s`, return its longest substring that reads the same forwards and backwards. If several substrings tie for the longest, return any of them.\n\n**Example 1:** `s = \"racecars\"` → `\"racecar\"`\n\n**Example 2:** `s = \"xyyz\"` → `\"yy\"`\n\n**Constraints:**\n- `1 <= s.length <= 1000`\n- `s` consists of English letters and digits",
+      "descriptionZh": "给定字符串 `s`，返回它最长的回文子串（正着读和倒着读都一样）。如果有多个子串并列最长，返回其中任意一个。\n\n**示例 1：** `s = \"racecars\"` → `\"racecar\"`\n\n**示例 2：** `s = \"xyyz\"` → `\"yy\"`\n\n**约束：**\n- `1 <= s.length <= 1000`\n- `s` 只由英文字母和数字组成",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: s = \"racecars\"\nExpected: \"racecar\""
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: s = \"xyyz\"\nExpected: \"yy\""
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: s = \"q\"\nExpected: \"q\""
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: s = \"abcd\"\nExpected: \"a\""
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: s = \"abba\"\nExpected: \"abba\""
+        },
+        {
+          "name": "Case 6",
+          "code": "Input: s = \"aaaa\"\nExpected: \"aaaa\""
+        },
+        {
+          "name": "Case 7",
+          "code": "Input: s = \"babad\"\nExpected: \"bab\""
+        },
+        {
+          "name": "Case 8",
+          "code": "Input: s = \"xyzlevel\"\nExpected: \"level\""
+        },
+        {
+          "name": "Random 1",
+          "code": "Input: s = \"cccbab\"\nExpected: \"ccc\""
+        },
+        {
+          "name": "Random 2",
+          "code": "Input: s = \"a\"\nExpected: \"a\""
+        },
+        {
+          "name": "Random 3",
+          "code": "Input: s = \"cb\"\nExpected: \"c\""
+        },
+        {
+          "name": "Random 4",
+          "code": "Input: s = \"bacabccbbba\"\nExpected: \"bacab\""
+        },
+        {
+          "name": "Random 5",
+          "code": "Input: s = \"abca\"\nExpected: \"a\""
+        },
+        {
+          "name": "Random 6",
+          "code": "Input: s = \"ababbb\"\nExpected: \"aba\""
+        },
+        {
+          "name": "Random 7",
+          "code": "Input: s = \"aa\"\nExpected: \"aa\""
+        },
+        {
+          "name": "Random 8",
+          "code": "Input: s = \"ccabb\"\nExpected: \"cc\""
+        },
+        {
+          "name": "Random 9",
+          "code": "Input: s = \"bccbc\"\nExpected: \"bccb\""
+        },
+        {
+          "name": "Random 10",
+          "code": "Input: s = \"ccaaa\"\nExpected: \"aaa\""
+        },
+        {
+          "name": "Random 11",
+          "code": "Input: s = \"ccca\"\nExpected: \"ccc\""
+        },
+        {
+          "name": "Random 12",
+          "code": "Input: s = \"aacc\"\nExpected: \"aa\""
+        },
+        {
+          "name": "Random 13",
+          "code": "Input: s = \"bbaaaaccaccb\"\nExpected: \"ccacc\""
+        },
+        {
+          "name": "Random 14",
+          "code": "Input: s = \"acbcaa\"\nExpected: \"acbca\""
+        },
+        {
+          "name": "Random 15",
+          "code": "Input: s = \"bccacabaa\"\nExpected: \"cac\""
+        },
+        {
+          "name": "Random 16",
+          "code": "Input: s = \"cacabb\"\nExpected: \"cac\""
+        },
+        {
+          "name": "Random 17",
+          "code": "Input: s = \"bbaba\"\nExpected: \"bab\""
+        },
+        {
+          "name": "Random 18",
+          "code": "Input: s = \"abbcac\"\nExpected: \"cac\""
+        },
+        {
+          "name": "Random 19",
+          "code": "Input: s = \"baaacabaaa\"\nExpected: \"aaa\""
+        },
+        {
+          "name": "Random 20",
+          "code": "Input: s = \"accbcbc\"\nExpected: \"cbcbc\""
+        }
+      ],
+      "track": "hot100",
+      "category": "Multi-dimensional DP",
+      "categoryZh": "多维动态规划",
+      "order": 11,
+      "leetcodeId": 5,
+      "leetcodeSlug": "longest-palindromic-substring",
+      "acm": {
+        "inputEn": "- Line 1: the string `s` (the whole line, possibly empty)",
+        "inputZh": "- 第 1 行：字符串 `s`（整行内容，可能为空）",
+        "outputEn": "Print one line: the string. If several answers are valid, print any one of them.",
+        "outputZh": "输出一行字符串。答案不唯一时，输出任意一个正确答案即可。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "s = \"racecars\"",
+            "expected": "\"racecar\""
+          },
+          {
+            "name": "Example 2",
+            "input": "s = \"xyyz\"",
+            "expected": "\"yy\""
+          },
+          {
+            "name": "Case 3",
+            "input": "s = \"q\"",
+            "expected": "\"q\""
+          },
+          {
+            "name": "Case 4",
+            "input": "s = \"abcd\"",
+            "expected": "\"a\""
+          },
+          {
+            "name": "Case 5",
+            "input": "s = \"abba\"",
+            "expected": "\"abba\""
+          },
+          {
+            "name": "Case 6",
+            "input": "s = \"aaaa\"",
+            "expected": "\"aaaa\""
+          },
+          {
+            "name": "Case 7",
+            "input": "s = \"babad\"",
+            "expected": "\"bab\""
+          },
+          {
+            "name": "Case 8",
+            "input": "s = \"xyzlevel\"",
+            "expected": "\"level\""
+          },
+          {
+            "name": "Random 1",
+            "input": "s = \"cccbab\"",
+            "expected": "\"ccc\""
+          },
+          {
+            "name": "Random 2",
+            "input": "s = \"a\"",
+            "expected": "\"a\""
+          },
+          {
+            "name": "Random 3",
+            "input": "s = \"cb\"",
+            "expected": "\"c\""
+          },
+          {
+            "name": "Random 4",
+            "input": "s = \"bacabccbbba\"",
+            "expected": "\"bacab\""
+          },
+          {
+            "name": "Random 5",
+            "input": "s = \"abca\"",
+            "expected": "\"a\""
+          },
+          {
+            "name": "Random 6",
+            "input": "s = \"ababbb\"",
+            "expected": "\"aba\""
+          },
+          {
+            "name": "Random 7",
+            "input": "s = \"aa\"",
+            "expected": "\"aa\""
+          },
+          {
+            "name": "Random 8",
+            "input": "s = \"ccabb\"",
+            "expected": "\"cc\""
+          },
+          {
+            "name": "Random 9",
+            "input": "s = \"bccbc\"",
+            "expected": "\"bccb\""
+          },
+          {
+            "name": "Random 10",
+            "input": "s = \"ccaaa\"",
+            "expected": "\"aaa\""
+          },
+          {
+            "name": "Random 11",
+            "input": "s = \"ccca\"",
+            "expected": "\"ccc\""
+          },
+          {
+            "name": "Random 12",
+            "input": "s = \"aacc\"",
+            "expected": "\"aa\""
+          },
+          {
+            "name": "Random 13",
+            "input": "s = \"bbaaaaccaccb\"",
+            "expected": "\"ccacc\""
+          },
+          {
+            "name": "Random 14",
+            "input": "s = \"acbcaa\"",
+            "expected": "\"acbca\""
+          },
+          {
+            "name": "Random 15",
+            "input": "s = \"bccacabaa\"",
+            "expected": "\"cac\""
+          },
+          {
+            "name": "Random 16",
+            "input": "s = \"cacabb\"",
+            "expected": "\"cac\""
+          },
+          {
+            "name": "Random 17",
+            "input": "s = \"bbaba\"",
+            "expected": "\"bab\""
+          },
+          {
+            "name": "Random 18",
+            "input": "s = \"abbcac\"",
+            "expected": "\"cac\""
+          },
+          {
+            "name": "Random 19",
+            "input": "s = \"baaacabaaa\"",
+            "expected": "\"aaa\""
+          },
+          {
+            "name": "Random 20",
+            "input": "s = \"accbcbc\"",
+            "expected": "\"cbcbc\""
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "racecars",
+            "expected": "racecar"
+          },
+          {
+            "name": "Example 2",
+            "input": "xyyz",
+            "expected": "yy"
+          },
+          {
+            "name": "Case 3",
+            "input": "q",
+            "expected": "q"
+          },
+          {
+            "name": "Case 4",
+            "input": "abcd",
+            "expected": "a"
+          },
+          {
+            "name": "Case 5",
+            "input": "abba",
+            "expected": "abba"
+          },
+          {
+            "name": "Case 6",
+            "input": "aaaa",
+            "expected": "aaaa"
+          },
+          {
+            "name": "Case 7",
+            "input": "babad",
+            "expected": "bab"
+          },
+          {
+            "name": "Case 8",
+            "input": "xyzlevel",
+            "expected": "level"
+          },
+          {
+            "name": "Random 1",
+            "input": "cccbab",
+            "expected": "ccc"
+          },
+          {
+            "name": "Random 2",
+            "input": "a",
+            "expected": "a"
+          },
+          {
+            "name": "Random 3",
+            "input": "cb",
+            "expected": "c"
+          },
+          {
+            "name": "Random 4",
+            "input": "bacabccbbba",
+            "expected": "bacab"
+          },
+          {
+            "name": "Random 5",
+            "input": "abca",
+            "expected": "a"
+          },
+          {
+            "name": "Random 6",
+            "input": "ababbb",
+            "expected": "aba"
+          },
+          {
+            "name": "Random 7",
+            "input": "aa",
+            "expected": "aa"
+          },
+          {
+            "name": "Random 8",
+            "input": "ccabb",
+            "expected": "cc"
+          },
+          {
+            "name": "Random 9",
+            "input": "bccbc",
+            "expected": "bccb"
+          },
+          {
+            "name": "Random 10",
+            "input": "ccaaa",
+            "expected": "aaa"
+          },
+          {
+            "name": "Random 11",
+            "input": "ccca",
+            "expected": "ccc"
+          },
+          {
+            "name": "Random 12",
+            "input": "aacc",
+            "expected": "aa"
+          },
+          {
+            "name": "Random 13",
+            "input": "bbaaaaccaccb",
+            "expected": "ccacc"
+          },
+          {
+            "name": "Random 14",
+            "input": "acbcaa",
+            "expected": "acbca"
+          },
+          {
+            "name": "Random 15",
+            "input": "bccacabaa",
+            "expected": "cac"
+          },
+          {
+            "name": "Random 16",
+            "input": "cacabb",
+            "expected": "cac"
+          },
+          {
+            "name": "Random 17",
+            "input": "bbaba",
+            "expected": "bab"
+          },
+          {
+            "name": "Random 18",
+            "input": "abbcac",
+            "expected": "cac"
+          },
+          {
+            "name": "Random 19",
+            "input": "baaacabaaa",
+            "expected": "aaa"
+          },
+          {
+            "name": "Random 20",
+            "input": "accbcbc",
+            "expected": "cbcbc"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\nclass Solution:\n    def longestPalindrome(self, s: str) -> str:\n        pass\n",
         "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
       }
     }

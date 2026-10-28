@@ -7,7 +7,9 @@ Stdlib only and self-contained, because it serves two roles:
   picking up anything on sys.path, so this file cannot import project modules.
 
 Type names used in task specs:
-    int, float, bool, str, int[], int[][], str[], str[][], ListNode, TreeNode, void
+    int, float, bool, str, int[], int[][], str[], str[][], char[][], ListNode, ListNode[],
+    TreeNode, Node (list node with a random pointer), void
+A trailing ``?`` (``int?``) marks a scalar answer that may be null.
 """
 
 from __future__ import annotations
@@ -36,6 +38,15 @@ class TreeNode:
         self.right = right
 
 
+class Node:
+    """Linked-list node with an extra pointer to any node of the list, or None."""
+
+    def __init__(self, x: int, next=None, random=None):
+        self.val = int(x)
+        self.next = next
+        self.random = random
+
+
 # ---------------------------------------------------------------------------
 # Plain values <-> runtime objects (LeetCode-style array encodings)
 # ---------------------------------------------------------------------------
@@ -55,6 +66,32 @@ def list_to_array(head: Optional[ListNode], limit: int = 10**6) -> list:
         if len(out) > limit:
             raise ValueError("linked list too long (cycle?)")
         head = head.next
+    return out
+
+
+def build_random_list(pairs: list) -> Optional[Node]:
+    """``[[val, random_index or None], ...]`` -> head."""
+    nodes = [Node(val) for val, _ in pairs]
+    for i, (_, rand) in enumerate(pairs):
+        if i + 1 < len(nodes):
+            nodes[i].next = nodes[i + 1]
+        nodes[i].random = None if rand is None else nodes[rand]
+    return nodes[0] if nodes else None
+
+
+def random_list_to_array(head: Optional[Node], limit: int = 10**6) -> list:
+    nodes = []
+    while head is not None:
+        nodes.append(head)
+        if len(nodes) > limit:
+            raise ValueError("linked list too long (cycle?)")
+        head = head.next
+    index = {id(n): i for i, n in enumerate(nodes)}
+    out = []
+    for n in nodes:
+        if n.random is not None and id(n.random) not in index:
+            raise ValueError("a random pointer leaves the list")
+        out.append([n.val, None if n.random is None else index[id(n.random)]])
     return out
 
 
@@ -96,8 +133,12 @@ def tree_to_array(root: Optional[TreeNode]) -> list:
 def to_runtime(value: Any, type_name: str) -> Any:
     if type_name == "ListNode":
         return build_list(value)
+    if type_name == "ListNode[]":
+        return [build_list(v) for v in value]
     if type_name == "TreeNode":
         return build_tree(value)
+    if type_name == "Node":
+        return build_random_list(value)
     return json.loads(json.dumps(value))  # deep copy; the solution may mutate its inputs
 
 
@@ -106,6 +147,8 @@ def from_runtime(value: Any, type_name: str) -> Any:
         return list_to_array(value)
     if type_name == "TreeNode":
         return tree_to_array(value)
+    if type_name == "Node":
+        return random_list_to_array(value)
     if isinstance(value, tuple):
         value = list(value)
     if isinstance(value, list):
@@ -134,6 +177,8 @@ def show_args(params: list, args: list) -> str:
 # ---------------------------------------------------------------------------
 
 def _scalar_text(value: Any) -> str:
+    if value is None:
+        return "null"
     if isinstance(value, bool):
         return "true" if value else "false"
     return str(value)
@@ -151,8 +196,14 @@ def acm_input_lines(type_name: str, value: Any) -> list[str]:
         return [str(len(value)), _row_text(value)]
     if type_name == "int[][]":
         return [str(len(value))] + [_row_text(row) for row in value]
+    if type_name == "char[][]":
+        return [str(len(value))] + ["".join(row) for row in value]
     if type_name == "str[]":
         return [str(len(value))] + list(value)
+    if type_name == "ListNode[]":
+        return [str(len(value))] + [line for v in value for line in acm_input_lines("ListNode", v)]
+    if type_name == "Node":
+        return [str(len(value))] + [_row_text(pair) for pair in value]
     if type_name == "TreeNode":
         return [_row_text(value)]
     raise NotImplementedError(f"ACM input for type {type_name}")
@@ -160,12 +211,15 @@ def acm_input_lines(type_name: str, value: Any) -> list[str]:
 
 def acm_output_text(type_name: str, value: Any) -> str:
     """Canonical ACM stdout for a return value (without trailing newline)."""
+    type_name = type_name.rstrip("?")
     if type_name in ("int", "float", "bool", "str"):
         return _scalar_text(value)
     if type_name in ("int[]", "ListNode", "TreeNode"):
         return _row_text(value)
-    if type_name in ("int[][]", "str[][]"):
+    if type_name in ("int[][]", "str[][]", "Node"):
         return "\n".join(_row_text(row) for row in value)
+    if type_name == "char[][]":
+        return "\n".join("".join(row) for row in value)
     if type_name == "str[]":
         return "\n".join(value)
     raise NotImplementedError(f"ACM output for type {type_name}")
@@ -180,6 +234,10 @@ def parse_acm_output(type_name: str, text: str) -> Any:
     lines = [line.rstrip() for line in text.replace("\r\n", "\n").split("\n")]
     while lines and lines[-1] == "":
         lines.pop()
+    nullable = type_name.endswith("?")
+    type_name = type_name.rstrip("?")
+    if nullable and type_name != "str" and [line.strip() for line in lines] == ["null"]:
+        return None
     if type_name in ("int", "float", "bool", "str"):
         if type_name == "str":
             if len(lines) > 1:
@@ -205,8 +263,12 @@ def parse_acm_output(type_name: str, text: str) -> Any:
         return [_parse_token(t, int) for t in lines[0].split()] if lines else []
     if type_name == "int[][]":
         return [[int(t) for t in line.split()] for line in lines]
+    if type_name == "Node":
+        return [[_parse_token(t, int) for t in line.split()] for line in lines]
     if type_name == "str[][]":
         return [line.split() for line in lines]
+    if type_name == "char[][]":
+        return [list(line) for line in lines]
     if type_name == "str[]":
         return lines
     raise NotImplementedError(f"ACM output for type {type_name}")
@@ -220,9 +282,21 @@ def _sort_key(value: Any) -> str:
     return json.dumps(value, sort_keys=True)
 
 
+def _approx_equal(actual: Any, expected: Any) -> bool:
+    """Equality where float leaves compare with a tolerance (design problems that return floats)."""
+    if isinstance(expected, float) and not isinstance(actual, bool):
+        return check("float", actual, expected)
+    if isinstance(expected, list):
+        return (isinstance(actual, list) and len(actual) == len(expected)
+                and all(_approx_equal(a, e) for a, e in zip(actual, expected)))
+    return actual == expected
+
+
 def check(kind: str, actual: Any, expected: Any) -> bool:
     if kind == "exact":
         return actual == expected
+    if kind == "approx":
+        return _approx_equal(actual, expected)
     if kind == "unordered":
         return isinstance(actual, list) and sorted(actual, key=_sort_key) == sorted(expected, key=_sort_key)
     if kind == "unordered_nested":
@@ -233,6 +307,37 @@ def check(kind: str, actual: Any, expected: Any) -> bool:
     if kind == "float":
         return isinstance(actual, (int, float)) and abs(actual - expected) <= 1e-5 * max(1.0, abs(expected))
     raise ValueError(f"unknown checker {kind}")
+
+
+# Task-supplied hooks (prepare / finish / checker) arrive as source strings, since this file
+# can't import task modules. They see the helpers below.
+HOOK_GLOBALS = {
+    "ListNode": ListNode, "TreeNode": TreeNode,
+    "build_list": build_list, "list_to_array": list_to_array,
+    "build_tree": build_tree, "tree_to_array": tree_to_array,
+    "Node": Node, "build_random_list": build_random_list, "random_list_to_array": random_list_to_array,
+}
+_hook_cache: dict[str, dict] = {}
+
+
+def hook(source: str, name: str):
+    ns = _hook_cache.get(source)
+    if ns is None:
+        ns = _hook_cache[source] = dict(HOOK_GLOBALS)
+        exec(source, ns)
+    return ns[name]
+
+
+def check_answer(spec: dict, args: Any, actual: Any, expected: Any) -> bool:
+    """Compare a plain answer with the expected one. ``custom`` tasks validate it with their
+    own ``check(args, actual, expected)``, for problems with several valid answers."""
+    kind = spec.get("check", "exact")
+    if kind == "custom":
+        try:
+            return bool(hook(spec["checker"], "check")(args, actual, expected))
+        except Exception:  # noqa: BLE001 - a malformed answer is just wrong
+            return False
+    return check(kind, actual, expected)
 
 
 # ---------------------------------------------------------------------------
@@ -251,7 +356,7 @@ def _user_error(exc: BaseException) -> str:
 
 def solution_namespace(name: str = "__solution__") -> dict[str, Any]:
     """Globals for core-mode code: what LeetCode predefines."""
-    return {"__name__": name, "List": List, "Optional": Optional, "ListNode": ListNode, "TreeNode": TreeNode}
+    return {"__name__": name, "List": List, "Optional": Optional, "ListNode": ListNode, "TreeNode": TreeNode, "Node": Node}
 
 
 def compute(ns: dict, spec: dict, case: dict) -> Any:
@@ -289,7 +394,7 @@ def run_core(job: dict) -> list[dict]:
         finally:
             sys.stdout = real_stdout
         elapsed_ms = (time.perf_counter() - start) * 1000
-        passed = check(spec.get("check", "exact"), actual, case["expected"])
+        passed = check_answer(spec, case.get("args"), actual, case["expected"])
         results.append({
             "status": "ok" if passed else "wrong",
             "actual": show(actual),
@@ -307,8 +412,14 @@ def _run_method(ns: dict, spec: dict, case: dict) -> Any:
     if method is None:
         raise AttributeError(f"Solution has no method '{spec['function_name']}'")
     params = spec["params"]
-    args = [to_runtime(arg, type_name) for (_, type_name), arg in zip(params, case["args"])]
+    # Case args follow ``inputs`` (the plain data); ``prepare`` turns them into the method's
+    # arguments when the two differ (shared list tails, cycles, nodes picked by value)
+    args = [to_runtime(arg, type_name) for (_, type_name), arg in zip(spec["inputs"], case["args"])]
+    if spec.get("prepare"):
+        args = list(hook(spec["prepare"], "prepare")(args))
     result = method(*args)
+    if spec.get("finish"):
+        return hook(spec["finish"], "finish")(result, args)
     inplace = spec.get("inplace")
     if inplace is not None:
         index = [name for name, _ in params].index(inplace)
