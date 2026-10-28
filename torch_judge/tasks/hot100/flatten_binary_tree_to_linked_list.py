@@ -31,8 +31,8 @@ def _build(vals, left, right):
 
 
 def _large_case():
-    # 2000 nodes forming a deep tree (over 1000 levels). A recursive flatten needs that many
-    # frames, which exceeds Python's default recursion limit in ACM programs
+    # 2000 nodes forming a deep tree (over 1000 levels): a recursive flatten needs that many
+    # frames, beyond Python's default of 1000 but within the judge's limit of 20000
     rng = random.Random(114)
     n = 2000
     vals = [rng.randint(-100, 100) for _ in range(n)]

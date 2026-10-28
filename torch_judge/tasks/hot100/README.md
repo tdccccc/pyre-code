@@ -57,7 +57,7 @@ contain spaces; `float` returns are compared with a tolerance in both modes.
 1. `python scripts/export_problems.py && python scripts/build_solutions.py`
 2. `python -m pytest -q scripts` — the reference must pass every case in both modes
 3. Add a classic wrong solution as `scripts/hot100_mutants/<task_id>.py`, starting with a
-   `# Mistake: ...` line. The random cases must catch it. If they don't, retune `random_case`
+   `# Mistake: ...` line. At least 4 of the 20 random cases must catch it. If they don't, retune `random_case`
    (see the note in `lru_cache.py`)
 4. Read the generated ACM format text and ACM program once (`spec.acm_format`, `spec.acm_solution`)
 

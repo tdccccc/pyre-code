@@ -46,8 +46,8 @@ def _balanced(values):
 def _large_case():
     # A 9000-node chain with random left/right turns, ending in a balanced 1000-node tree, so
     # the depth is about 9000. The naive method (recomputing heights at every node) costs the
-    # sum of all node depths, about 5 * 10^7 recursive calls: several seconds. The reference is
-    # iterative, so it is unaffected; recursive ACM programs need sys.setrecursionlimit here
+    # sum of all node depths, about 5 * 10^7 recursive calls: several seconds. The depth stays
+    # within the judge's recursion limit (20000 in both modes), so a recursive O(n) answer passes
     rng = random.Random(543)
     root = TreeNode(rng.randint(-100, 100))
     node = root

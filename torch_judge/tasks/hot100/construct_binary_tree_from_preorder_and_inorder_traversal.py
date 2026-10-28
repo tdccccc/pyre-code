@@ -52,8 +52,9 @@ def _orders(vals, left, right):
 
 
 def _large_case():
-    # A zigzag path of 3000 nodes, 3000 levels deep. A recursive build needs that many frames,
-    # so ACM programs must raise Python's default recursion limit of 1000 to pass
+    # A zigzag path of 3000 nodes, 3000 levels deep: a recursive build needs that many frames
+    # (the judge allows 20000). Searching inorder for each root with list.index is O(n^2) but
+    # still takes well under a second at n <= 3000, so this checks correctness at scale
     rng = random.Random(105)
     n = 3000
     vals = rng.sample(range(-3000, 3001), n)
@@ -97,12 +98,8 @@ TASK = {
     ],
     "random_case": _random_case,
     "large_case": _large_case,
-    "solution": '''import sys
-
-
-class Solution:
+    "solution": '''class Solution:
     def buildTree(self, preorder: List[int], inorder: List[int]) -> Optional[TreeNode]:
-        sys.setrecursionlimit(10000)  # a skewed tree can be 3000 levels deep
         position = {v: i for i, v in enumerate(inorder)}  # value -> index in inorder
         next_value = iter(preorder)  # consumed root, then left subtree, then right subtree
 

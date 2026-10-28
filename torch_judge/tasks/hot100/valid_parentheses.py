@@ -20,7 +20,8 @@ def _is_valid(s: str) -> bool:
 def _large_case():
     # 10^4 characters, the constraint limit: 5000 pairs in random nesting. Near the end, two
     # adjacent closing brackets of different types are swapped. The bracket counts stay
-    # balanced, so a count-only check says true, but the answer is false
+    # balanced, so a count-only check says true, but the answer is false. The "delete () [] {}
+    # until nothing changes" approach still finishes quickly (str.replace runs in C)
     rng = random.Random(20)
     opens, stack, out = 5000, [], []
     while opens or stack:

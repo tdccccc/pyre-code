@@ -33,8 +33,7 @@ def _build(vals, left, right):
 def _large_case():
     # 1000 nodes with small values, so many downward paths hit the target. The naive method
     # (walk down from every node) is O(n^2), but at n <= 1000 it still finishes in about 50 ms,
-    # so this case checks the count rather than speed. The tree is about 800 levels deep, close
-    # to Python's default recursion limit of 1000 in ACM programs
+    # so this case checks the count rather than speed. The tree is about 800 levels deep
     rng = random.Random(437)
     n = 1000
     vals = [rng.randint(-10, 10) for _ in range(n)]

@@ -54,6 +54,7 @@ def test_brute_force_times_out_on_large_input():
 # Classic wrong solutions, one file per task (named like the task); each must fail somewhere
 # in the hand-written or random cases
 MUTANTS_DIR = Path(__file__).parent / "hot100_mutants"
+MIN_RANDOM_CATCHES = 4
 MUTANTS = {p.stem: p.read_text(encoding="utf-8") for p in MUTANTS_DIR.glob("*.py")}
 
 
@@ -63,8 +64,11 @@ def test_every_task_has_a_mutant():
 
 @pytest.mark.parametrize("task_id", sorted(MUTANTS))
 def test_classic_mistake_is_caught_by_random_cases_too(task_id):
+    # A margin, not just one lucky case: random cases should expose the mistake often enough
+    # that similar bugs are caught too (README: retune random_case if this fails)
     failed = [r["name"] for r in _grade(task_id, MUTANTS[task_id])["results"] if not r["passed"]]
-    assert any(name.startswith("Random") for name in failed), failed
+    caught = sum(name.startswith("Random") for name in failed)
+    assert caught >= MIN_RANDOM_CATCHES, f"{caught} of {spec.RANDOM_CASES} random cases catch it: {failed}"
 
 
 def test_random_cases_are_seeded_and_visible():

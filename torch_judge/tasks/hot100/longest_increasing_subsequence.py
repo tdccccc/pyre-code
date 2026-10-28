@@ -16,7 +16,8 @@ def _length(nums: list[int]) -> int:
 
 def _large_case():
     # 2500 values drawn from only 601 distinct numbers, so repeats are everywhere and a
-    # non-strict comparison gives a visibly wrong length
+    # non-strict comparison gives a visibly wrong length. The O(n^2) DP also passes (about
+    # 0.1 s at n <= 2500), so this checks correctness at scale, not the O(n log n) follow-up
     rng = random.Random(300)
     nums = [rng.randint(-300, 300) for _ in range(2500)]
     return {"args": [nums], "expected": _length(nums)}
