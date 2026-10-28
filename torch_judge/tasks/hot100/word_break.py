@@ -21,15 +21,31 @@ def _large_case():
     return {"args": [s, words], "expected": _can_split(s, words)}
 
 
+def _greedy_split(s: str, words: list[str]) -> bool:
+    # The mutant's method: take the longest word at each step and never backtrack
+    i = 0
+    while i < len(s):
+        for j in range(len(s), i, -1):
+            if s[i:j] in words:
+                i = j
+                break
+        else:
+            return False
+    return True
+
+
 def _random_case(rng):
-    # Words and strings over {a, b}, so the dictionary splits the string in more than one way
-    # and greedy choices go wrong. Half the strings are built from the words (true cases)
-    words = sorted({"".join(rng.choice("ab") for _ in range(rng.randint(1, 3))) for _ in range(rng.randint(1, 4))})
-    if rng.random() < 0.5:
-        s = "".join(rng.choice(words) for _ in range(rng.randint(1, 4)))
-    else:
-        s = "".join(rng.choice("ab") for _ in range(rng.randint(1, 8)))
-    return {"args": [s, words]}
+    # Words and strings over {a, b}, so one string can be split in more than one way. About 40%
+    # of the cases are greedy traps: a split exists, but the longest-word-first walk gets stuck.
+    # Greedy never answers True for an unsplittable string, so only the traps expose it. The
+    # rest are unconstrained, true or false at random
+    want_trap = rng.random() < 0.4
+    while True:
+        words = sorted({"".join(rng.choice("ab") for _ in range(rng.randint(1, 3))) for _ in range(rng.randint(2, 5))})
+        s = "".join(rng.choice("ab") for _ in range(rng.randint(2, 8)))
+        trap = _can_split(s, words) and not _greedy_split(s, words)
+        if trap == want_trap:
+            return {"args": [s, words]}
 
 
 TASK = {

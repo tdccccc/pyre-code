@@ -25,8 +25,14 @@ def _large_case():
 
 
 def _random_case(rng):
-    m, n = rng.randint(1, 4), rng.randint(1, 4)
-    return {"args": [[[rng.choice([0, 1, 1, 2]) for _ in range(n)] for _ in range(m)]]}
+    # Small grids with fresh, empty and rotten cells. In 60% of the cases the top-left orange is
+    # rotten, so rot can run along a row or column. The mistake (rot spreads within a sweep)
+    # shows up only when a chain of fresh oranges lies in the sweep's direction
+    m, n = rng.randint(2, 4), rng.randint(2, 4)
+    grid = [[rng.choice([0, 1, 1, 2]) for _ in range(n)] for _ in range(m)]
+    if rng.random() < 0.6:
+        grid[0][0] = 2
+    return {"args": [grid]}
 
 
 TASK = {

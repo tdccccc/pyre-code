@@ -22,6 +22,11 @@ def _large_case():
 
 
 def _random_case(rng):
+    # Half the arrays are all negative, where the answer is the largest single value (below 0).
+    # A best sum that starts at 0 only goes wrong on those, so they are the cases that expose it.
+    # The other arrays mix signs
+    if rng.random() < 0.5:
+        return {"args": [[rng.randint(-9, -1) for _ in range(rng.randint(1, 6))]]}
     return {"args": [[rng.randint(-5, 5) for _ in range(rng.randint(1, 8))]]}
 
 

@@ -54,12 +54,15 @@ def _large_case():
 
 
 def _random_case(rng):
-    rows, cols = rng.randint(1, 3), rng.randint(1, 3)
-    board = [[rng.choice("AB") for _ in range(cols)] for _ in range(rows)]
-    if rng.random() < 0.5:
-        word = _walk(rng, board, rng.randint(1, min(6, rows * cols)))
+    # Boards with mostly "A", and long words. 85% of the words are walks over the board, so they
+    # exist. On these, the search wanders into dead ends, and a cell it marked on a failed branch
+    # is then wrongly blocked for a later path that needs it
+    rows, cols = rng.randint(3, 4), rng.randint(3, 4)
+    board = [["A" if rng.random() < 0.6 else "B" for _ in range(cols)] for _ in range(rows)]
+    if rng.random() < 0.85:
+        word = _walk(rng, board, rng.randint(5, 9))
     else:
-        word = "".join(rng.choice("AB") for _ in range(rng.randint(1, 5)))
+        word = "".join(rng.choice("AB") for _ in range(rng.randint(3, 6)))
     return {"args": [board, word]}
 
 

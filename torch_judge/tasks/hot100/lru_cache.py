@@ -34,17 +34,40 @@ def _large_case():
 
 
 def _random_case(rng):
-    # Capacity 2 over four keys, so recency decides most evictions. Measured against
-    # mutants: about 20% of these cases expose a get or put that skips the refresh.
+    # Capacity 2 over five keys. After some random ops, most cases read the LRU key (which
+    # refreshes it), put a new key, then read both old keys. A correct cache evicts the other
+    # key, so those reads show whether the first read counted as a use. Measured against
+    # mutants: about 40% of these cases expose a get that skips the refresh.
     ops, args = ["LRUCache"], [[2]]
-    for _ in range(rng.randint(15, 25)):
-        key = rng.randint(0, 3)
-        if rng.random() < 0.5:
-            ops.append("put")
-            args.append([key, rng.randint(0, 99)])
+    cache = OrderedDict()
+
+    def put(key):
+        ops.append("put")
+        args.append([key, rng.randint(0, 99)])
+        cache[key] = 0
+        cache.move_to_end(key)
+        if len(cache) > 2:
+            cache.popitem(last=False)
+
+    def get(key):
+        ops.append("get")
+        args.append([key])
+        if key in cache:
+            cache.move_to_end(key)
+
+    for step in range(rng.randint(3, 9)):
+        if step < 2 or rng.random() < 0.4:
+            put(rng.randint(0, 4))
         else:
-            ops.append("get")
-            args.append([key])
+            get(rng.choice(list(cache)) if cache and rng.random() < 0.6 else rng.randint(0, 4))
+    if len(cache) == 2 and rng.random() < 0.8:
+        a, b = list(cache)
+        if rng.random() < 0.5:
+            a, b = b, a
+        get(a)
+        put(rng.choice([k for k in range(5) if k not in cache]))
+        get(b)
+        get(a)
     return {"ops": ops, "args": args}
 
 

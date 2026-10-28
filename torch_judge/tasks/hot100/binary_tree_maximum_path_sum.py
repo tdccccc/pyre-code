@@ -51,9 +51,12 @@ def _large_case():
 
 
 def _random_case(rng):
-    n = rng.randint(1, 7)
-    left, right = _random_shape(rng, n, window=rng.randint(1, 3))
-    vals = [rng.randint(-10, 10) for _ in range(n)]
+    # Three to seven nodes, mostly positive values and shapes that branch (a wide window). The
+    # best path often bends at a node whose two sides both add value. The mutant only goes up
+    # through a node, so it misses that path
+    n = rng.randint(3, 7)
+    left, right = _random_shape(rng, n, window=rng.randint(2, n))
+    vals = [rng.randint(-3, 10) for _ in range(n)]
     return {"args": [tree_to_array(_build(vals, left, right))]}
 
 

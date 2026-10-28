@@ -27,7 +27,16 @@ def _large_case():
 
 
 def _random_case(rng):
-    return {"args": [[rng.randint(1, 10) for _ in range(rng.randint(1, 8))]]}
+    # Half the arrays have one number larger than the rest added together, plus an even gap so
+    # the total is even. The answer is False, but a solver that lets a number repeat can still
+    # reach half the total from the small numbers. The other arrays are random
+    small = [rng.randint(1, 5) for _ in range(rng.randint(1, 4))]
+    if rng.random() < 0.5:
+        nums = small + [sum(small) + 2 * rng.randint(1, 4)]
+    else:
+        nums = [rng.randint(1, 10) for _ in range(rng.randint(1, 8))]
+    rng.shuffle(nums)
+    return {"args": [nums]}
 
 
 TASK = {
