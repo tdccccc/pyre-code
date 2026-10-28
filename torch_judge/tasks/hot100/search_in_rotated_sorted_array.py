@@ -19,10 +19,17 @@ def _large_case():
 
 
 def _random_case(rng):
-    # Distinct values, rotated by any amount (0 included), with absent targets now and then
+    # Distinct values, rotated by any amount (0 included). The mistake is a target equal to the
+    # first or last value of a sorted half, so most targets are the array's two ends; the rest
+    # are random, sometimes absent
     nums = sorted(rng.sample(range(-10, 11), rng.randint(1, 8)))
     k = rng.randrange(len(nums))
-    return {"args": [nums[k:] + nums[:k], rng.randint(-11, 11)]}
+    rotated = nums[k:] + nums[:k]
+    if rng.random() < 0.85:
+        target = rng.choice([rotated[0], rotated[-1]])
+    else:
+        target = rng.randint(-11, 11)
+    return {"args": [rotated, target]}
 
 
 TASK = {

@@ -16,11 +16,16 @@ def _large_case():
 
 def _random_case(rng):
     # Retry until exactly one pair sums to the target; any other valid pair would be
-    # graded wrong against the reference answer
+    # graded wrong against the reference answer. Most targets are twice a value in the list. The
+    # mutant then pairs that value with itself at its first occurrence, which is wrong when that
+    # occurrence comes before the real pair
     while True:
         nums = [rng.randint(-10, 10) for _ in range(rng.randint(2, 8))]
-        i, j = sorted(rng.sample(range(len(nums)), 2))
-        target = nums[i] + nums[j]
+        if rng.random() < 0.6:
+            target = 2 * rng.choice(nums)
+        else:
+            i, j = sorted(rng.sample(range(len(nums)), 2))
+            target = nums[i] + nums[j]
         pairs = sum(nums[a] + nums[b] == target for a in range(len(nums)) for b in range(a + 1, len(nums)))
         if pairs == 1:
             return {"args": [nums, target]}

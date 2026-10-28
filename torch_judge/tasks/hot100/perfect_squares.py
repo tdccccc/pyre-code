@@ -20,8 +20,10 @@ def _large_case():
     return {"args": [n], "expected": _least_squares(n)}
 
 
+# Greedy (largest square first) is wrong for roughly 40% of n up to 300. The mistake only shows
+# once the optimum needs several squares, which takes n well past 60, so the range goes to 300
 def _random_case(rng):
-    return {"args": [rng.randint(1, 60)]}
+    return {"args": [rng.randint(1, 300)]}
 
 
 TASK = {

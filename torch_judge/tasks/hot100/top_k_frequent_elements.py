@@ -20,10 +20,15 @@ def _large_case():
 
 
 def _random_case(rng):
-    # Retry until the k-th and (k+1)-th most frequent values have different counts, so the
-    # top-k set is unique (a tie at the boundary would make either tied value a valid answer)
+    # The mistake is returning the first k distinct values in order of appearance. So the values
+    # are shuffled with random counts over 3 to 5 distinct values, which often leaves the most
+    # frequent value out of the first k. Retry until the k-th and (k+1)-th most frequent values
+    # have different counts, so the top-k set is unique (a tie at the boundary would make either
+    # tied value a valid answer)
     while True:
-        nums = [rng.randint(-2, 3) for _ in range(rng.randint(1, 10))]
+        values = rng.sample(range(-3, 4), rng.randint(3, 5))
+        nums = [v for v in values for _ in range(rng.randint(1, 4))]
+        rng.shuffle(nums)
         counts = sorted(Counter(nums).values(), reverse=True)
         k = rng.randint(1, len(counts))
         if k == len(counts) or counts[k - 1] > counts[k]:

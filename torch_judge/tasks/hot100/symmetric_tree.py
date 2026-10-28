@@ -26,6 +26,28 @@ def _mirror(node):
     return TreeNode(node.val, _mirror(node.right), _mirror(node.left))
 
 
+def _rotate(root, rng):
+    # Rotate a random child up over its parent. Rotations keep the in-order sequence, so a test
+    # on the in-order values can't tell the trees apart, but the shape usually stops mirroring
+    nodes = [(None, None, root)]  # (parent, side of parent, node)
+    for _, _, node in nodes:
+        for side in ("left", "right"):
+            child = getattr(node, side)
+            if child is not None:
+                nodes.append((node, side, child))
+    options = [(p, ps, x, side) for p, ps, x in nodes for side in ("left", "right") if getattr(x, side)]
+    parent, pside, x, side = rng.choice(options)
+    y = getattr(x, side)
+    if side == "left":
+        x.left, y.right = y.right, x
+    else:
+        x.right, y.left = y.left, x
+    if parent is None:
+        return y
+    setattr(parent, pside, y)
+    return root
+
+
 def _is_symmetric(root):
     # Compare pairs of positions across the root with an explicit stack
     pairs = [(root.left, root.right)]
@@ -55,11 +77,15 @@ def _large_case():
     return {"args": [tree_to_array(root)], "expected": _is_symmetric(root)}
 
 
+# Start from a mirror-symmetric tree, whose in-order values form a palindrome, then rotate a node
+# in half the cases. The mutant's palindrome test still answers true after a rotation, but the
+# shape is then usually not symmetric, which is the case it gets wrong. The rest stay symmetric
 def _random_case(rng):
-    # Half the time the right half is the mirror of the left, so both answers are common
-    left = _random_tree(rng, rng.randint(0, 4), 1, 3)
-    right = _mirror(left) if rng.random() < 0.5 else _random_tree(rng, rng.randint(0, 4), 1, 3)
-    return {"args": [tree_to_array(TreeNode(2, left, right))]}
+    left = _random_tree(rng, rng.randint(1, 4), 1, 3)
+    root = TreeNode(2, left, _mirror(left))
+    if rng.random() < 0.5:
+        root = _rotate(root, rng)
+    return {"args": [tree_to_array(root)]}
 
 
 TASK = {

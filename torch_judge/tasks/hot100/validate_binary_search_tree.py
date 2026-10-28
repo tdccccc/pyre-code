@@ -23,6 +23,25 @@ def _bst(values):
     return root
 
 
+def _local_tree(rng, n):
+    # Random shape where each child only has to beat its own parent (a left child is smaller, a
+    # right child larger). The mutant checks exactly that, so these trees pass it, while many
+    # break the bound set by a higher ancestor
+    while True:
+        root = TreeNode(rng.randint(-9, 9))
+        slots = [(root, "left"), (root, "right")]
+        for _ in range(n - 1):
+            parent, side = slots.pop(rng.randrange(len(slots)))
+            options = range(-9, parent.val) if side == "left" else range(parent.val + 1, 10)
+            if not options:
+                break
+            child = TreeNode(rng.choice(options))
+            setattr(parent, side, child)
+            slots += [(child, "left"), (child, "right")]
+        else:
+            return root
+
+
 def _balanced(values):
     # Balanced tree from a sorted list, used to build the deep test tree
     if not values:
@@ -61,14 +80,14 @@ def _large_case():
     return {"args": [tree_to_array(root)], "expected": _is_valid(root)}
 
 
+# Half the cases are trees that pass the parent-child check but break a higher bound (the mutant's
+# blind spot), since a node two or more levels down is often on the wrong side of an ancestor.
+# The other half are valid BSTs built by insertion, so the answer is true for them
 def _random_case(rng):
-    # Half the cases are valid BSTs; the other half get one node moved to a random value
-    root = _bst(rng.sample(range(-9, 10), rng.randint(1, 10)))
     if rng.random() < 0.5:
-        nodes = [root]
-        for node in nodes:
-            nodes += [c for c in (node.left, node.right) if c is not None]
-        rng.choice(nodes).val = rng.randint(-9, 9)
+        root = _local_tree(rng, rng.randint(3, 8))
+    else:
+        root = _bst(rng.sample(range(-9, 10), rng.randint(1, 10)))
     return {"args": [tree_to_array(root)]}
 
 

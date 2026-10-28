@@ -19,9 +19,17 @@ def _large_case():
     return {"args": [values, 37], "expected": _reverse_groups(values, 37)}
 
 
+# The mistake (reversing an incomplete last group) only shows when at least two nodes are left
+# over, which needs k >= 3. So k is 3 or 4, and the leftover is 2 or more in most cases. The
+# rest keep a leftover of 0 or 1 to check that full groups still reverse
 def _random_case(rng):
-    values = [rng.randint(0, 9) for _ in range(rng.randint(1, 7))]
-    return {"args": [values, rng.randint(1, len(values))]}
+    k = rng.randint(3, 4)
+    if rng.random() < 0.2:
+        leftover = rng.randint(2, k - 1)
+    else:
+        leftover = rng.randint(0, k - 1)
+    values = [rng.randint(0, 9) for _ in range(rng.randint(1, 2) * k + leftover)]
+    return {"args": [values, k]}
 
 
 TASK = {
