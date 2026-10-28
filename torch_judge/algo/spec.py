@@ -553,7 +553,15 @@ def _read_stmt(name: str, type_name: str) -> list[str]:
     raise NotImplementedError(type_name)
 
 
-def _print_stmt(expr: str, type_name: str) -> list[str]:
+def _print_stmt(expr: str, type_name: str, plain: bool = False) -> list[str]:
+    """Statements printing ``expr``. ``plain``: it already holds the plain answer (a ``finish``
+    hook converted it), so lists, trees and random lists are printed without converting."""
+    if plain and type_name in ("ListNode", "TreeNode", "Node"):
+        type_name = {"ListNode": "int[]", "TreeNode": "tokens", "Node": "Node rows"}[type_name]
+    if type_name == "tokens":
+        return [f"print(format_tokens({expr}))"]
+    if type_name == "Node rows":
+        return [f"for row in {expr}:", "    print(format_tokens(row))"]
     if type_name.endswith("?"):
         return [f'print("null" if {expr} is None else {expr})']
     if type_name in ("int", "float", "str"):
@@ -624,7 +632,7 @@ def acm_solution(task: dict) -> str:
             body.append(f"    ans = {call}")
             if task.get("finish"):
                 body.append("    ans = finish(ans, args)")
-            body += [f"    {s}" for s in _print_stmt("ans", acm_output_type(task))]
+            body += [f"    {s}" for s in _print_stmt("ans", acm_output_type(task), plain=bool(task.get("finish")))]
 
     footer = ["", "", 'if __name__ == "__main__":', "    main()", ""]
     sections = ["\n".join(header)] + helpers + hooks + [core, "\n".join(body)]
