@@ -2427,6 +2427,914 @@
           "code": "\nimport torch\nN, F = 6, 4\nA = torch.zeros(N, N)\nedges_list = [(0,1),(1,2),(2,3),(3,4),(4,5),(0,5)]\nfor i,j in edges_list:\n    A[i,j] = A[j,i] = 1.0\ntorch.manual_seed(42)\nX = torch.randn(N, F)\n# (i,j) and (j,i) should produce the same score since decoder is dot product\nedges_fwd = torch.tensor([[0,1],[2,3],[1,4]], dtype=torch.long)\nedges_rev = torch.tensor([[1,0],[3,2],[4,1]], dtype=torch.long)\nscores_fwd = {fn}(A, X, edges_fwd)\nscores_rev = {fn}(A, X, edges_rev)\nassert torch.allclose(scores_fwd, scores_rev, atol=1e-5), f'score(i,j) should equal score(j,i): max diff = {(scores_fwd - scores_rev).abs().max().item():.6f}'\n"
         }
       ]
+    },
+    {
+      "id": "two_sum",
+      "title": "Two Sum",
+      "titleZh": "两数之和",
+      "difficulty": "Easy",
+      "functionName": "twoSum",
+      "hint": "While scanning, ask \"have I already seen `target - x`?\" A dict from value to index answers that in O(1).",
+      "hintZh": "遍历时问自己：「`target - x` 之前出现过吗？」用一个 值 → 下标 的字典可以 O(1) 回答。",
+      "descriptionEn": "Given an integer array `nums` and an integer `target`, find the two positions whose values add up to `target` and return their indices.\n\nEach input has exactly one valid pair, and the same position cannot be used twice. The two indices may be returned in either order.\n\n**Example 1:** `nums = [4,11,7,2], target = 9` → `[2,3]` (7 + 2 = 9)\n\n**Example 2:** `nums = [5,5], target = 10` → `[0,1]`\n\n**Constraints:**\n- `2 <= nums.length <= 10^4`\n- `-10^9 <= nums[i], target <= 10^9`\n- Exactly one valid answer exists\n\n**Follow-up:** can you do better than O(n²)?",
+      "descriptionZh": "给定整数数组 `nums` 和整数 `target`，找出数组中和为 `target` 的两个位置，返回它们的下标。\n\n每组输入恰好只有一对答案，同一个位置不能使用两次。两个下标可以按任意顺序返回。\n\n**示例 1：** `nums = [4,11,7,2], target = 9` → `[2,3]`（7 + 2 = 9）\n\n**示例 2：** `nums = [5,5], target = 10` → `[0,1]`\n\n**约束：**\n- `2 <= nums.length <= 10^4`\n- `-10^9 <= nums[i], target <= 10^9`\n- 答案恰好存在一个\n\n**进阶：** 你能想出时间复杂度低于 O(n²) 的算法吗？",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: nums = [4,11,7,2], target = 9\nExpected: [2,3]"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: nums = [5,5], target = 10\nExpected: [0,1]"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: nums = [-3,4,1,90], target = -2\nExpected: [0,2]"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: nums = [0,4,3,0], target = 0\nExpected: [0,3]"
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: nums = [1,2,3,4,5,6], target = 11\nExpected: [4,5]"
+        }
+      ],
+      "track": "hot100",
+      "category": "Hashing",
+      "categoryZh": "哈希",
+      "order": 1,
+      "leetcodeId": 1,
+      "leetcodeSlug": "two-sum",
+      "acm": {
+        "inputEn": "- Line 1: an integer n, the length of `nums`\n- Line 2: n space-separated integers: `nums`\n- Line 3: an integer `target`",
+        "inputZh": "- 第 1 行：整数 n，表示 `nums` 的长度\n- 第 2 行：n 个以空格分隔的整数，即 `nums`\n- 第 3 行：整数 `target`",
+        "outputEn": "Print one line of space-separated integers (an empty line if the result is empty). Elements may be printed in any order.",
+        "outputZh": "输出一行以空格分隔的整数（结果为空时输出空行）。元素可以按任意顺序输出。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "nums = [4,11,7,2], target = 9",
+            "expected": "[2,3]"
+          },
+          {
+            "name": "Example 2",
+            "input": "nums = [5,5], target = 10",
+            "expected": "[0,1]"
+          },
+          {
+            "name": "Case 3",
+            "input": "nums = [-3,4,1,90], target = -2",
+            "expected": "[0,2]"
+          },
+          {
+            "name": "Case 4",
+            "input": "nums = [0,4,3,0], target = 0",
+            "expected": "[0,3]"
+          },
+          {
+            "name": "Case 5",
+            "input": "nums = [1,2,3,4,5,6], target = 11",
+            "expected": "[4,5]"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "4\n4 11 7 2\n9",
+            "expected": "2 3"
+          },
+          {
+            "name": "Example 2",
+            "input": "2\n5 5\n10",
+            "expected": "0 1"
+          },
+          {
+            "name": "Case 3",
+            "input": "4\n-3 4 1 90\n-2",
+            "expected": "0 2"
+          },
+          {
+            "name": "Case 4",
+            "input": "4\n0 4 3 0\n0",
+            "expected": "0 3"
+          },
+          {
+            "name": "Case 5",
+            "input": "6\n1 2 3 4 5 6\n11",
+            "expected": "4 5"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\nclass Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
+      "id": "group_anagrams",
+      "title": "Group Anagrams",
+      "titleZh": "字母异位词分组",
+      "difficulty": "Medium",
+      "functionName": "groupAnagrams",
+      "hint": "Anagrams share a canonical form, e.g. the sorted string or a 26-letter count tuple. Use it as a dict key.",
+      "hintZh": "字母异位词有相同的「标准形式」，比如排序后的字符串，或 26 个字母的计数元组。用它当字典的键。",
+      "descriptionEn": "Given a list of strings `strs`, put strings that are anagrams of each other (same letters, same counts, any order) into the same group, and return the list of groups.\n\nGroups may appear in any order, and so may the strings inside a group.\n\n**Example 1:** `strs = [\"stone\",\"notes\",\"tab\",\"onset\",\"bat\",\"cat\"]` → `[[\"stone\",\"notes\",\"onset\"],[\"tab\",\"bat\"],[\"cat\"]]`\n\n**Example 2:** `strs = [\"a\"]` → `[[\"a\"]]`\n\n**Constraints:**\n- `1 <= strs.length <= 10^4`\n- `0 <= strs[i].length <= 100`\n- `strs[i]` contains lowercase English letters only",
+      "descriptionZh": "给定字符串列表 `strs`，把互为字母异位词（字母相同、各字母出现次数相同、顺序任意）的字符串放进同一组，返回所有分组。\n\n组的顺序、组内字符串的顺序都不限。\n\n**示例 1：** `strs = [\"stone\",\"notes\",\"tab\",\"onset\",\"bat\",\"cat\"]` → `[[\"stone\",\"notes\",\"onset\"],[\"tab\",\"bat\"],[\"cat\"]]`\n\n**示例 2：** `strs = [\"a\"]` → `[[\"a\"]]`\n\n**约束：**\n- `1 <= strs.length <= 10^4`\n- `0 <= strs[i].length <= 100`\n- `strs[i]` 只包含小写英文字母",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: strs = [\"stone\",\"notes\",\"tab\",\"onset\",\"bat\",\"cat\"]\nExpected: [[\"stone\",\"notes\",\"onset\"],[\"tab\",\"bat\"],[\"cat\"]]"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: strs = [\"a\"]\nExpected: [[\"a\"]]"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: strs = [\"\"]\nExpected: [[\"\"]]"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: strs = [\"ab\",\"ba\",\"abc\",\"cab\",\"bca\",\"xyz\"]\nExpected: [[\"ab\",\"ba\"],[\"abc\",\"cab\",\"bca\"],[\"xyz\"]]"
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: strs = [\"aab\",\"aba\",\"abb\"]\nExpected: [[\"aab\",\"aba\"],[\"abb\"]]"
+        }
+      ],
+      "track": "hot100",
+      "category": "Hashing",
+      "categoryZh": "哈希",
+      "order": 2,
+      "leetcodeId": 49,
+      "leetcodeSlug": "group-anagrams",
+      "acm": {
+        "inputEn": "- Line 1: an integer n, the length of `strs`\n- The next n lines: one string of `strs` each",
+        "inputZh": "- 第 1 行：整数 n，表示 `strs` 的长度\n- 接下来 n 行：每行是 `strs` 中的一个字符串",
+        "outputEn": "Print one group per line, strings space-separated. Groups, and the strings within a group, may be in any order.",
+        "outputZh": "输出若干行，每行一组，字符串以空格分隔。组与组之间、组内元素的顺序均不限。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "strs = [\"stone\",\"notes\",\"tab\",\"onset\",\"bat\",\"cat\"]",
+            "expected": "[[\"stone\",\"notes\",\"onset\"],[\"tab\",\"bat\"],[\"cat\"]]"
+          },
+          {
+            "name": "Example 2",
+            "input": "strs = [\"a\"]",
+            "expected": "[[\"a\"]]"
+          },
+          {
+            "name": "Case 3",
+            "input": "strs = [\"\"]",
+            "expected": "[[\"\"]]"
+          },
+          {
+            "name": "Case 4",
+            "input": "strs = [\"ab\",\"ba\",\"abc\",\"cab\",\"bca\",\"xyz\"]",
+            "expected": "[[\"ab\",\"ba\"],[\"abc\",\"cab\",\"bca\"],[\"xyz\"]]"
+          },
+          {
+            "name": "Case 5",
+            "input": "strs = [\"aab\",\"aba\",\"abb\"]",
+            "expected": "[[\"aab\",\"aba\"],[\"abb\"]]"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "6\nstone\nnotes\ntab\nonset\nbat\ncat",
+            "expected": "stone notes onset\ntab bat\ncat"
+          },
+          {
+            "name": "Example 2",
+            "input": "1\na",
+            "expected": "a"
+          },
+          {
+            "name": "Case 3",
+            "input": "6\nab\nba\nabc\ncab\nbca\nxyz",
+            "expected": "ab ba\nabc cab bca\nxyz"
+          },
+          {
+            "name": "Case 4",
+            "input": "3\naab\naba\nabb",
+            "expected": "aab aba\nabb"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\nclass Solution:\n    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
+      "id": "move_zeroes",
+      "title": "Move Zeroes",
+      "titleZh": "移动零",
+      "difficulty": "Easy",
+      "functionName": "moveZeroes",
+      "hint": "Keep a write pointer for where the next non-zero goes. Scan with a read pointer; when it sees a non-zero, swap it into the write position.",
+      "hintZh": "维护一个「下一个非零元素该放哪」的写指针。读指针向后扫描，遇到非零元素就把它交换到写指针的位置。",
+      "descriptionEn": "Given an integer array `nums`, move every `0` to the end while keeping the non-zero elements in their original relative order.\n\nModify `nums` **in place**; do not return anything and do not build a copy of the array.\n\n**Example 1:** `nums = [0,3,0,7,9]` → `nums` becomes `[3,7,9,0,0]`\n\n**Example 2:** `nums = [0]` → `[0]`\n\n**Constraints:**\n- `1 <= nums.length <= 10^4`\n- `-2^31 <= nums[i] <= 2^31 - 1`\n\n**Follow-up:** can you keep the number of writes small?",
+      "descriptionZh": "给定整数数组 `nums`，把所有 `0` 移到末尾，同时保持非零元素原有的相对顺序。\n\n必须**原地**修改 `nums`，不要返回任何值，也不要复制数组。\n\n**示例 1：** `nums = [0,3,0,7,9]` → `nums` 变为 `[3,7,9,0,0]`\n\n**示例 2：** `nums = [0]` → `[0]`\n\n**约束：**\n- `1 <= nums.length <= 10^4`\n- `-2^31 <= nums[i] <= 2^31 - 1`\n\n**进阶：** 你能尽量减少写操作的次数吗？",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: nums = [0,3,0,7,9]\nExpected: [3,7,9,0,0]"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: nums = [0]\nExpected: [0]"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: nums = [1,2,3]\nExpected: [1,2,3]"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: nums = [0,0,1]\nExpected: [1,0,0]"
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: nums = [-4,0,0,5,0,-6]\nExpected: [-4,5,-6,0,0,0]"
+        }
+      ],
+      "track": "hot100",
+      "category": "Two Pointers",
+      "categoryZh": "双指针",
+      "order": 3,
+      "leetcodeId": 283,
+      "leetcodeSlug": "move-zeroes",
+      "acm": {
+        "inputEn": "- Line 1: an integer n, the length of `nums`\n- Line 2: n space-separated integers: `nums`",
+        "inputZh": "- 第 1 行：整数 n，表示 `nums` 的长度\n- 第 2 行：n 个以空格分隔的整数，即 `nums`",
+        "outputEn": "Print `nums` after the operation, as one line of space-separated integers (an empty line if the result is empty).",
+        "outputZh": "输出操作完成后的 `nums`，格式为一行以空格分隔的整数（结果为空时输出空行）。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "nums = [0,3,0,7,9]",
+            "expected": "[3,7,9,0,0]"
+          },
+          {
+            "name": "Example 2",
+            "input": "nums = [0]",
+            "expected": "[0]"
+          },
+          {
+            "name": "Case 3",
+            "input": "nums = [1,2,3]",
+            "expected": "[1,2,3]"
+          },
+          {
+            "name": "Case 4",
+            "input": "nums = [0,0,1]",
+            "expected": "[1,0,0]"
+          },
+          {
+            "name": "Case 5",
+            "input": "nums = [-4,0,0,5,0,-6]",
+            "expected": "[-4,5,-6,0,0,0]"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "5\n0 3 0 7 9",
+            "expected": "3 7 9 0 0"
+          },
+          {
+            "name": "Example 2",
+            "input": "1\n0",
+            "expected": "0"
+          },
+          {
+            "name": "Case 3",
+            "input": "3\n1 2 3",
+            "expected": "1 2 3"
+          },
+          {
+            "name": "Case 4",
+            "input": "3\n0 0 1",
+            "expected": "1 0 0"
+          },
+          {
+            "name": "Case 5",
+            "input": "6\n-4 0 0 5 0 -6",
+            "expected": "-4 5 -6 0 0 0"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\nclass Solution:\n    def moveZeroes(self, nums: List[int]) -> None:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
+      "id": "longest_substring_without_repeating",
+      "title": "Longest Substring Without Repeating Characters",
+      "titleZh": "无重复字符的最长子串",
+      "difficulty": "Medium",
+      "functionName": "lengthOfLongestSubstring",
+      "hint": "Slide a window [start, i]. Remember where each character was last seen; when s[i] repeats inside the window, jump start past that earlier position.",
+      "hintZh": "维护滑动窗口 [start, i]，记录每个字符最后出现的位置。当 s[i] 在窗口内重复时，把 start 跳到上次出现位置的后一位。",
+      "descriptionEn": "Given a string `s`, return the length of its longest **substring** (a contiguous run of characters) in which no character appears twice.\n\n**Example 1:** `s = \"abacdcf\"` → `4` (the substring `\"bacd\"`)\n\n**Example 2:** `s = \"zzzz\"` → `1`\n\n**Constraints:**\n- `0 <= s.length <= 5 * 10^4`\n- `s` consists of English letters, digits, symbols and spaces",
+      "descriptionZh": "给定字符串 `s`，返回其中不含重复字符的最长**子串**（连续的一段字符）的长度。\n\n**示例 1：** `s = \"abacdcf\"` → `4`（子串 `\"bacd\"`）\n\n**示例 2：** `s = \"zzzz\"` → `1`\n\n**约束：**\n- `0 <= s.length <= 5 * 10^4`\n- `s` 由英文字母、数字、符号和空格组成",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: s = \"abacdcf\"\nExpected: 4"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: s = \"zzzz\"\nExpected: 1"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: s = \"\"\nExpected: 0"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: s = \" \"\nExpected: 1"
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: s = \"abcdeafg\"\nExpected: 7"
+        },
+        {
+          "name": "Case 6",
+          "code": "Input: s = \"abba\"\nExpected: 2"
+        }
+      ],
+      "track": "hot100",
+      "category": "Sliding Window",
+      "categoryZh": "滑动窗口",
+      "order": 4,
+      "leetcodeId": 3,
+      "leetcodeSlug": "longest-substring-without-repeating-characters",
+      "acm": {
+        "inputEn": "- Line 1: the string `s` (the whole line, possibly empty)",
+        "inputZh": "- 第 1 行：字符串 `s`（整行内容，可能为空）",
+        "outputEn": "Print one integer.",
+        "outputZh": "输出一个整数。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "s = \"abacdcf\"",
+            "expected": "4"
+          },
+          {
+            "name": "Example 2",
+            "input": "s = \"zzzz\"",
+            "expected": "1"
+          },
+          {
+            "name": "Case 3",
+            "input": "s = \"\"",
+            "expected": "0"
+          },
+          {
+            "name": "Case 4",
+            "input": "s = \" \"",
+            "expected": "1"
+          },
+          {
+            "name": "Case 5",
+            "input": "s = \"abcdeafg\"",
+            "expected": "7"
+          },
+          {
+            "name": "Case 6",
+            "input": "s = \"abba\"",
+            "expected": "2"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "abacdcf",
+            "expected": "4"
+          },
+          {
+            "name": "Example 2",
+            "input": "zzzz",
+            "expected": "1"
+          },
+          {
+            "name": "Case 3",
+            "input": "",
+            "expected": "0"
+          },
+          {
+            "name": "Case 4",
+            "input": "abcdeafg",
+            "expected": "7"
+          },
+          {
+            "name": "Case 5",
+            "input": "abba",
+            "expected": "2"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\nclass Solution:\n    def lengthOfLongestSubstring(self, s: str) -> int:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
+      "id": "lru_cache",
+      "title": "LRU Cache",
+      "titleZh": "LRU 缓存",
+      "difficulty": "Medium",
+      "functionName": "LRUCache",
+      "hint": "A dict gives O(1) lookup; a doubly linked list gives O(1) \"move to most recent\" and \"drop least recent\". Store list nodes in the dict. (collections.OrderedDict bundles both.)",
+      "hintZh": "字典提供 O(1) 查找，双向链表提供 O(1) 的「移到最近使用」和「删除最久未使用」。字典里存链表节点。（collections.OrderedDict 把两者合在了一起。）",
+      "descriptionEn": "Design a key-value cache with a fixed `capacity` that evicts the **least recently used** key when it is full. Implement the class `LRUCache`:\n\n- `LRUCache(capacity)` creates an empty cache holding at most `capacity` keys\n- `get(key)` returns the value for `key`, or `-1` if it is absent; a successful get counts as a use\n- `put(key, value)` inserts or updates `key`; it counts as a use. If this makes the cache exceed `capacity`, remove the least recently used key\n\nBoth `get` and `put` must run in **O(1)** average time.\n\n**Example:** capacity 2: `put(1,10)`, `put(2,20)`, `get(1)` → `10`, `put(3,30)` evicts key 2, `get(2)` → `-1`\n\n**Constraints:**\n- `1 <= capacity <= 3000`\n- `0 <= key <= 10^4`, `0 <= value <= 10^5`\n- At most `2 * 10^5` calls to `get` and `put`",
+      "descriptionZh": "设计一个容量固定为 `capacity` 的键值缓存，满了以后淘汰**最久未使用**的键。实现 `LRUCache` 类：\n\n- `LRUCache(capacity)`：创建一个最多存放 `capacity` 个键的空缓存\n- `get(key)`：返回 `key` 对应的值，不存在则返回 `-1`；成功读取算作一次使用\n- `put(key, value)`：插入或更新 `key`，算作一次使用。如果因此超出 `capacity`，删除最久未使用的键\n\n`get` 和 `put` 的平均时间复杂度都必须是 **O(1)**。\n\n**示例：** 容量为 2：`put(1,10)`、`put(2,20)`、`get(1)` → `10`，`put(3,30)` 淘汰键 2，`get(2)` → `-1`\n\n**约束：**\n- `1 <= capacity <= 3000`\n- `0 <= key <= 10^4`，`0 <= value <= 10^5`\n- `get` 和 `put` 总共最多调用 `2 * 10^5` 次",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: [\"LRUCache\",\"put\",\"put\",\"get\",\"put\",\"get\",\"put\",\"get\",\"get\",\"get\"]\n[[2],[1,10],[2,20],[1],[3,30],[2],[4,40],[1],[3],[4]]\nExpected: [null,null,null,10,null,-1,null,-1,30,40]"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: [\"LRUCache\",\"put\",\"get\",\"put\",\"get\",\"get\"]\n[[1],[2,1],[2],[3,2],[2],[3]]\nExpected: [null,null,1,null,-1,2]"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: [\"LRUCache\",\"put\",\"put\",\"put\",\"put\",\"get\",\"get\",\"get\"]\n[[2],[1,1],[2,2],[1,5],[3,3],[1],[2],[3]]\nExpected: [null,null,null,null,null,5,-1,3]"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: [\"LRUCache\",\"get\",\"put\",\"get\",\"put\",\"put\",\"get\",\"get\"]\n[[2],[7],[7,70],[7],[8,80],[9,90],[7],[9]]\nExpected: [null,-1,null,70,null,null,-1,90]"
+        }
+      ],
+      "track": "hot100",
+      "category": "Linked List",
+      "categoryZh": "链表",
+      "order": 5,
+      "leetcodeId": 146,
+      "leetcodeSlug": "lru-cache",
+      "acm": {
+        "inputEn": "- Line 1: an integer q, the number of operations (including construction)\n- The next q lines: one operation each, the name followed by its arguments, space-separated\n- The first operation is always `LRUCache capacity`; the rest are among `get key`, `put key value`",
+        "inputZh": "- 第 1 行：整数 q，表示操作数（包含构造）\n- 接下来 q 行：每行一个操作，先写操作名，再写参数，以空格分隔\n- 第一个操作总是 `LRUCache capacity`，其余操作为 `get key`, `put key value` 之一",
+        "outputEn": "For every `get` call, in order, print its return value on its own line.",
+        "outputZh": "对每次 `get` 调用，按顺序各输出一行返回值。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "[\"LRUCache\",\"put\",\"put\",\"get\",\"put\",\"get\",\"put\",\"get\",\"get\",\"get\"]\n[[2],[1,10],[2,20],[1],[3,30],[2],[4,40],[1],[3],[4]]",
+            "expected": "[null,null,null,10,null,-1,null,-1,30,40]"
+          },
+          {
+            "name": "Example 2",
+            "input": "[\"LRUCache\",\"put\",\"get\",\"put\",\"get\",\"get\"]\n[[1],[2,1],[2],[3,2],[2],[3]]",
+            "expected": "[null,null,1,null,-1,2]"
+          },
+          {
+            "name": "Case 3",
+            "input": "[\"LRUCache\",\"put\",\"put\",\"put\",\"put\",\"get\",\"get\",\"get\"]\n[[2],[1,1],[2,2],[1,5],[3,3],[1],[2],[3]]",
+            "expected": "[null,null,null,null,null,5,-1,3]"
+          },
+          {
+            "name": "Case 4",
+            "input": "[\"LRUCache\",\"get\",\"put\",\"get\",\"put\",\"put\",\"get\",\"get\"]\n[[2],[7],[7,70],[7],[8,80],[9,90],[7],[9]]",
+            "expected": "[null,-1,null,70,null,null,-1,90]"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "10\nLRUCache 2\nput 1 10\nput 2 20\nget 1\nput 3 30\nget 2\nput 4 40\nget 1\nget 3\nget 4",
+            "expected": "10\n-1\n-1\n30\n40"
+          },
+          {
+            "name": "Example 2",
+            "input": "6\nLRUCache 1\nput 2 1\nget 2\nput 3 2\nget 2\nget 3",
+            "expected": "1\n-1\n2"
+          },
+          {
+            "name": "Case 3",
+            "input": "8\nLRUCache 2\nput 1 1\nput 2 2\nput 1 5\nput 3 3\nget 1\nget 2\nget 3",
+            "expected": "5\n-1\n3"
+          },
+          {
+            "name": "Case 4",
+            "input": "8\nLRUCache 2\nget 7\nput 7 70\nget 7\nput 8 80\nput 9 90\nget 7\nget 9",
+            "expected": "-1\n70\n-1\n90"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\nclass LRUCache:\n\n    def __init__(self, capacity: int):\n        pass\n\n    def get(self, key: int) -> int:\n        pass\n\n    def put(self, key: int, value: int) -> None:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
+      "id": "reverse_linked_list",
+      "title": "Reverse Linked List",
+      "titleZh": "反转链表",
+      "difficulty": "Easy",
+      "functionName": "reverseList",
+      "hint": "Walk the list keeping `prev` and `cur`. Save `cur.next` before pointing `cur.next` back at `prev`, then step both forward.",
+      "hintZh": "遍历链表，维护 `prev` 和 `cur`。先保存 `cur.next`，再把 `cur.next` 指回 `prev`，然后两个指针一起前进。",
+      "descriptionEn": "Given the head `head` of a singly linked list, reverse the list and return the new head.\n\n**Example 1:** `head = [7,3,9,2]` → `[2,9,3,7]`\n\n**Example 2:** `head = [4,8]` → `[8,4]`\n\n**Constraints:**\n- The list has `0` to `5000` nodes\n- `-5000 <= Node.val <= 5000`\n\n**Follow-up:** can you write both an iterative and a recursive version?",
+      "descriptionZh": "给定单链表的头节点 `head`，把链表反转，返回反转后的头节点。\n\n**示例 1：** `head = [7,3,9,2]` → `[2,9,3,7]`\n\n**示例 2：** `head = [4,8]` → `[8,4]`\n\n**约束：**\n- 链表节点数在 `0` 到 `5000` 之间\n- `-5000 <= Node.val <= 5000`\n\n**进阶：** 你能分别写出迭代和递归两种做法吗？",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: head = [7,3,9,2]\nExpected: [2,9,3,7]"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: head = [4,8]\nExpected: [8,4]"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: head = []\nExpected: []"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: head = [5]\nExpected: [5]"
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: head = [1,1,2,2]\nExpected: [2,2,1,1]"
+        }
+      ],
+      "track": "hot100",
+      "category": "Linked List",
+      "categoryZh": "链表",
+      "order": 6,
+      "leetcodeId": 206,
+      "leetcodeSlug": "reverse-linked-list",
+      "acm": {
+        "inputEn": "- Line 1: an integer n, the number of nodes in `head`\n- Line 2: n space-separated integers: the node values from head to tail",
+        "inputZh": "- 第 1 行：整数 n，表示链表 `head` 的节点数\n- 第 2 行：n 个以空格分隔的整数，即从头到尾各节点的值",
+        "outputEn": "Print one line: the node values from head to tail, space-separated (an empty line for an empty list).",
+        "outputZh": "输出一行：从头到尾各节点的值，以空格分隔（空链表输出空行）。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "head = [7,3,9,2]",
+            "expected": "[2,9,3,7]"
+          },
+          {
+            "name": "Example 2",
+            "input": "head = [4,8]",
+            "expected": "[8,4]"
+          },
+          {
+            "name": "Case 3",
+            "input": "head = []",
+            "expected": "[]"
+          },
+          {
+            "name": "Case 4",
+            "input": "head = [5]",
+            "expected": "[5]"
+          },
+          {
+            "name": "Case 5",
+            "input": "head = [1,1,2,2]",
+            "expected": "[2,2,1,1]"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "4\n7 3 9 2",
+            "expected": "2 9 3 7"
+          },
+          {
+            "name": "Example 2",
+            "input": "2\n4 8",
+            "expected": "8 4"
+          },
+          {
+            "name": "Case 3",
+            "input": "0",
+            "expected": ""
+          },
+          {
+            "name": "Case 4",
+            "input": "1\n5",
+            "expected": "5"
+          },
+          {
+            "name": "Case 5",
+            "input": "4\n1 1 2 2",
+            "expected": "2 2 1 1"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\n# Definition for singly-linked list.\n# class ListNode:\n#     def __init__(self, val=0, next=None):\n#         self.val = val\n#         self.next = next\n\nclass Solution:\n    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
+      "id": "binary_tree_level_order",
+      "title": "Binary Tree Level Order Traversal",
+      "titleZh": "二叉树的层序遍历",
+      "difficulty": "Medium",
+      "functionName": "levelOrder",
+      "hint": "Breadth-first search with a queue. At the start of each round, the queue holds exactly one level: pop `len(queue)` nodes, record their values, and push their children.",
+      "hintZh": "用队列做广度优先搜索。每一轮开始时，队列里恰好是一整层：弹出 `len(queue)` 个节点，记录它们的值，再把它们的子节点入队。",
+      "descriptionEn": "Given the root `root` of a binary tree, return the node values level by level: the first list holds the root, the next holds its children, and so on, each level read left to right.\n\nTrees are written in level order, with `null` for a missing child.\n\n**Example 1:** `root = [5,3,8,null,4,7,9]` → `[[5],[3,8],[4,7,9]]`\n\n**Example 2:** `root = [1]` → `[[1]]`\n\n**Constraints:**\n- The tree has `0` to `2000` nodes\n- `-1000 <= Node.val <= 1000`",
+      "descriptionZh": "给定二叉树的根节点 `root`，按层返回节点值：第一个列表是根节点，下一个是它的子节点，依此类推，每层从左到右。\n\n二叉树按层序写成数组，缺失的子节点写作 `null`。\n\n**示例 1：** `root = [5,3,8,null,4,7,9]` → `[[5],[3,8],[4,7,9]]`\n\n**示例 2：** `root = [1]` → `[[1]]`\n\n**约束：**\n- 节点数在 `0` 到 `2000` 之间\n- `-1000 <= Node.val <= 1000`",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: root = [5,3,8,null,4,7,9]\nExpected: [[5],[3,8],[4,7,9]]"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: root = [1]\nExpected: [[1]]"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: root = []\nExpected: []"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: root = [1,2,null,3,null,4]\nExpected: [[1],[2],[3],[4]]"
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: root = [0,-1,1,-2,null,null,2]\nExpected: [[0],[-1,1],[-2,2]]"
+        }
+      ],
+      "track": "hot100",
+      "category": "Binary Tree",
+      "categoryZh": "二叉树",
+      "order": 7,
+      "leetcodeId": 102,
+      "leetcodeSlug": "binary-tree-level-order-traversal",
+      "acm": {
+        "inputEn": "- Line 1: the level-order traversal of `root`, space-separated, `null` for missing nodes (empty line for an empty tree)",
+        "inputZh": "- 第 1 行：二叉树 `root` 的层序遍历，以空格分隔，空节点写作 `null`（空树为空行）",
+        "outputEn": "Print one inner list per line, space-separated.",
+        "outputZh": "输出若干行，每行一个子列表，元素以空格分隔。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "root = [5,3,8,null,4,7,9]",
+            "expected": "[[5],[3,8],[4,7,9]]"
+          },
+          {
+            "name": "Example 2",
+            "input": "root = [1]",
+            "expected": "[[1]]"
+          },
+          {
+            "name": "Case 3",
+            "input": "root = []",
+            "expected": "[]"
+          },
+          {
+            "name": "Case 4",
+            "input": "root = [1,2,null,3,null,4]",
+            "expected": "[[1],[2],[3],[4]]"
+          },
+          {
+            "name": "Case 5",
+            "input": "root = [0,-1,1,-2,null,null,2]",
+            "expected": "[[0],[-1,1],[-2,2]]"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "5 3 8 null 4 7 9",
+            "expected": "5\n3 8\n4 7 9"
+          },
+          {
+            "name": "Example 2",
+            "input": "1",
+            "expected": "1"
+          },
+          {
+            "name": "Case 3",
+            "input": "",
+            "expected": ""
+          },
+          {
+            "name": "Case 4",
+            "input": "1 2 null 3 null 4",
+            "expected": "1\n2\n3\n4"
+          },
+          {
+            "name": "Case 5",
+            "input": "0 -1 1 -2 null null 2",
+            "expected": "0\n-1 1\n-2 2"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\n# Definition for a binary tree node.\n# class TreeNode:\n#     def __init__(self, val=0, left=None, right=None):\n#         self.val = val\n#         self.left = left\n#         self.right = right\n\nclass Solution:\n    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
+    },
+    {
+      "id": "coin_change",
+      "title": "Coin Change",
+      "titleZh": "零钱兑换",
+      "difficulty": "Medium",
+      "functionName": "coinChange",
+      "hint": "Greedy fails (see example 1). Let dp[a] be the fewest coins for amount a: dp[0] = 0, and dp[a] = 1 + min(dp[a - c]) over coins c <= a.",
+      "hintZh": "贪心不对（见示例 1）。设 dp[a] 为凑出金额 a 的最少硬币数：dp[0] = 0，dp[a] = 1 + min(dp[a - c])，c 取所有不超过 a 的面额。",
+      "descriptionEn": "You have coins of the denominations in `coins`, with an unlimited supply of each. Return the fewest coins that add up to exactly `amount`, or `-1` if no combination does.\n\n**Example 1:** `coins = [1,3,4], amount = 6` → `2` (3 + 3; greedy 4 + 1 + 1 uses three)\n\n**Example 2:** `coins = [2], amount = 3` → `-1`\n\n**Constraints:**\n- `1 <= coins.length <= 12`\n- `1 <= coins[i] <= 2^31 - 1`\n- `0 <= amount <= 10^4`",
+      "descriptionZh": "你有面额为 `coins` 中各值的硬币，每种数量不限。返回凑出恰好 `amount` 所需的最少硬币数；如果凑不出，返回 `-1`。\n\n**示例 1：** `coins = [1,3,4], amount = 6` → `2`（3 + 3；贪心的 4 + 1 + 1 要用三枚）\n\n**示例 2：** `coins = [2], amount = 3` → `-1`\n\n**约束：**\n- `1 <= coins.length <= 12`\n- `1 <= coins[i] <= 2^31 - 1`\n- `0 <= amount <= 10^4`",
+      "tests": [
+        {
+          "name": "Example 1",
+          "code": "Input: coins = [1,3,4], amount = 6\nExpected: 2"
+        },
+        {
+          "name": "Example 2",
+          "code": "Input: coins = [2], amount = 3\nExpected: -1"
+        },
+        {
+          "name": "Case 3",
+          "code": "Input: coins = [1], amount = 0\nExpected: 0"
+        },
+        {
+          "name": "Case 4",
+          "code": "Input: coins = [2,5,10,1], amount = 27\nExpected: 4"
+        },
+        {
+          "name": "Case 5",
+          "code": "Input: coins = [7,11], amount = 25\nExpected: 3"
+        },
+        {
+          "name": "Case 6",
+          "code": "Input: coins = [2147483647], amount = 2\nExpected: -1"
+        }
+      ],
+      "track": "hot100",
+      "category": "Dynamic Programming",
+      "categoryZh": "动态规划",
+      "order": 8,
+      "leetcodeId": 322,
+      "leetcodeSlug": "coin-change",
+      "acm": {
+        "inputEn": "- Line 1: an integer n, the length of `coins`\n- Line 2: n space-separated integers: `coins`\n- Line 3: an integer `amount`",
+        "inputZh": "- 第 1 行：整数 n，表示 `coins` 的长度\n- 第 2 行：n 个以空格分隔的整数，即 `coins`\n- 第 3 行：整数 `amount`",
+        "outputEn": "Print one integer.",
+        "outputZh": "输出一个整数。"
+      },
+      "cases": {
+        "core": [
+          {
+            "name": "Example 1",
+            "input": "coins = [1,3,4], amount = 6",
+            "expected": "2"
+          },
+          {
+            "name": "Example 2",
+            "input": "coins = [2], amount = 3",
+            "expected": "-1"
+          },
+          {
+            "name": "Case 3",
+            "input": "coins = [1], amount = 0",
+            "expected": "0"
+          },
+          {
+            "name": "Case 4",
+            "input": "coins = [2,5,10,1], amount = 27",
+            "expected": "4"
+          },
+          {
+            "name": "Case 5",
+            "input": "coins = [7,11], amount = 25",
+            "expected": "3"
+          },
+          {
+            "name": "Case 6",
+            "input": "coins = [2147483647], amount = 2",
+            "expected": "-1"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ],
+        "acm": [
+          {
+            "name": "Example 1",
+            "input": "3\n1 3 4\n6",
+            "expected": "2"
+          },
+          {
+            "name": "Example 2",
+            "input": "1\n2\n3",
+            "expected": "-1"
+          },
+          {
+            "name": "Case 3",
+            "input": "1\n1\n0",
+            "expected": "0"
+          },
+          {
+            "name": "Case 4",
+            "input": "4\n2 5 10 1\n27",
+            "expected": "4"
+          },
+          {
+            "name": "Case 5",
+            "input": "2\n7 11\n25",
+            "expected": "3"
+          },
+          {
+            "name": "Case 6",
+            "input": "1\n2147483647\n2",
+            "expected": "-1"
+          },
+          {
+            "name": "Large input",
+            "hidden": true
+          }
+        ]
+      },
+      "starters": {
+        "core": "from typing import List, Optional\n\nclass Solution:\n    def coinChange(self, coins: List[int], amount: int) -> int:\n        pass\n",
+        "acm": "import sys\n\n\ndef main():\n    data = sys.stdin.read().split(\"\\n\")\n    # Parse the input as described under \"Input format\", then print the answer.\n\n\nif __name__ == \"__main__\":\n    main()\n"
+      }
     }
   ]
 }

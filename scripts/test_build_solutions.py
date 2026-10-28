@@ -51,10 +51,10 @@ SOLUTIONS_JSON = Path(__file__).parent.parent / "web" / "src" / "lib" / "solutio
 
 @pytest.mark.skipif(not SOLUTIONS_JSON.exists(), reason="solutions.json not generated yet")
 def test_solutions_json_has_all_tasks():
-    from torch_judge.tasks import TASKS
+    from torch_judge.tasks import HOT100_TASKS, TASKS
 
     data = json.loads(SOLUTIONS_JSON.read_text())
-    assert len(data) == len(TASKS)
+    assert len(data) == len(TASKS) + len(HOT100_TASKS)
 
 
 @pytest.mark.skipif(not SOLUTIONS_JSON.exists(), reason="solutions.json not generated yet")

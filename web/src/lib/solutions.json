@@ -1022,5 +1022,197 @@
         "role": "demo"
       }
     ]
+  },
+  "binary_tree_level_order": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "from collections import deque\n\n\nclass Solution:\n    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:\n        if not root:\n            return []\n        result, queue = [], deque([root])\n        while queue:\n            level = []\n            for _ in range(len(queue)):\n                node = queue.popleft()\n                level.append(node.val)\n                if node.left:\n                    queue.append(node.left)\n                if node.right:\n                    queue.append(node.right)\n            result.append(level)\n        return result",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nfrom collections import deque\n\n\nclass TreeNode:\n    def __init__(self, val=0, left=None, right=None):\n        self.val = val\n        self.left = left\n        self.right = right\n\n\ndef build_tree(tokens):\n    if not tokens or tokens[0] == \"null\":\n        return None\n    root = TreeNode(int(tokens[0]))\n    queue, i = deque([root]), 1\n    while queue and i < len(tokens):\n        node = queue.popleft()\n        if i < len(tokens) and tokens[i] != \"null\":\n            node.left = TreeNode(int(tokens[i]))\n            queue.append(node.left)\n        i += 1\n        if i < len(tokens) and tokens[i] != \"null\":\n            node.right = TreeNode(int(tokens[i]))\n            queue.append(node.right)\n        i += 1\n    return root\n\n\ndef tree_tokens(root):\n    out, queue = [], deque([root])\n    while queue:\n        node = queue.popleft()\n        out.append(str(node.val) if node else \"null\")\n        if node:\n            queue.extend([node.left, node.right])\n    while out and out[-1] == \"null\":\n        out.pop()\n    return out\n\n\nfrom collections import deque\n\n\nclass Solution:\n    def levelOrder(self, root: Optional[TreeNode]) -> List[List[int]]:\n        if not root:\n            return []\n        result, queue = [], deque([root])\n        while queue:\n            level = []\n            for _ in range(len(queue)):\n                node = queue.popleft()\n                level.append(node.val)\n                if node.left:\n                    queue.append(node.left)\n                if node.right:\n                    queue.append(node.right)\n            result.append(level)\n        return result\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    root = build_tree(next(lines).split())\n    ans = Solution().levelOrder(root)\n    for row in ans:\n        print(\" \".join(map(str, row)))\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "BFS, one level per round. The queue's length at the start of a round is the size of the current level, so popping exactly that many nodes separates the levels cleanly while their children are queued for the next round.\n\nTime O(n), space O(width of the widest level).",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "BFS，每轮处理一层。每轮开始时队列的长度就是当前层的节点数，恰好弹出这么多个节点，就能把各层干净地分开，同时把子节点排进下一轮。\n\n时间 O(n)，空间 O(最宽一层的宽度)。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
+  "coin_change": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class Solution:\n    def coinChange(self, coins: List[int], amount: int) -> int:\n        inf = amount + 1  # more coins than any real answer needs\n        dp = [0] + [inf] * amount\n        for a in range(1, amount + 1):\n            for c in coins:\n                if c <= a and dp[a - c] + 1 < dp[a]:\n                    dp[a] = dp[a - c] + 1\n        return dp[amount] if dp[amount] <= amount else -1",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass Solution:\n    def coinChange(self, coins: List[int], amount: int) -> int:\n        inf = amount + 1  # more coins than any real answer needs\n        dp = [0] + [inf] * amount\n        for a in range(1, amount + 1):\n            for c in coins:\n                if c <= a and dp[a - c] + 1 < dp[a]:\n                    dp[a] = dp[a - c] + 1\n        return dp[amount] if dp[amount] <= amount else -1\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    next(lines)  # length of coins\n    coins = list(map(int, next(lines).split()))\n    amount = int(next(lines))\n    ans = Solution().coinChange(coins, amount)\n    print(ans)\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "Complete-knapsack style DP. `dp[a]` is the fewest coins summing to `a`, with `dp[0] = 0`. Any optimal way to make `a` ends with some coin `c`, leaving an optimal way to make `a - c`, so `dp[a] = 1 + min(dp[a - c])`. `amount + 1` serves as infinity because no answer can use more than `amount` coins.\n\nTime O(amount × len(coins)), space O(amount).",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "完全背包式的动态规划。`dp[a]` 表示凑出 `a` 的最少硬币数，`dp[0] = 0`。凑出 `a` 的最优方案一定以某枚硬币 `c` 结尾，剩下的部分正好是凑出 `a - c` 的最优方案，所以 `dp[a] = 1 + min(dp[a - c])`。用 `amount + 1` 当作无穷大，因为任何答案都不会超过 `amount` 枚。\n\n时间 O(amount × len(coins))，空间 O(amount)。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
+  "group_anagrams": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "from collections import defaultdict\n\n\nclass Solution:\n    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:\n        groups = defaultdict(list)\n        for s in strs:\n            groups[\"\".join(sorted(s))].append(s)\n        return list(groups.values())",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nfrom collections import defaultdict\n\n\nclass Solution:\n    def groupAnagrams(self, strs: List[str]) -> List[List[str]]:\n        groups = defaultdict(list)\n        for s in strs:\n            groups[\"\".join(sorted(s))].append(s)\n        return list(groups.values())\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    n = int(next(lines))\n    strs = [next(lines) for _ in range(n)]\n    ans = Solution().groupAnagrams(strs)\n    for row in ans:\n        print(\" \".join(map(str, row)))\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "Map each string to a key that is identical for all of its anagrams; sorting the characters works. Collect strings by key in a dict and return the dict's values.\n\nWith n strings of length up to k: time O(n·k log k), space O(n·k). A 26-count tuple key brings the time down to O(n·k).",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "给每个字符串算一个「所有异位词都相同」的键，把字符排序就行。用字典按键收集字符串，最后返回字典的所有值。\n\nn 个字符串、长度不超过 k：时间 O(n·k log k)，空间 O(n·k)。改用 26 个字母的计数元组当键，时间可以降到 O(n·k)。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
+  "longest_substring_without_repeating": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class Solution:\n    def lengthOfLongestSubstring(self, s: str) -> int:\n        last = {}  # char -> index where it was last seen\n        start = best = 0\n        for i, ch in enumerate(s):\n            if last.get(ch, -1) >= start:\n                start = last[ch] + 1\n            last[ch] = i\n            best = max(best, i - start + 1)\n        return best",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass Solution:\n    def lengthOfLongestSubstring(self, s: str) -> int:\n        last = {}  # char -> index where it was last seen\n        start = best = 0\n        for i, ch in enumerate(s):\n            if last.get(ch, -1) >= start:\n                start = last[ch] + 1\n            last[ch] = i\n            best = max(best, i - start + 1)\n        return best\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    s = next(lines)\n    ans = Solution().lengthOfLongestSubstring(s)\n    print(ans)\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "Sliding window. `start` is the left edge of a window with no repeats. When `s[i]` was last seen at or after `start`, the window must begin right after that occurrence. The check `>= start` matters: an occurrence left of the window (like the first `a` in `\"abba\"`) must not move `start` backwards.\n\nTime O(n), space O(size of the character set).",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "滑动窗口。`start` 是无重复窗口的左边界。如果 `s[i]` 上次出现的位置在 `start` 及之后，窗口就得从那次出现的下一位开始。判断 `>= start` 很关键：窗口左边的旧位置（比如 `\"abba\"` 里第一个 `a`）不能让 `start` 往回退。\n\n时间 O(n)，空间 O(字符集大小)。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
+  "lru_cache": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class Node:\n    def __init__(self, key=0, value=0):\n        self.key, self.value = key, value\n        self.prev = self.next = None\n\n\nclass LRUCache:\n\n    def __init__(self, capacity: int):\n        self.capacity = capacity\n        self.nodes = {}\n        # Sentinels: head.next is the least recent, tail.prev the most recent\n        self.head, self.tail = Node(), Node()\n        self.head.next, self.tail.prev = self.tail, self.head\n\n    def _unlink(self, node):\n        node.prev.next, node.next.prev = node.next, node.prev\n\n    def _append(self, node):\n        node.prev, node.next = self.tail.prev, self.tail\n        self.tail.prev.next = node\n        self.tail.prev = node\n\n    def get(self, key: int) -> int:\n        node = self.nodes.get(key)\n        if node is None:\n            return -1\n        self._unlink(node)\n        self._append(node)\n        return node.value\n\n    def put(self, key: int, value: int) -> None:\n        node = self.nodes.get(key)\n        if node:\n            node.value = value\n            self._unlink(node)\n        else:\n            if len(self.nodes) == self.capacity:\n                lru = self.head.next\n                self._unlink(lru)\n                del self.nodes[lru.key]\n            node = self.nodes[key] = Node(key, value)\n        self._append(node)",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass Node:\n    def __init__(self, key=0, value=0):\n        self.key, self.value = key, value\n        self.prev = self.next = None\n\n\nclass LRUCache:\n\n    def __init__(self, capacity: int):\n        self.capacity = capacity\n        self.nodes = {}\n        # Sentinels: head.next is the least recent, tail.prev the most recent\n        self.head, self.tail = Node(), Node()\n        self.head.next, self.tail.prev = self.tail, self.head\n\n    def _unlink(self, node):\n        node.prev.next, node.next.prev = node.next, node.prev\n\n    def _append(self, node):\n        node.prev, node.next = self.tail.prev, self.tail\n        self.tail.prev.next = node\n        self.tail.prev = node\n\n    def get(self, key: int) -> int:\n        node = self.nodes.get(key)\n        if node is None:\n            return -1\n        self._unlink(node)\n        self._append(node)\n        return node.value\n\n    def put(self, key: int, value: int) -> None:\n        node = self.nodes.get(key)\n        if node:\n            node.value = value\n            self._unlink(node)\n        else:\n            if len(self.nodes) == self.capacity:\n                lru = self.head.next\n                self._unlink(lru)\n                del self.nodes[lru.key]\n            node = self.nodes[key] = Node(key, value)\n        self._append(node)\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    q = int(next(lines))\n    obj = None\n    for _ in range(q):\n        op, *args = next(lines).split()\n        if op == \"LRUCache\":\n            obj = LRUCache(int(args[0]))\n        elif op == \"get\":\n            print(obj.get(int(args[0])))\n        elif op == \"put\":\n            obj.put(int(args[0]), int(args[1]))\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "Hash map + doubly linked list ordered by recency. The map finds a key's node in O(1); unlinking a node and appending it at the tail are O(1) pointer updates. Sentinel head/tail nodes remove the empty-list special cases. On overflow, evict `head.next`, the least recently used node, and delete its key from the map (which is why nodes store their key).\n\nTime O(1) per operation, space O(capacity).",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "哈希表 + 按使用时间排序的双向链表。哈希表 O(1) 找到键对应的节点；把节点摘下、再接到链表尾部都是 O(1) 的指针操作。头尾哨兵节点省去了空链表的特判。超出容量时淘汰 `head.next`（最久未使用的节点），并从哈希表删除它的键，所以节点里要存 key。\n\n每次操作时间 O(1)，空间 O(capacity)。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
+  "move_zeroes": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class Solution:\n    def moveZeroes(self, nums: List[int]) -> None:\n        write = 0\n        for read in range(len(nums)):\n            if nums[read] != 0:\n                nums[write], nums[read] = nums[read], nums[write]\n                write += 1",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass Solution:\n    def moveZeroes(self, nums: List[int]) -> None:\n        write = 0\n        for read in range(len(nums)):\n            if nums[read] != 0:\n                nums[write], nums[read] = nums[read], nums[write]\n                write += 1\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    next(lines)  # length of nums\n    nums = list(map(int, next(lines).split()))\n    Solution().moveZeroes(nums)\n    print(\" \".join(map(str, nums)))\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "Two pointers. `write` marks where the next non-zero belongs. Scanning with `read`, every non-zero is swapped into `write`, which then advances. Everything before `write` is the non-zeros in order; everything from `write` on is zero.\n\nTime O(n), space O(1).",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "双指针。`write` 指向下一个非零元素应放的位置。`read` 向后扫描，遇到非零元素就和 `write` 位置交换，然后 `write` 前进。`write` 之前是按原顺序排列的非零元素，之后全是零。\n\n时间 O(n)，空间 O(1)。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
+  "reverse_linked_list": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class Solution:\n    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        prev, cur = None, head\n        while cur:\n            nxt = cur.next\n            cur.next = prev\n            prev, cur = cur, nxt\n        return prev",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass ListNode:\n    def __init__(self, val=0, next=None):\n        self.val = val\n        self.next = next\n\n\ndef build_list(values):\n    dummy = tail = ListNode()\n    for v in values:\n        tail.next = ListNode(v)\n        tail = tail.next\n    return dummy.next\n\n\ndef list_values(head):\n    out = []\n    while head:\n        out.append(head.val)\n        head = head.next\n    return out\n\n\nclass Solution:\n    def reverseList(self, head: Optional[ListNode]) -> Optional[ListNode]:\n        prev, cur = None, head\n        while cur:\n            nxt = cur.next\n            cur.next = prev\n            prev, cur = cur, nxt\n        return prev\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    next(lines)  # number of nodes\n    head = build_list(list(map(int, next(lines).split())))\n    ans = Solution().reverseList(head)\n    print(\" \".join(map(str, list_values(ans))))\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "Iterative pointer reversal. Hold `prev` (the already-reversed part) and `cur`. Each step saves `cur.next`, points `cur` back at `prev`, and advances. When `cur` runs off the end, `prev` is the new head.\n\nTime O(n), space O(1). The recursive version is O(n) stack space; in your own ACM programs, deep recursion may need `sys.setrecursionlimit`.",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "迭代反转指针。维护 `prev`（已反转的部分）和 `cur`。每一步先保存 `cur.next`，把 `cur` 指回 `prev`，再前进。`cur` 走到末尾时，`prev` 就是新的头节点。\n\n时间 O(n)，空间 O(1)。递归写法需要 O(n) 的栈空间；在 ACM 模式下自己写程序时，递归太深可能需要调大 `sys.setrecursionlimit`。",
+        "role": "explanation_zh"
+      }
+    ]
+  },
+  "two_sum": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        seen = {}  # value -> index\n        for i, x in enumerate(nums):\n            if target - x in seen:\n                return [seen[target - x], i]\n            seen[x] = i\n        return []",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import sys\nfrom typing import List, Optional\n\n\nclass Solution:\n    def twoSum(self, nums: List[int], target: int) -> List[int]:\n        seen = {}  # value -> index\n        for i, x in enumerate(nums):\n            if target - x in seen:\n                return [seen[target - x], i]\n            seen[x] = i\n        return []\n\n\ndef main():\n    lines = iter(sys.stdin.read().split(\"\\n\"))\n    next(lines)  # length of nums\n    nums = list(map(int, next(lines).split()))\n    target = int(next(lines))\n    ans = Solution().twoSum(nums, target)\n    print(\" \".join(map(str, ans)))\n\n\nif __name__ == \"__main__\":\n    main()",
+        "role": "solution_acm"
+      },
+      {
+        "type": "markdown",
+        "source": "One pass with a hash map from value to index. For each `x`, if `target - x` was seen earlier, those two indices are the answer; otherwise record `x`. Checking before inserting keeps an element from pairing with itself.\n\nTime O(n), space O(n).",
+        "role": "explanation"
+      },
+      {
+        "type": "markdown",
+        "source": "一次遍历，用哈希表记录 值 → 下标。对每个 `x`，如果 `target - x` 已经出现过，这两个下标就是答案；否则把 `x` 记下来。先查再存，保证不会和自己配对。\n\n时间 O(n)，空间 O(n)。",
+        "role": "explanation_zh"
+      }
+    ]
   }
 }

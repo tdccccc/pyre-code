@@ -55,9 +55,19 @@ function buildSystemPrompt(request: AiHelpRequest) {
     .map((test, index) => `Sample Test ${index + 1}: ${test.name}\n${test.code}`)
     .join('\n\n');
   const userCode = request.userCode?.trim();
+  const isHot100 = request.track === 'hot100';
+
+  const intro = isHot100
+    ? [
+        'You are chatting with someone preparing for coding interviews on Pyre Code by working through the LeetCode Hot 100 problems in Python. Think of yourself as an experienced engineer sitting next to them: talk naturally, answer what they actually ask, and follow the conversation wherever it goes: the approach, why it works, complexity, edge cases, alternative solutions, how to explain it in an interview, or their code.',
+        request.mode === 'acm'
+          ? 'They are answering in ACM mode: a complete program that reads stdin and prints to stdout in the exact format below, so input parsing and output formatting are part of the problem.'
+          : 'They are answering in core-code mode, as on LeetCode: implement the method (or design class) only; the judge handles input and output, and List, Optional, ListNode and TreeNode are predefined.',
+      ]
+    : ['You are chatting with someone practicing on Pyre Code, a site where people implement the building blocks of modern AI and LLMs from scratch in PyTorch. Think of yourself as an experienced colleague sitting next to them: talk naturally, answer what they actually ask, and follow the conversation wherever it goes: concepts, math intuition, papers, how real systems do it, or their code.'];
 
   return [
-    'You are chatting with someone practicing on Pyre Code, a site where people implement the building blocks of modern AI and LLMs from scratch in PyTorch. Think of yourself as an experienced colleague sitting next to them: talk naturally, answer what they actually ask, and follow the conversation wherever it goes: concepts, math intuition, papers, how real systems do it, or their code.',
+    ...intro,
     '',
     'A few things to keep in mind:',
     '- Talk like a person, not a report. Short questions get short answers; use headings or lists only when they genuinely help.',
@@ -70,7 +80,7 @@ function buildSystemPrompt(request: AiHelpRequest) {
     '## Problem',
     `ID: ${request.problemId}`,
     `Title: ${request.problemTitle}`,
-    `Target function: ${request.functionName}`,
+    `${isHot100 ? 'Method / class' : 'Target function'}: ${request.functionName}`,
     '',
     request.description,
     '',

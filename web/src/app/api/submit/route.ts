@@ -4,7 +4,7 @@ import { GRADING_SERVICE_URL } from '@/lib/constants';
 import { SubmissionResult } from '@/lib/types';
 
 export async function POST(request: Request) {
-  const { taskId, code } = await request.json();
+  const { taskId, code, mode } = await request.json();
 
   const cookieStore = await cookies();
   let sessionToken = cookieStore.get('session_token')?.value;
@@ -16,7 +16,7 @@ export async function POST(request: Request) {
   const gradingResponse = await fetch(`${GRADING_SERVICE_URL}/grade`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ taskId, code }),
+    body: JSON.stringify({ taskId, code, mode }),
   });
 
   if (!gradingResponse.ok) {
@@ -52,7 +52,7 @@ export async function POST(request: Request) {
   const progressResponse = await fetch(`${GRADING_SERVICE_URL}/progress`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ sessionToken, taskId, status, execTimeMs: result.totalTimeMs, code, allPassed: result.allPassed }),
+    body: JSON.stringify({ sessionToken, taskId, status, execTimeMs: result.totalTimeMs, code, allPassed: result.allPassed, mode }),
   });
 
   if (!progressResponse.ok) {

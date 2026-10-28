@@ -16,6 +16,7 @@ from typing import Any
 from fastapi import FastAPI, HTTPException
 from pydantic import BaseModel
 
+from torch_judge.algo import judge as algo_judge
 from torch_judge.tasks import get_task
 
 app = FastAPI(title="Grading Service")
@@ -67,6 +68,10 @@ def _get_db() -> sqlite3.Connection:
             FOREIGN KEY (user_id) REFERENCES users(id)
         )
     """)
+    # Answer mode ('core' or 'acm') of Hot 100 submissions; older rows default to core
+    columns = {row[1] for row in conn.execute("PRAGMA table_info(submissions)")}
+    if "mode" not in columns:
+        conn.execute("ALTER TABLE submissions ADD COLUMN mode TEXT NOT NULL DEFAULT 'core'")
     conn.commit()
     return conn
 
@@ -74,12 +79,14 @@ def _get_db() -> sqlite3.Connection:
 class SubmitRequest(BaseModel):
     taskId: str
     code: str
+    mode: str = "core"
 
 
 class RunRequest(BaseModel):
     taskId: str
     code: str
     testIndices: list[int] | None = None
+    mode: str = "core"
 
 
 class TestResult(BaseModel):
@@ -88,6 +95,10 @@ class TestResult(BaseModel):
     execTimeMs: float
     error: str | None = None
     output: str | None = None
+    # Hot 100 cases: display strings for the case and the learner's answer
+    input: str | None = None
+    expected: str | None = None
+    actual: str | None = None
 
 
 class GradeResponse(BaseModel):
@@ -211,20 +222,23 @@ def _execute_tests(code: str, task: dict, test_indices: list[int] | None = None,
     return GradeResponse(passed=passed, total=len(results), allPassed=passed == len(results), results=results, totalTimeMs=total_time_ms)
 
 
+def _grade(task_id: str, code: str, mode: str, test_indices: list[int] | None = None) -> GradeResponse:
+    task = get_task(task_id)
+    if task is None:
+        raise HTTPException(status_code=404, detail=f"Task '{task_id}' not found")
+    if task.get("track") == "hot100":
+        return GradeResponse(**algo_judge.grade(task_id, task, code, mode, test_indices))
+    return _execute_tests(code, task, test_indices)
+
+
 @app.post("/grade", response_model=GradeResponse)
 def grade(request: SubmitRequest) -> GradeResponse:
-    task = get_task(request.taskId)
-    if task is None:
-        raise HTTPException(status_code=404, detail=f"Task '{request.taskId}' not found")
-    return _execute_tests(request.code, task)
+    return _grade(request.taskId, request.code, request.mode)
 
 
 @app.post("/run", response_model=GradeResponse)
 def run(request: RunRequest) -> GradeResponse:
-    task = get_task(request.taskId)
-    if task is None:
-        raise HTTPException(status_code=404, detail=f"Task '{request.taskId}' not found")
-    return _execute_tests(request.code, task, request.testIndices)
+    return _grade(request.taskId, request.code, request.mode, request.testIndices)
 
 
 
@@ -267,6 +281,7 @@ class SaveProgressRequest(BaseModel):
     execTimeMs: float | None = None
     code: str | None = None
     allPassed: bool | None = None
+    mode: str = "core"
 
 
 @app.post("/users")
@@ -333,8 +348,8 @@ def save_progress(request: SaveProgressRequest) -> dict[str, str]:
                 )
         if request.code is not None:
             conn.execute(
-                "INSERT INTO submissions (user_id, task_id, code, passed, exec_time_ms) VALUES (?, ?, ?, ?, ?)",
-                (user_id, request.taskId, request.code, 1 if request.allPassed else 0, request.execTimeMs)
+                "INSERT INTO submissions (user_id, task_id, code, passed, exec_time_ms, mode) VALUES (?, ?, ?, ?, ?, ?)",
+                (user_id, request.taskId, request.code, 1 if request.allPassed else 0, request.execTimeMs, request.mode)
             )
     return {"ok": "true"}
 
@@ -343,12 +358,12 @@ def save_progress(request: SaveProgressRequest) -> dict[str, str]:
 def get_submissions(user_id: int, task_id: str) -> list[dict]:
     with _get_db() as conn:
         rows = conn.execute(
-            "SELECT id, passed, exec_time_ms, submitted_at, code FROM submissions "
+            "SELECT id, passed, exec_time_ms, submitted_at, code, mode FROM submissions "
             "WHERE user_id = ? AND task_id = ? ORDER BY submitted_at DESC LIMIT 50",
             (user_id, task_id)
         ).fetchall()
     return [
-        {"id": r[0], "passed": bool(r[1]), "execTimeMs": r[2], "submittedAt": r[3], "code": r[4]}
+        {"id": r[0], "passed": bool(r[1]), "execTimeMs": r[2], "submittedAt": r[3], "code": r[4], "mode": r[5]}
         for r in rows
     ]
 

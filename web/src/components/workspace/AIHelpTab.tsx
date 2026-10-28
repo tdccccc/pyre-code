@@ -6,7 +6,7 @@ import { ArrowUp, Check, Loader2, RefreshCw, RotateCcw, Settings2, Sparkles, Ser
 import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/context/LocaleContext';
 import { MarkdownContent } from '@/components/workspace/MarkdownContent';
-import { AI_HELP_QUICK_ACTIONS } from '@/lib/aiHelpPrompts';
+import { AI_HELP_QUICK_ACTIONS, HOT100_QUICK_ACTIONS } from '@/lib/aiHelpPrompts';
 import { getSampleTests, getSolutionCode } from '@/lib/problemContext';
 import { cn } from '@/lib/utils';
 import { useProblemStore } from '@/store/problemStore';
@@ -29,6 +29,7 @@ interface AIHelpTabProps {
 
 export function AIHelpTab({ problem }: AIHelpTabProps) {
   const { locale, t } = useLocale();
+  const isHot100 = problem.track === 'hot100';
   const hasLoadedConfig = useRef(false);
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
@@ -106,15 +107,22 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
     stickToBottom.current = true;
 
     try {
+      const { codeMode } = useProblemStore.getState();
+      const isAcm = isHot100 && codeMode === 'acm' && problem.acm;
+      const description = locale === 'zh' ? problem.descriptionZh : problem.descriptionEn;
       const body: AiHelpRequest = {
         problemId: problem.id,
         problemTitle: problem.title,
         functionName: problem.functionName,
-        description: locale === 'zh' ? problem.descriptionZh : problem.descriptionEn,
-        solutionCode: getSolutionCode(problem.id) || '',
+        description: isAcm
+          ? `${description}\n\nInput format:\n${problem.acm!.inputEn}\n\nOutput format:\n${problem.acm!.outputEn}`
+          : description,
+        solutionCode: getSolutionCode(problem.id, isHot100 ? codeMode : 'core') || '',
         sampleTests: getSampleTests(problem),
         messages: history.map(({ role, content }) => ({ role, content })),
         userCode: config.includeUserCode !== false ? currentCode : undefined,
+        track: isHot100 ? 'hot100' : undefined,
+        mode: isHot100 ? codeMode : undefined,
         locale,
         config: { baseUrl: config.baseUrl, apiKey: config.apiKey, model: config.model },
       };
@@ -304,7 +312,7 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
 
       <div className="flex-shrink-0 px-3 pt-2 pb-3 space-y-2" style={{ borderTop: '1px solid var(--line)' }}>
         <div className="flex flex-wrap gap-1.5">
-          {AI_HELP_QUICK_ACTIONS.map((action) => (
+          {(isHot100 ? HOT100_QUICK_ACTIONS : AI_HELP_QUICK_ACTIONS).map((action) => (
             <button
               key={action.id}
               type="button"

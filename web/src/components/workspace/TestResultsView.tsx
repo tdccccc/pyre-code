@@ -4,12 +4,15 @@ import { CheckCircle, XCircle, Clock } from 'lucide-react';
 import { PythonCode } from '@/lib/pythonHighlight';
 import { useLocale } from '@/context/LocaleContext';
 import { useProblemStore } from '@/store/problemStore';
-import type { SubmissionResult, Test } from '@/lib/types';
+import { CaseBlock } from './CaseBlock';
+import type { CodeMode, SubmissionResult, Test, TestResult } from '@/lib/types';
 
 interface TestResultsViewProps {
   result: SubmissionResult | null;
   tests: Test[];
   functionName: string;
+  /** Set for Hot 100: results carry input / expected / actual strings */
+  algoMode?: CodeMode;
 }
 
 function formatTestCode(code: string, functionName: string): string {
@@ -25,7 +28,36 @@ function padIndex(i: number): string {
   return String(i + 1).padStart(2, '0');
 }
 
-export function TestResultsView({ result, tests, functionName }: TestResultsViewProps) {
+function AlgoResultDetail({ result, mode }: { result: TestResult; mode: CodeMode }) {
+  const { t } = useLocale();
+  if (result.input == null) {
+    return (
+      <>
+        <p className="text-sm text-text-3">{t('hiddenCase')}</p>
+        {result.error && <CaseBlock label="Error" text={result.error} tone="bad" />}
+      </>
+    );
+  }
+  const isWrongAnswer = result.error?.startsWith('Wrong Answer');
+  return (
+    <>
+      <CaseBlock label={mode === 'acm' ? t('acmStdin') : t('caseInput')} text={result.input} />
+      {result.error && !isWrongAnswer && <CaseBlock label="Error" text={result.error} tone="bad" />}
+      {result.actual != null && (
+        <CaseBlock
+          label={mode === 'acm' ? t('yourStdout') : t('yourAnswer')}
+          text={result.actual}
+          tone={result.passed ? 'good' : 'bad'}
+        />
+      )}
+      <CaseBlock label={mode === 'acm' ? t('acmExpected') : t('caseExpected')} text={result.expected ?? ''} />
+      {isWrongAnswer && result.error !== 'Wrong Answer' && <p className="text-xs text-hard">{result.error}</p>}
+      {result.output && <CaseBlock label={t('printOutput')} text={result.output} />}
+    </>
+  );
+}
+
+export function TestResultsView({ result, tests, functionName, algoMode }: TestResultsViewProps) {
   const { t } = useLocale();
   const { selectedCaseIndex, setSelectedCaseIndex } = useProblemStore();
 
@@ -126,8 +158,10 @@ export function TestResultsView({ result, tests, functionName }: TestResultsView
               <span className="mono text-[11px] text-text-3">{activeResult.execTimeMs.toFixed(1)}ms</span>
             </div>
 
+            {algoMode && <AlgoResultDetail result={activeResult} mode={algoMode} />}
+
             {/* Test code */}
-            {activeTest && (
+            {!algoMode && activeTest && (
               <div>
                 <h4 className="eyebrow mb-1.5">{t('testCasesTab')}</h4>
                 <pre className="p-3 rounded-lg text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words leading-relaxed" style={{ background: 'var(--bg-sunken)' }}>
@@ -137,7 +171,7 @@ export function TestResultsView({ result, tests, functionName }: TestResultsView
             )}
 
             {/* Error with expected/got diff */}
-            {activeResult.error && (
+            {!algoMode && activeResult.error && (
               <div>
                 <h4 className="eyebrow mb-1.5">Error</h4>
                 {!activeResult.passed && activeResult.error.includes('Expected') ? (
@@ -173,7 +207,7 @@ export function TestResultsView({ result, tests, functionName }: TestResultsView
             )}
 
             {/* Output */}
-            {activeResult.output && (
+            {!algoMode && activeResult.output && (
               <div>
                 <h4 className="eyebrow mb-1.5">Output</h4>
                 <pre className="p-3 rounded-lg text-text text-xs font-mono overflow-x-auto whitespace-pre-wrap break-words" style={{ background: 'var(--bg-sunken)' }}>

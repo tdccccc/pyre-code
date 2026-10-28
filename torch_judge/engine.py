@@ -46,6 +46,9 @@ def check(task_id: str) -> None:
         available = ", ".join(f"'{k}'" for k in TASKS)
         print(f"{_RED}Unknown task '{task_id}'. Available: {available}{_RESET}")
         return
+    if task.get("track") == "hot100":
+        print(f"{_RED}'{task_id}' is a Hot 100 problem; solve it in the web app.{_RESET}")
+        return
 
     fn_name = task["function_name"]
     user_ns = _get_user_namespace()

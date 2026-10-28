@@ -18,8 +18,9 @@ import { ActionBar } from '@/components/workspace/ActionBar';
 import { useProblemStore } from '@/store/problemStore';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
-import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory } from '@/lib/types';
-import { loadCodeDraft, saveCodeDraft } from '@/lib/codeDraft';
+import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory, CodeMode } from '@/lib/types';
+import { loadCodeDraft, loadCodeMode, saveCodeDraft, saveCodeMode } from '@/lib/codeDraft';
+import { cn } from '@/lib/utils';
 
 function FlameGlyph() {
   return (
@@ -53,6 +54,7 @@ function WorkspacePageNew() {
     isRunning, setIsRunning,
     setRunResult, setBottomTab, resetTestPanel, resetAiHelp,
     submissionHistory, setSubmissionHistory,
+    codeMode, setCodeMode,
   } = useProblemStore();
 
   const [problem, setProblem] = useState<(Problem & { starterCode?: string }) | null>(null);
@@ -66,10 +68,13 @@ function WorkspacePageNew() {
     codeReadyRef.current = false;
     fetch(`/api/problems/${id}`)
       .then((r) => r.json())
-      .then((data) => {
+      .then((data: Problem & { starterCode?: string }) => {
         setProblem(data);
-        const cachedCode = loadCodeDraft(id);
-        setCurrentCode(cachedCode ?? data.starterCode ?? '');
+        // Hot 100 remembers the learner's answer mode; AI problems are always core
+        const mode: CodeMode = data.starters ? loadCodeMode() : 'core';
+        setCodeMode(mode);
+        const cachedCode = loadCodeDraft(id, mode);
+        setCurrentCode(cachedCode ?? data.starters?.[mode] ?? data.starterCode ?? '');
         codeReadyRef.current = true;
         setSubmissionResult(null);
         resetTestPanel();
@@ -97,7 +102,7 @@ function WorkspacePageNew() {
       setPathData(null);
     }
     return () => { cancelled = true; };
-  }, [id, pathId, setCurrentCode, setSubmissionResult, resetTestPanel, resetAiHelp, setSubmissionHistory]);
+  }, [id, pathId, setCurrentCode, setCodeMode, setSubmissionResult, resetTestPanel, resetAiHelp, setSubmissionHistory]);
 
   // Keyboard shortcuts: [ / ] for prev/next problem, Esc to close drawer.
   useEffect(() => {
@@ -138,10 +143,22 @@ function WorkspacePageNew() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [pathData, id, pathId, router, drawerOpen, setDrawerOpen]);
 
+  // Also follows mode changes, so restoring an ACM submission saves into the ACM draft
   useEffect(() => {
     if (!codeReadyRef.current) return;
-    saveCodeDraft(id, currentCode);
-  }, [id, currentCode]);
+    saveCodeDraft(id, currentCode, codeMode);
+  }, [id, currentCode, codeMode]);
+
+  const isHot100 = problem?.track === 'hot100';
+  const mode = isHot100 ? codeMode : undefined;
+
+  const switchCodeMode = (next: CodeMode) => {
+    if (!problem?.starters || next === codeMode) return;
+    saveCodeMode(next);
+    setCodeMode(next);
+    setCurrentCode(loadCodeDraft(id, next) ?? problem.starters[next]);
+    setRunResult(null);
+  };
 
   const handleRun = async () => {
     if (!problem || isRunning) return;
@@ -152,7 +169,7 @@ function WorkspacePageNew() {
       const res = await fetch('/api/run', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId: id, code: currentCode, testIndices }),
+        body: JSON.stringify({ taskId: id, code: currentCode, testIndices, mode }),
       });
       const data = await res.json();
       setRunResult(data);
@@ -172,7 +189,7 @@ function WorkspacePageNew() {
       const res = await fetch('/api/submit', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ taskId: id, code: currentCode }),
+        body: JSON.stringify({ taskId: id, code: currentCode, mode }),
       });
       const data: SubmissionResult = await res.json();
       setSubmissionResult(data);
@@ -253,7 +270,7 @@ function WorkspacePageNew() {
           <AIHelpTab problem={problem} />
         </Tabs.Content>
         <Tabs.Content value="submissionsTab" className="flex-1 min-h-0">
-          <SubmissionHistoryTab />
+          <SubmissionHistoryTab showMode={isHot100} />
         </Tabs.Content>
       </Tabs.Root>
     </div>
@@ -277,7 +294,25 @@ function WorkspacePageNew() {
                 <path d="M10 1.5v3h3" stroke="currentColor" strokeWidth="1.2" strokeLinejoin="round" />
               </svg>
               <span className="mono text-[12.5px] text-text-2">{id}.py</span>
-              <span className="ml-auto mono text-[11.5px] text-text-3 px-1.5 py-0.5 rounded" style={{ background: 'var(--bg-sunken)', border: '1px solid var(--line)' }}>Python</span>
+              {isHot100 && (
+                <div className="ml-auto flex gap-0.5 p-0.5 rounded-[7px]" style={{ background: 'var(--bg-sunken)', border: '1px solid var(--line)' }}>
+                  {(['core', 'acm'] as const).map((m) => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => switchCodeMode(m)}
+                      title={m === 'core' ? t('modeCoreTip') : t('modeAcmTip')}
+                      className={cn(
+                        'px-2 h-[20px] rounded-[5px] text-[11.5px] cursor-pointer transition-[background,color] duration-150',
+                        codeMode === m ? 'bg-bg-elev text-text shadow-sm' : 'text-text-3 hover:text-text',
+                      )}
+                    >
+                      {m === 'core' ? t('modeCore') : t('modeAcm')}
+                    </button>
+                  ))}
+                </div>
+              )}
+              <span className={cn(!isHot100 && 'ml-auto', 'mono text-[11.5px] text-text-3 px-1.5 py-0.5 rounded')} style={{ background: 'var(--bg-sunken)', border: '1px solid var(--line)' }}>Python</span>
             </div>
             <div className="flex-1 overflow-hidden">
               <CodeEditor value={currentCode} onChange={setCurrentCode} onRunShortcut={handleRun} onSubmitShortcut={handleSubmit} />
@@ -286,7 +321,7 @@ function WorkspacePageNew() {
         }
         bottom={
           <div className="flex flex-col h-full">
-            <TestPanel tests={problem.tests} functionName={problem.functionName} />
+            <TestPanel tests={problem.tests} functionName={problem.functionName} cases={problem.cases?.[codeMode]} codeMode={codeMode} />
             <ActionBar onSubmit={handleSubmit} onRun={handleRun} isSubmitting={isSubmitting} isRunning={isRunning} attemptCount={submissionHistory.length} />
           </div>
         }
@@ -311,7 +346,9 @@ function WorkspacePageNew() {
 
         {/* Breadcrumbs */}
         <div className="mono text-xs text-text-3 flex items-center gap-1.5 pl-2 ml-2 h-5" style={{ borderLeft: '1px solid var(--line)' }}>
-          <Link href="/problems" className="text-text-2 hover:text-text transition-colors">{t('problems')}</Link>
+          <Link href={isHot100 ? '/hot100' : '/problems'} className="text-text-2 hover:text-text transition-colors">
+            {isHot100 ? t('hot100') : t('problems')}
+          </Link>
           <span className="opacity-60">/</span>
           <span className="text-text font-medium">{problem ? (locale === 'zh' ? problem.titleZh : problem.title) : id}</span>
         </div>
@@ -400,7 +437,7 @@ function WorkspacePageNew() {
       <ProblemDrawer
         open={drawerOpen}
         onClose={() => setDrawerOpen(false)}
-        problems={allProblems}
+        problems={allProblems.filter((p) => p.track === problem.track)}
         progress={progress}
         currentId={id}
       />

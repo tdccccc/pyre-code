@@ -16,6 +16,28 @@ export interface Problem {
   descriptionEn: string;
   descriptionZh: string;
   tests: Test[];
+  /** Absent for the AI track */
+  track?: 'hot100';
+  category?: string;
+  categoryZh?: string;
+  /** Position in the Hot 100 study order */
+  order?: number;
+  leetcodeId?: number;
+  leetcodeSlug?: string;
+  acm?: { inputEn: string; inputZh: string; outputEn: string; outputZh: string };
+  cases?: Record<CodeMode, AlgoCase[]>;
+  starters?: Record<CodeMode, string>;
+}
+
+/** Hot 100 answer format: LeetCode-style class method, or a full stdin/stdout program */
+export type CodeMode = 'core' | 'acm';
+
+export interface AlgoCase {
+  name: string;
+  /** Large generated inputs are graded but not shown */
+  hidden?: boolean;
+  input?: string;
+  expected?: string;
 }
 
 export interface TestResult {
@@ -24,6 +46,9 @@ export interface TestResult {
   execTimeMs: number;
   error?: string;
   output?: string;
+  input?: string | null;
+  expected?: string | null;
+  actual?: string | null;
 }
 
 export interface SubmissionResult {
@@ -76,6 +101,7 @@ export interface SubmissionHistory {
   execTimeMs: number | null;
   submittedAt: string;
   code: string;
+  mode?: CodeMode;
 }
 
 export interface AiHelpConfig {
@@ -101,6 +127,9 @@ export interface AiHelpRequest {
   sampleTests: Array<{ name: string; code: string }>;
   messages: Array<Pick<AiChatMessage, 'role' | 'content'>>;
   userCode?: string;
+  /** Hot 100 problems get an algorithm-interview persona instead of the LLM tutor */
+  track?: 'hot100';
+  mode?: CodeMode;
   locale: Locale;
   config: Omit<AiHelpConfig, 'includeUserCode'>;
 }

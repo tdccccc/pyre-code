@@ -1,0 +1,324 @@
+"""Algorithm-problem harness: value types, ACM text I/O, answer checkers, core-mode runner.
+
+Stdlib only and self-contained, because it serves two roles:
+- imported by the grading service (ACM serialization, checking, display);
+- executed as ``python -I runner.py`` for core mode, reading a JSON job on stdin and
+  printing a JSON result as the last stdout line. ``-I`` keeps the learner's code from
+  picking up anything on sys.path, so this file cannot import project modules.
+
+Type names used in task specs:
+    int, float, bool, str, int[], int[][], str[], str[][], ListNode, TreeNode, void
+"""
+
+from __future__ import annotations
+
+import io
+import json
+import sys
+import time
+import traceback
+from collections import deque
+from typing import Any, List, Optional
+
+MAX_DISPLAY_CHARS = 2000
+
+
+class ListNode:
+    def __init__(self, val=0, next=None):
+        self.val = val
+        self.next = next
+
+
+class TreeNode:
+    def __init__(self, val=0, left=None, right=None):
+        self.val = val
+        self.left = left
+        self.right = right
+
+
+# ---------------------------------------------------------------------------
+# Plain values <-> runtime objects (LeetCode-style array encodings)
+# ---------------------------------------------------------------------------
+
+def build_list(values: list) -> Optional[ListNode]:
+    dummy = tail = ListNode()
+    for v in values:
+        tail.next = ListNode(v)
+        tail = tail.next
+    return dummy.next
+
+
+def list_to_array(head: Optional[ListNode], limit: int = 10**6) -> list:
+    out = []
+    while head is not None:
+        out.append(head.val)
+        if len(out) > limit:
+            raise ValueError("linked list too long (cycle?)")
+        head = head.next
+    return out
+
+
+def build_tree(values: list) -> Optional[TreeNode]:
+    if not values or values[0] is None:
+        return None
+    root = TreeNode(values[0])
+    queue = deque([root])
+    i = 1
+    while queue and i < len(values):
+        node = queue.popleft()
+        if i < len(values) and values[i] is not None:
+            node.left = TreeNode(values[i])
+            queue.append(node.left)
+        i += 1
+        if i < len(values) and values[i] is not None:
+            node.right = TreeNode(values[i])
+            queue.append(node.right)
+        i += 1
+    return root
+
+
+def tree_to_array(root: Optional[TreeNode]) -> list:
+    out: list = []
+    queue = deque([root])
+    while queue:
+        node = queue.popleft()
+        if node is None:
+            out.append(None)
+            continue
+        out.append(node.val)
+        queue.append(node.left)
+        queue.append(node.right)
+    while out and out[-1] is None:
+        out.pop()
+    return out
+
+
+def to_runtime(value: Any, type_name: str) -> Any:
+    if type_name == "ListNode":
+        return build_list(value)
+    if type_name == "TreeNode":
+        return build_tree(value)
+    return json.loads(json.dumps(value))  # deep copy; the solution may mutate its inputs
+
+
+def from_runtime(value: Any, type_name: str) -> Any:
+    if type_name == "ListNode":
+        return list_to_array(value)
+    if type_name == "TreeNode":
+        return tree_to_array(value)
+    if isinstance(value, tuple):
+        value = list(value)
+    if isinstance(value, list):
+        return [list(v) if isinstance(v, tuple) else v for v in value]
+    return value
+
+
+# ---------------------------------------------------------------------------
+# Display (LeetCode style: JSON with null)
+# ---------------------------------------------------------------------------
+
+def _clip(text: str) -> str:
+    return text if len(text) <= MAX_DISPLAY_CHARS else text[:MAX_DISPLAY_CHARS] + " …"
+
+
+def show(value: Any) -> str:
+    return _clip(json.dumps(value, ensure_ascii=False, separators=(",", ":")))
+
+
+def show_args(params: list, args: list) -> str:
+    return _clip(", ".join(f"{name} = {show(arg)}" for (name, _), arg in zip(params, args)))
+
+
+# ---------------------------------------------------------------------------
+# ACM text format
+# ---------------------------------------------------------------------------
+
+def _scalar_text(value: Any) -> str:
+    if isinstance(value, bool):
+        return "true" if value else "false"
+    return str(value)
+
+
+def _row_text(values: list) -> str:
+    return " ".join("null" if v is None else _scalar_text(v) for v in values)
+
+
+def acm_input_lines(type_name: str, value: Any) -> list[str]:
+    """Lines one argument occupies in ACM stdin."""
+    if type_name in ("int", "float", "bool", "str"):
+        return [_scalar_text(value)]
+    if type_name in ("int[]", "ListNode"):
+        return [str(len(value)), _row_text(value)]
+    if type_name == "int[][]":
+        return [str(len(value))] + [_row_text(row) for row in value]
+    if type_name == "str[]":
+        return [str(len(value))] + list(value)
+    if type_name == "TreeNode":
+        return [_row_text(value)]
+    raise NotImplementedError(f"ACM input for type {type_name}")
+
+
+def acm_output_text(type_name: str, value: Any) -> str:
+    """Canonical ACM stdout for a return value (without trailing newline)."""
+    if type_name in ("int", "float", "bool", "str"):
+        return _scalar_text(value)
+    if type_name in ("int[]", "ListNode", "TreeNode"):
+        return _row_text(value)
+    if type_name in ("int[][]", "str[][]"):
+        return "\n".join(_row_text(row) for row in value)
+    if type_name == "str[]":
+        return "\n".join(value)
+    raise NotImplementedError(f"ACM output for type {type_name}")
+
+
+def _parse_token(token: str, cast) -> Any:
+    return None if token == "null" else cast(token)
+
+
+def parse_acm_output(type_name: str, text: str) -> Any:
+    """Inverse of acm_output_text, tolerant of trailing whitespace. Raises ValueError."""
+    lines = [line.rstrip() for line in text.replace("\r\n", "\n").split("\n")]
+    while lines and lines[-1] == "":
+        lines.pop()
+    if type_name in ("int", "float", "bool", "str"):
+        if type_name == "str":
+            if len(lines) > 1:
+                raise ValueError("expected a single line")
+            return lines[0] if lines else ""
+        if len(lines) != 1:
+            raise ValueError("expected exactly one line")
+        token = lines[0].strip()
+        if type_name == "int":
+            return int(token)
+        if type_name == "float":
+            return float(token)
+        if token not in ("true", "false"):
+            raise ValueError("expected true or false")
+        return token == "true"
+    if type_name in ("int[]", "ListNode"):
+        if len(lines) > 1:
+            raise ValueError("expected a single line")
+        return [int(t) for t in lines[0].split()] if lines else []
+    if type_name == "TreeNode":
+        if len(lines) > 1:
+            raise ValueError("expected a single line")
+        return [_parse_token(t, int) for t in lines[0].split()] if lines else []
+    if type_name == "int[][]":
+        return [[int(t) for t in line.split()] for line in lines]
+    if type_name == "str[][]":
+        return [line.split() for line in lines]
+    if type_name == "str[]":
+        return lines
+    raise NotImplementedError(f"ACM output for type {type_name}")
+
+
+# ---------------------------------------------------------------------------
+# Checkers
+# ---------------------------------------------------------------------------
+
+def _sort_key(value: Any) -> str:
+    return json.dumps(value, sort_keys=True)
+
+
+def check(kind: str, actual: Any, expected: Any) -> bool:
+    if kind == "exact":
+        return actual == expected
+    if kind == "unordered":
+        return isinstance(actual, list) and sorted(actual, key=_sort_key) == sorted(expected, key=_sort_key)
+    if kind == "unordered_nested":
+        if not isinstance(actual, list) or not all(isinstance(g, list) for g in actual):
+            return False
+        norm = lambda groups: sorted((sorted(g, key=_sort_key) for g in groups), key=_sort_key)
+        return norm(actual) == norm(expected)
+    if kind == "float":
+        return isinstance(actual, (int, float)) and abs(actual - expected) <= 1e-5 * max(1.0, abs(expected))
+    raise ValueError(f"unknown checker {kind}")
+
+
+# ---------------------------------------------------------------------------
+# Core-mode execution (runs inside the sandbox subprocess)
+# ---------------------------------------------------------------------------
+
+def _user_error(exc: BaseException) -> str:
+    """Exception message with the innermost line number of the learner's code."""
+    line = None
+    for frame in traceback.extract_tb(exc.__traceback__):
+        if frame.filename == "<solution>":
+            line = frame.lineno
+    where = f" (line {line})" if line else ""
+    return f"{type(exc).__name__}: {exc}{where}"
+
+
+def run_core(job: dict) -> dict:
+    spec, case = job["spec"], job["case"]
+    # Like LeetCode: recursive solutions over 10^3–10^4 deep inputs shouldn't hit Python's default 1000
+    sys.setrecursionlimit(20000)
+    ns: dict[str, Any] = {
+        "__name__": "__solution__",
+        "List": List, "Optional": Optional,
+        "ListNode": ListNode, "TreeNode": TreeNode,
+    }
+    captured = io.StringIO()
+    real_stdout = sys.stdout
+    sys.stdout = captured
+    try:
+        try:
+            exec(compile(job["code"], "<solution>", "exec"), ns)
+        except BaseException as exc:  # noqa: BLE001 - report anything the learner's code raises
+            return {"status": "error", "error": _user_error(exc), "stdout": captured.getvalue()}
+
+        design = spec.get("design")
+        start = time.perf_counter()
+        try:
+            if design:
+                actual = _run_design(ns, design, case)
+            else:
+                actual = _run_method(ns, spec, case)
+        except BaseException as exc:  # noqa: BLE001
+            return {"status": "error", "error": _user_error(exc), "stdout": captured.getvalue()}
+        elapsed_ms = (time.perf_counter() - start) * 1000
+    finally:
+        sys.stdout = real_stdout
+
+    passed = check(spec.get("check", "exact"), actual, case["expected"])
+    return {
+        "status": "ok" if passed else "wrong",
+        "actual": show(actual),
+        "timeMs": elapsed_ms,
+        "stdout": captured.getvalue(),
+    }
+
+
+def _run_method(ns: dict, spec: dict, case: dict) -> Any:
+    solution_cls = ns.get("Solution")
+    if solution_cls is None:
+        raise NameError("class Solution is not defined")
+    method = getattr(solution_cls(), spec["function_name"], None)
+    if method is None:
+        raise AttributeError(f"Solution has no method '{spec['function_name']}'")
+    params = spec["params"]
+    args = [to_runtime(arg, type_name) for (_, type_name), arg in zip(params, case["args"])]
+    result = method(*args)
+    inplace = spec.get("inplace")
+    if inplace is not None:
+        index = [name for name, _ in params].index(inplace)
+        return from_runtime(args[index], params[index][1])
+    return from_runtime(result, spec["returns"])
+
+
+def _run_design(ns: dict, design: dict, case: dict) -> list:
+    cls = ns.get(design["class"])
+    if cls is None:
+        raise NameError(f"class {design['class']} is not defined")
+    ops, op_args = case["ops"], case["args"]
+    obj = cls(*op_args[0])
+    out: list = [None]
+    for op, args in zip(ops[1:], op_args[1:]):
+        result = getattr(obj, op)(*args)
+        out.append(None if design["methods"][op][1] == "void" else result)
+    return out
+
+
+if __name__ == "__main__":
+    result = run_core(json.loads(sys.stdin.read()))
+    sys.stdout.write("\n" + json.dumps(result) + "\n")

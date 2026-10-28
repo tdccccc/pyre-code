@@ -1,9 +1,11 @@
 'use client';
 
 import { useState } from 'react';
-import { Lightbulb, ChevronDown, ChevronRight } from 'lucide-react';
+import { Lightbulb, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
+import { CaseBlock } from '@/components/workspace/CaseBlock';
 import { useLocale } from '@/context/LocaleContext';
+import { useProblemStore } from '@/store/problemStore';
 import type { Problem } from '@/lib/types';
 
 function parseInline(text: string): (string | JSX.Element)[] {
@@ -60,24 +62,72 @@ interface DescriptionTabProps {
 export function DescriptionTab({ problem }: DescriptionTabProps) {
   const [hintOpen, setHintOpen] = useState(false);
   const { locale, t } = useLocale();
+  const codeMode = useProblemStore((s) => s.codeMode);
 
   const description = locale === 'zh' ? problem.descriptionZh : problem.descriptionEn;
   const hint = locale === 'zh' && problem.hintZh ? problem.hintZh : problem.hint;
+  const isHot100 = problem.track === 'hot100';
+  const isAcm = isHot100 && codeMode === 'acm';
+  // Design problems (LRUCache, ...) name a class; everything else is a Solution method
+  const isClass = /^[A-Z]/.test(problem.functionName);
+
+  const task = !isHot100
+    ? t('implementFn', { fn: problem.functionName })
+    : isAcm
+      ? t('acmTask')
+      : t(isClass ? 'implementClass' : 'implementMethod', { fn: problem.functionName });
+  const sample = problem.cases?.acm[0];
 
   return (
     <div className="px-7 py-6 space-y-6">
       <div>
         <div className="flex items-center gap-3 mb-2">
-          <h1 className="text-[22px] tracking-[-0.02em] font-semibold">{locale === 'zh' ? problem.titleZh : problem.title}</h1>
+          <h1 className="text-[22px] tracking-[-0.02em] font-semibold">
+            {isHot100 && <span className="text-text-3 font-normal mr-2 tabular-nums">{problem.leetcodeId}.</span>}
+            {locale === 'zh' ? problem.titleZh : problem.title}
+          </h1>
           <Badge variant={problem.difficulty.toLowerCase() as 'easy' | 'medium' | 'hard'}>
             {problem.difficulty.toUpperCase()}
           </Badge>
         </div>
-        <p className="text-sm text-text-2">{t('implementFn', { fn: problem.functionName })}</p>
+        {isHot100 && (
+          <div className="flex items-center gap-3 mb-2 text-xs text-text-3">
+            <span>{locale === 'zh' ? problem.categoryZh : problem.category}</span>
+            <a
+              href={`https://${locale === 'zh' ? 'leetcode.cn' : 'leetcode.com'}/problems/${problem.leetcodeSlug}/`}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center gap-1 hover:text-accent transition-colors"
+            >
+              {t('viewOnLeetcode')}
+              <ExternalLink className="w-3 h-3" />
+            </a>
+          </div>
+        )}
+        <p className="text-sm text-text-2">{task}</p>
       </div>
 
       {description && (
         <div className="space-y-1">{renderDescription(description)}</div>
+      )}
+
+      {isAcm && problem.acm && (
+        <div className="space-y-4">
+          <div className="space-y-1">
+            <h3 className="text-sm font-medium text-text">{t('inputFormat')}</h3>
+            {renderDescription(locale === 'zh' ? problem.acm.inputZh : problem.acm.inputEn)}
+          </div>
+          <div className="space-y-1">
+            <h3 className="text-sm font-medium text-text">{t('outputFormat')}</h3>
+            {renderDescription(locale === 'zh' ? problem.acm.outputZh : problem.acm.outputEn)}
+          </div>
+          {sample?.input != null && (
+            <div className="grid grid-cols-2 gap-3 max-[700px]:grid-cols-1">
+              <CaseBlock label={t('sampleInput')} text={sample.input} />
+              <CaseBlock label={t('sampleOutput')} text={sample.expected ?? ''} />
+            </div>
+          )}
+        </div>
       )}
 
       {hint && (

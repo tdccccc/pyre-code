@@ -6,7 +6,8 @@ import { useProblemStore } from '@/store/problemStore';
 import { useLocale } from '@/context/LocaleContext';
 import { CodeEditor, CodeDiffViewer } from './CodeEditor';
 import { cn } from '@/lib/utils';
-import type { SubmissionHistory as Submission } from '@/lib/types';
+import { saveCodeMode } from '@/lib/codeDraft';
+import type { CodeMode, SubmissionHistory as Submission } from '@/lib/types';
 
 const actionClass =
   'inline-flex items-center gap-1.5 h-7 px-2 rounded-md text-xs text-text-2 hover:text-text hover:bg-[color-mix(in_oklab,var(--text)_5%,transparent)] transition-colors cursor-pointer disabled:opacity-40 disabled:pointer-events-none';
@@ -20,6 +21,15 @@ function parseSubmittedAt(value: string): Date {
   return new Date(/Z$|[+-]\d{2}:\d{2}$/.test(value) ? value : `${value.replace(' ', 'T')}Z`);
 }
 
+function ModeTag({ mode }: { mode?: CodeMode }) {
+  const { t } = useLocale();
+  return (
+    <span className="mono text-[10.5px] px-1.5 py-px rounded text-text-3" style={{ border: '1px solid var(--line)' }}>
+      {mode === 'acm' ? t('modeAcm') : t('modeCore')}
+    </span>
+  );
+}
+
 function StatusLabel({ passed }: { passed: boolean }) {
   const { t } = useLocale();
   const Icon = passed ? CheckCircle2 : XCircle;
@@ -31,7 +41,8 @@ function StatusLabel({ passed }: { passed: boolean }) {
   );
 }
 
-export function SubmissionHistory() {
+/** `showMode`: tag each submission with its Hot 100 answer mode */
+export function SubmissionHistory({ showMode = false }: { showMode?: boolean }) {
   const { t, locale } = useLocale();
   const { submissionHistory } = useProblemStore();
   const [selectedId, setSelectedId] = useState<number | null>(null);
@@ -55,6 +66,7 @@ export function SubmissionHistory() {
     return (
       <SubmissionDetail
         submission={submissionHistory[selectedIndex]}
+        showMode={showMode}
         attempt={submissionHistory.length - selectedIndex}
         time={formatTime(submissionHistory[selectedIndex].submittedAt)}
         onBack={() => setSelectedId(null)}
@@ -76,6 +88,7 @@ export function SubmissionHistory() {
             <div className="flex items-center gap-3">
               <StatusLabel passed={s.passed} />
               <span className="text-xs text-text-3">{t('submissionAttempt', { n: submissionHistory.length - index })}</span>
+              {showMode && <ModeTag mode={s.mode} />}
             </div>
             <div className="flex items-center gap-2 text-xs text-text-3">
               <span>{formatTime(s.submittedAt)}</span>
@@ -95,15 +108,17 @@ interface SubmissionDetailProps {
   attempt: number;
   time: string;
   onBack: () => void;
+  showMode: boolean;
 }
 
-function SubmissionDetail({ submission, attempt, time, onBack }: SubmissionDetailProps) {
+function SubmissionDetail({ submission, attempt, time, onBack, showMode }: SubmissionDetailProps) {
   const { t } = useLocale();
-  const { currentCode, setCurrentCode } = useProblemStore();
+  const { currentCode, setCurrentCode, codeMode, setCodeMode } = useProblemStore();
   const [mode, setMode] = useState<'code' | 'diff'>('code');
   const [copied, setCopied] = useState(false);
   const [confirmRestore, setConfirmRestore] = useState(false);
-  const isSameAsCurrent = currentCode === submission.code;
+  const submissionMode = submission.mode ?? 'core';
+  const isSameAsCurrent = currentCode === submission.code && (!showMode || codeMode === submissionMode);
 
   // Restoring overwrites the editor, so it takes a second click within a few seconds
   useEffect(() => {
@@ -126,6 +141,11 @@ function SubmissionDetail({ submission, attempt, time, onBack }: SubmissionDetai
     if (!confirmRestore) {
       setConfirmRestore(true);
       return;
+    }
+    // An ACM submission restores into ACM mode (and its draft), and vice versa
+    if (showMode && submissionMode !== codeMode) {
+      saveCodeMode(submissionMode);
+      setCodeMode(submissionMode);
     }
     setCurrentCode(submission.code);
     setConfirmRestore(false);
@@ -158,6 +178,7 @@ function SubmissionDetail({ submission, attempt, time, onBack }: SubmissionDetai
         <div className="flex flex-wrap items-center gap-x-3 gap-y-1 px-1">
           <StatusLabel passed={submission.passed} />
           <span className="text-xs text-text-3">
+            {showMode && <ModeTag mode={submission.mode} />}{' '}
             {t('submissionAttempt', { n: attempt })} · {time}
             {submission.execTimeMs != null && ` · ${submission.execTimeMs.toFixed(1)}ms`}
           </span>

@@ -3,13 +3,13 @@ import { GRADING_SERVICE_URL } from '@/lib/constants';
 import { SubmissionResult } from '@/lib/types';
 
 export async function POST(request: Request) {
-  const { taskId, code, testIndices } = await request.json();
+  const { taskId, code, testIndices, mode } = await request.json();
 
   try {
     const res = await fetch(`${GRADING_SERVICE_URL}/run`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ taskId, code, testIndices }),
+      body: JSON.stringify({ taskId, code, testIndices, mode }),
     });
     if (!res.ok) {
       const errText = await res.text();

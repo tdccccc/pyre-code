@@ -1,9 +1,11 @@
 'use client';
 
 import { CodeEditor } from './CodeEditor';
+import { MarkdownContent } from './MarkdownContent';
 import { useLocale } from '@/context/LocaleContext';
 import solutionsData from '@/lib/solutions.json';
 import { getSolutionCode } from '@/lib/problemContext';
+import { useProblemStore } from '@/store/problemStore';
 
 interface Cell {
   type: string;
@@ -16,7 +18,8 @@ interface SolutionTabProps {
 }
 
 export function SolutionTab({ problemId }: SolutionTabProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
+  const codeMode = useProblemStore((s) => s.codeMode);
   const data = (solutionsData as Record<string, { cells: Cell[] }>)[problemId];
   const cells = data?.cells ?? [];
 
@@ -24,9 +27,12 @@ export function SolutionTab({ problemId }: SolutionTabProps) {
     return <div className="p-6 text-sm text-text-3">{t('noSolution')}</div>;
   }
 
-  const solutionCode = getSolutionCode(problemId);
+  const solutionCode = getSolutionCode(problemId, codeMode);
   const demoCode = cells.filter((c) => c.role === 'demo').map((c) => c.source).join('\n\n');
-  const explanations = cells.filter((c) => c.role === 'explanation');
+  // Hot 100 ships the explanation in both languages; AI problems only have 'explanation'
+  const hasZh = cells.some((c) => c.role === 'explanation_zh');
+  const explanationRole = locale === 'zh' && hasZh ? 'explanation_zh' : 'explanation';
+  const explanations = cells.filter((c) => c.role === explanationRole);
 
   return (
     <div className="h-full overflow-y-auto p-4 space-y-4">
@@ -45,7 +51,7 @@ export function SolutionTab({ problemId }: SolutionTabProps) {
         </div>
       )}
       {explanations.map((c, i) => (
-        <p key={i} className="text-sm text-text-2 px-1 whitespace-pre-wrap">{c.source}</p>
+        <div key={i} className="text-sm text-text-2 px-1"><MarkdownContent content={c.source} /></div>
       ))}
       {demoCode && (
         <div className="flex flex-col gap-1">

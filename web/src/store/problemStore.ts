@@ -1,9 +1,12 @@
 import { create } from 'zustand';
-import type { SubmissionResult, CustomTest, AiHelpConfig, AiChatMessage, SubmissionHistory } from '@/lib/types';
+import type { SubmissionResult, CustomTest, AiHelpConfig, AiChatMessage, SubmissionHistory, CodeMode } from '@/lib/types';
 
 interface ProblemStore {
   currentCode: string;
   setCurrentCode: (code: string) => void;
+  /** Hot 100 answer mode; AI-track problems always use 'core' */
+  codeMode: CodeMode;
+  setCodeMode: (mode: CodeMode) => void;
   submissionResult: SubmissionResult | null;
   setSubmissionResult: (result: SubmissionResult | null) => void;
   isSubmitting: boolean;
@@ -44,6 +47,8 @@ interface ProblemStore {
 export const useProblemStore = create<ProblemStore>((set, get) => ({
   currentCode: '',
   setCurrentCode: (code) => set({ currentCode: code }),
+  codeMode: 'core',
+  setCodeMode: (mode) => set({ codeMode: mode }),
   submissionResult: null,
   setSubmissionResult: (result) => set({ submissionResult: result }),
   isSubmitting: false,

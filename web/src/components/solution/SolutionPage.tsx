@@ -2,6 +2,7 @@
 
 import Link from 'next/link';
 import { CodeEditor } from '@/components/workspace/CodeEditor';
+import { MarkdownContent } from '@/components/workspace/MarkdownContent';
 import { useLocale } from '@/context/LocaleContext';
 import solutionsData from '@/lib/solutions.json';
 import { getSolutionCode } from '@/lib/problemContext';
@@ -26,7 +27,7 @@ interface SolutionPageProps {
 }
 
 export function SolutionPageContent({ problemId }: SolutionPageProps) {
-  const { t } = useLocale();
+  const { t, locale } = useLocale();
   const data = (solutionsData as Record<string, { cells: Cell[] }>)[problemId];
   const cells = data?.cells ?? [];
 
@@ -35,7 +36,8 @@ export function SolutionPageContent({ problemId }: SolutionPageProps) {
   }
 
   const solutionCode = getSolutionCode(problemId);
-  const explanations = cells.filter((c) => c.role === 'explanation');
+  const hasZh = cells.some((c) => c.role === 'explanation_zh');
+  const explanations = cells.filter((c) => c.role === (locale === 'zh' && hasZh ? 'explanation_zh' : 'explanation'));
   const demoCode = cells.filter((c) => c.role === 'demo').map((c) => c.source).join('\n\n');
 
   return (
@@ -77,7 +79,7 @@ export function SolutionPageContent({ problemId }: SolutionPageProps) {
           {/* Explanations */}
           {explanations.length > 0 && <SectionHeader>Walkthrough</SectionHeader>}
           {explanations.map((c, i) => (
-            <p key={i} className="text-[14.5px] text-text-2 leading-[1.7] mb-3.5 max-w-[68ch]">{c.source}</p>
+            <div key={i} className="text-[14.5px] text-text-2 leading-[1.7] mb-3.5 max-w-[68ch]"><MarkdownContent content={c.source} /></div>
           ))}
 
           {/* Demo code */}
