@@ -227,6 +227,20 @@
       }
     ]
   },
+  "softmax_backward": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def softmax_backward(y, dy):\n    # Per-row dot product sum_j dy_j * y_j, kept as a broadcastable (*, 1) tensor\n    s = (dy * y).sum(dim=-1, keepdim=True)\n    # dx_i = y_i * (dy_i - s): the full V x V Jacobian is never formed\n    return y * (dy - s)",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nx = torch.randn(2, 5, requires_grad=True)\ny = torch.softmax(x, dim=-1)\ndy = torch.randn(2, 5)\n\ndx = softmax_backward(y.detach(), dy)\n(ref,) = torch.autograd.grad(y, x, grad_outputs=dy)\nprint('Max diff vs autograd:', (dx - ref).abs().max().item())\nprint('Row sums of dx:', dx.sum(dim=-1).tolist())",
+        "role": "demo"
+      }
+    ]
+  },
   "weight_init": {
     "cells": [
       {
@@ -335,6 +349,20 @@
       {
         "type": "code",
         "source": "torch.manual_seed(0)\nQ = torch.randn(1, 4, 8)\nK = torch.randn(1, 4, 8)\nV = torch.randn(1, 4, 8)\nout = causal_attention(Q, K, V)\nprint(\"Pos 0 == V[0]?\", torch.allclose(out[:, 0], V[:, 0], atol=1e-5))",
+        "role": "demo"
+      }
+    ]
+  },
+  "chunked_cross_entropy": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def chunked_cross_entropy(hidden, weight, targets, chunk_size, ignore_index=-100):\n    N = hidden.shape[0]\n    total = hidden.new_zeros(())\n    count = 0\n    for start in range(0, N, chunk_size):\n        h = hidden[start:start + chunk_size]          # (c, D)\n        t = targets[start:start + chunk_size]         # (c,)\n        valid = t != ignore_index\n        # Only this chunk's logits exist: (c, V) instead of (N, V)\n        logits = h @ weight.T\n        lse = torch.logsumexp(logits, dim=-1)         # (c,)\n        # Ignored targets may be out of range for gather; point them at 0 and mask out\n        safe_t = t.masked_fill(~valid, 0)\n        tgt_logit = logits.gather(1, safe_t[:, None])[:, 0]\n        total = total + ((lse - tgt_logit) * valid).sum()\n        count += int(valid.sum())\n    return total / max(count, 1)",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nN, D, V = 64, 16, 500\nhidden = torch.randn(N, D)\nweight = torch.randn(V, D)\ntargets = torch.randint(0, V, (N,))\ntargets[:5] = -100\n\nloss = chunked_cross_entropy(hidden, weight, targets, chunk_size=16)\nref = torch.nn.functional.cross_entropy(hidden @ weight.T, targets)\nprint('Chunked loss:', round(loss.item(), 6))\nprint('Reference   :', round(ref.item(), 6))\nprint('Peak logits per chunk:', 16 * V, 'elements vs full:', N * V)",
         "role": "demo"
       }
     ]
@@ -451,6 +479,20 @@
       }
     ]
   },
+  "fp8_scaling": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "class DelayedScaler:\n    def __init__(self, history_len=16, fp8_max=448.0, margin=0):\n        self.history_len = history_len\n        self.fp8_max = fp8_max\n        self.margin = margin\n        self.scale = 1.0\n        self.amax_history = []\n\n    def quantize(self, x):\n        # Quantize with the scale derived from previous steps\n        s = self.scale\n        x_fp8 = (x * s).clamp(-self.fp8_max, self.fp8_max).to(torch.float8_e4m3fn)\n\n        # Record this tensor's amax for future steps, keeping only the window\n        self.amax_history = (self.amax_history + [x.abs().max().item()])[-self.history_len:]\n        amax = max(self.amax_history)\n        if amax > 0:  # an all-zero history leaves the scale unchanged\n            self.scale = self.fp8_max / amax / 2 ** self.margin\n        return x_fp8, s\n\n    def dequantize(self, x_fp8, scale):\n        return x_fp8.to(torch.float32) / scale",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nsc = DelayedScaler(history_len=4)\nfor step in range(4):\n    x = torch.randn(256) * (step + 1)\n    x_fp8, s = sc.quantize(x)\n    x_hat = sc.dequantize(x_fp8, s)\n    rel = ((x_hat - x).norm() / x.norm()).item()\n    print(f'step={step}  scale_used={s:.4f}  next_scale={sc.scale:.4f}  rel_err={rel:.4f}')",
+        "role": "demo"
+      }
+    ]
+  },
   "gat_layer": {
     "cells": [
       {
@@ -469,6 +511,34 @@
       }
     ]
   },
+  "inference_roofline": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def inference_roofline(num_params, n_layers, d_model, n_heads, n_kv_heads, seq_len, batch_size, peak_flops, mem_bandwidth, bytes_per_param=2):\n    head_dim = d_model // n_heads\n\n    # KV cache: K and V (factor 2) for every layer, every cached token, every KV head\n    kv_cache_bytes = 2 * n_layers * batch_size * seq_len * n_kv_heads * head_dim * bytes_per_param\n\n    # One decode step: 2 FLOPs per parameter per token; weights are read once for the whole batch\n    flops = 2 * num_params * batch_size\n    total_bytes = num_params * bytes_per_param + kv_cache_bytes\n\n    intensity = flops / total_bytes\n    ridge = peak_flops / mem_bandwidth  # FLOP/byte where compute and memory time are equal\n    bound = \"memory\" if intensity < ridge else \"compute\"\n\n    # The slower of the two limits sets the step time (roofline)\n    step_time = max(flops / peak_flops, total_bytes / mem_bandwidth)\n    tokens_per_sec = batch_size / step_time\n    mfu = flops / step_time / peak_flops\n\n    return {\n        \"kv_cache_bytes\": kv_cache_bytes,\n        \"flops\": flops,\n        \"bytes\": total_bytes,\n        \"arithmetic_intensity\": intensity,\n        \"bound\": bound,\n        \"step_time\": step_time,\n        \"tokens_per_sec\": tokens_per_sec,\n        \"mfu\": mfu,\n    }",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "P, L, d, heads, s = 6738415616, 32, 4096, 32, 2048\npeak, bw = 312e12, 2.0e12  # A100-like: 312 TFLOP/s bf16, 2 TB/s HBM\nprint(f\"ridge point = {peak / bw:.0f} FLOP/byte\")\nprint(f\"{'batch':>6} {'AI':>8} {'bound':>8} {'step ms':>8} {'tok/s':>9} {'mfu':>7}\")\nfor batch in [1, 8, 32, 64, 128, 256]:\n    out = inference_roofline(P, L, d, heads, heads, s, batch, peak, bw)\n    print(f\"{batch:>6} {out['arithmetic_intensity']:>8.1f} {out['bound']:>8} \"\n          f\"{out['step_time'] * 1e3:>8.2f} {out['tokens_per_sec']:>9.1f} {out['mfu']:>7.3f}\")\n\ngqa = inference_roofline(P, L, d, heads, 8, s, 64, peak, bw)\nmha = inference_roofline(P, L, d, heads, heads, s, 64, peak, bw)\nprint(f\"batch 64 KV cache: MHA {mha['kv_cache_bytes'] / 2**30:.1f} GiB vs GQA-8 {gqa['kv_cache_bytes'] / 2**30:.1f} GiB\")",
+        "role": "demo"
+      }
+    ]
+  },
+  "kv_block_allocator": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "import heapq\n\n\nclass BlockAllocator:\n    def __init__(self, num_blocks: int):\n        self.refs = [0] * num_blocks  # ref count per physical block, 0 = free\n        self.free_heap = list(range(num_blocks))  # ids are already a valid min-heap\n\n    def allocate(self) -> int:\n        if not self.free_heap:\n            raise RuntimeError(\"no free KV blocks\")\n        block_id = heapq.heappop(self.free_heap)  # smallest free id\n        self.refs[block_id] = 1\n        return block_id\n\n    def fork(self, block_id: int) -> None:\n        self._check_allocated(block_id)\n        self.refs[block_id] += 1\n\n    def free(self, block_id: int) -> None:\n        self._check_allocated(block_id)\n        self.refs[block_id] -= 1\n        if self.refs[block_id] == 0:\n            heapq.heappush(self.free_heap, block_id)\n\n    def copy_on_write(self, block_id: int) -> int:\n        self._check_allocated(block_id)\n        if self.refs[block_id] == 1:\n            return block_id  # sole owner writes in place\n        new_id = self.allocate()  # raises before any state changes if no block is free\n        self.refs[block_id] -= 1  # other holders keep the old block\n        return new_id\n\n    def ref_count(self, block_id: int) -> int:\n        return self.refs[block_id]\n\n    def num_free(self) -> int:\n        return len(self.free_heap)\n\n    def _check_allocated(self, block_id: int) -> None:\n        if self.refs[block_id] == 0:\n            raise ValueError(f\"block {block_id} is free\")",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "alloc = BlockAllocator(4)\na = alloc.allocate()  # block 0\nb = alloc.allocate()  # block 1\nalloc.fork(a)  # beam search: a second sequence shares block 0\nprint('ref_count(0) =', alloc.ref_count(a))\n\nnew = alloc.copy_on_write(a)  # the second sequence is about to write\nprint('copy-on-write gives block', new, '| ref_count(0) =', alloc.ref_count(a))\n\nalloc.free(b)\nprint('free blocks:', alloc.num_free(), '| next allocate ->', alloc.allocate())",
+        "role": "demo"
+      }
+    ]
+  },
   "layernorm": {
     "cells": [
       {
@@ -479,6 +549,20 @@
       {
         "type": "code",
         "source": "x = torch.randn(2, 8)\ngamma = torch.ones(8)\nbeta = torch.zeros(8)\nout = my_layer_norm(x, gamma, beta)\nref = torch.nn.functional.layer_norm(x, [8], gamma, beta)\nprint(\"Match ref?\", torch.allclose(out, ref, atol=1e-4))",
+        "role": "demo"
+      }
+    ]
+  },
+  "layernorm_backward": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def layernorm_backward(dy, x, gamma, eps=1e-5):\n    D = x.shape[-1]\n    mu = x.mean(dim=-1, keepdim=True)\n    var = ((x - mu) ** 2).mean(dim=-1, keepdim=True)       # biased variance\n    rstd = 1.0 / torch.sqrt(var + eps)\n    x_hat = (x - mu) * rstd\n\n    dx_hat = dy * gamma\n    dx = rstd * (dx_hat\n                 - dx_hat.mean(dim=-1, keepdim=True)\n                 - x_hat * (dx_hat * x_hat).mean(dim=-1, keepdim=True))\n\n    # Parameter grads sum over every dim except the last\n    lead = tuple(range(dy.dim() - 1))\n    dgamma = (dy * x_hat).sum(dim=lead)\n    dbeta = dy.sum(dim=lead)\n    return dx, dgamma, dbeta",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nx = torch.randn(2, 3, 6, requires_grad=True)\ngamma = torch.randn(6, requires_grad=True)\nbeta = torch.zeros(6, requires_grad=True)\ndy = torch.randn(2, 3, 6)\n\ny = torch.nn.functional.layer_norm(x, (6,), gamma, beta, 1e-5)\nref_dx, ref_dg, ref_db = torch.autograd.grad(y, (x, gamma, beta), grad_outputs=dy)\ndx, dgamma, dbeta = layernorm_backward(dy, x.detach(), gamma.detach())\n\nprint('dx max diff:', (dx - ref_dx).abs().max().item())\nprint('dgamma max diff:', (dgamma - ref_dg).abs().max().item())\nprint('dbeta max diff:', (dbeta - ref_db).abs().max().item())",
         "role": "demo"
       }
     ]
@@ -590,6 +674,20 @@
       }
     ]
   },
+  "pipeline_1f1b": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def pipeline_1f1b_schedule(num_stages, num_microbatches):\n    p, m = num_stages, num_microbatches\n    schedule = []\n    for s in range(p):\n        # Warmup: stage s runs (p - s - 1) forwards before its first backward\n        warmup = min(p - s - 1, m)\n        ops = [f\"F{i}\" for i in range(warmup)]\n\n        # Steady state: one forward, then one backward, per step\n        for j in range(m - warmup):\n            ops.append(f\"F{warmup + j}\")\n            ops.append(f\"B{j}\")\n\n        # Cooldown: the remaining backwards drain the pipeline\n        ops += [f\"B{j}\" for j in range(m - warmup, m)]\n        schedule.append(ops)\n\n    # Ideal bubble with equal forward/backward times: (p - 1) / (m + p - 1)\n    bubble_fraction = (p - 1) / (m + p - 1)\n    return schedule, bubble_fraction",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "p, m = 4, 8\nschedule, bubble = pipeline_1f1b_schedule(p, m)\n\nfor s, ops in enumerate(schedule):\n    print(f\"stage {s}: {' '.join(ops)}\")\n\nfor s in range(p):\n    in_flight, peak = 0, 0\n    for op in schedule[s]:\n        in_flight += 1 if op[0] == \"F\" else -1\n        peak = max(peak, in_flight)\n    print(f\"stage {s}: peak in-flight = {peak} (GPipe would hold {m})\")  # expect min(p - s, m)\n\nprint(f\"bubble fraction = {bubble:.4f}\")  # expect 3/11 = 0.2727",
+        "role": "demo"
+      }
+    ]
+  },
   "ppo_loss": {
     "cells": [
       {
@@ -618,6 +716,20 @@
       }
     ]
   },
+  "ring_allreduce": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def ring_allreduce(tensors):\n    W = len(tensors)\n    # chunks[r][c]: chunk c of rank r's buffer (copies, so the inputs are never touched)\n    chunks = [[c.clone() for c in t.tensor_split(W)] for t in tensors]\n    log = []\n\n    # Phase 1: reduce-scatter. Rank r sends chunk (r - t) to rank r+1, which adds it in.\n    for t in range(W - 1):\n        sent = [chunks[r][(r - t) % W] for r in range(W)]  # values from before this step\n        entry = []\n        for r in range(W):\n            dst, c = (r + 1) % W, (r - t) % W\n            chunks[dst][c] = chunks[dst][c] + sent[r]\n            entry.append((r, dst, c))\n        log.append(entry)\n\n    # Phase 2: all-gather. Rank r forwards chunk (r + 1 - t); the receiver overwrites it.\n    for t in range(W - 1):\n        sent = [chunks[r][(r + 1 - t) % W] for r in range(W)]\n        entry = []\n        for r in range(W):\n            dst, c = (r + 1) % W, (r + 1 - t) % W\n            chunks[dst][c] = sent[r]\n            entry.append((r, dst, c))\n        log.append(entry)\n\n    # Every rank now holds all reduced chunks; concatenation copies into fresh tensors\n    outputs = [torch.cat(chunks[r]) for r in range(W)]\n    return outputs, log",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nW, L = 4, 10\ntensors = [torch.randn(L) for _ in range(W)]\n\noutputs, log = ring_allreduce(tensors)\nref = torch.stack(tensors).sum(dim=0)\n\nprint(\"steps:\", len(log), \"| transfers per step:\", len(log[0]))  # expect 6 | 4\nprint(\"max error vs elementwise sum:\", max((o - ref).abs().max().item() for o in outputs))  # expect ~0\nprint(\"reduce-scatter step 0:\", log[0])  # [(0, 1, 0), (1, 2, 1), (2, 3, 2), (3, 0, 3)]\nprint(\"all-gather step 3:\", log[-1])",
+        "role": "demo"
+      }
+    ]
+  },
   "rmsnorm": {
     "cells": [
       {
@@ -642,6 +754,20 @@
       {
         "type": "code",
         "source": "q = torch.randn(1, 8, 16)\nk = torch.randn(1, 8, 16)\nqr, kr = apply_rope(q, k)\nprint('Shape preserved:', qr.shape == q.shape)\nprint('Norm preserved:', torch.allclose(q.norm(dim=-1), qr.norm(dim=-1), atol=1e-4))",
+        "role": "demo"
+      }
+    ]
+  },
+  "sampling_penalties": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "from collections import Counter\n\n\ndef apply_sampling_penalties(logits, prev_tokens, repetition_penalty=1.0, frequency_penalty=0.0, presence_penalty=0.0, temperature=1.0, min_p=0.0):\n    logits = logits.clone()  # never modify the caller's tensor\n    counts = Counter(prev_tokens)\n\n    if counts:\n        ids = torch.tensor(list(counts.keys()), dtype=torch.long)\n        cnt = torch.tensor(list(counts.values()), dtype=logits.dtype)\n        vals = logits[ids]\n\n        # 1. Repetition penalty: once per distinct token, sign-aware\n        vals = torch.where(vals > 0, vals / repetition_penalty, vals * repetition_penalty)\n\n        # 2. Frequency scales with the count; presence applies once (every id has count > 0)\n        vals = vals - (frequency_penalty * cnt + presence_penalty)\n\n        logits[ids] = vals\n\n    # 3. Temperature\n    logits = logits / temperature\n\n    # 4. Softmax\n    probs = torch.softmax(logits, dim=-1)\n\n    # 5. Min-p: drop tokens far below the most likely one, then renormalize\n    threshold = min_p * probs.max()\n    probs = torch.where(probs < threshold, torch.zeros_like(probs), probs)\n    return probs / probs.sum()",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nV = 8\nlogits = torch.randn(V)\nprev = [3, 3, 5, 1]\n\nbase = torch.softmax(logits, dim=-1)\nprint('plain softmax:  ', [round(x, 3) for x in base.tolist()])\n\npenalized = apply_sampling_penalties(logits, prev, repetition_penalty=1.5, frequency_penalty=0.3, presence_penalty=0.2, temperature=0.8, min_p=0.05)\nprint('with penalties: ', [round(x, 3) for x in penalized.tolist()])\nprint('sum:', round(penalized.sum().item(), 6))",
         "role": "demo"
       }
     ]
@@ -688,6 +814,48 @@
       }
     ]
   },
+  "training_memory": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def training_memory(num_params, n_layers, d_model, n_heads, seq_len, micro_batch, zero_stage=0, world_size=1, recompute=False):\n    if zero_stage not in (0, 1, 2, 3):\n        raise ValueError(f\"zero_stage must be 0, 1, 2 or 3, got {zero_stage}\")\n\n    # Model states: bf16 params (2) + bf16 grads (2) + fp32 master/m/v (12) bytes per parameter\n    param_div = world_size if zero_stage == 3 else 1\n    grad_div = world_size if zero_stage >= 2 else 1\n    opt_div = world_size if zero_stage >= 1 else 1\n    params = 2 * num_params / param_div\n    grads = 2 * num_params / grad_div\n    optimizer = 12 * num_params / opt_div\n\n    # Activations per layer (Korthikanti et al. 2022, bf16, no tensor/sequence parallelism)\n    s, b, h, a = seq_len, micro_batch, d_model, n_heads\n    if recompute:\n        # Full checkpointing: only each layer's input tensor is kept\n        per_layer = 2 * s * b * h\n    else:\n        per_layer = s * b * h * (34 + 5 * a * s / h)\n    activations = float(n_layers * per_layer)  # not sharded across ranks\n\n    total = params + grads + optimizer + activations\n    return {\n        \"params\": float(params),\n        \"grads\": float(grads),\n        \"optimizer\": float(optimizer),\n        \"activations\": activations,\n        \"total\": float(total),\n    }",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "Psi, L, h, a, s, b, N = 7_000_000_000, 32, 4096, 32, 2048, 1, 8\nGiB = 2**30\nprint(f\"7B model, s={s}, micro-batch={b}, N={N} GPUs (GiB per GPU)\")\nfor stage in range(4):\n    m = training_memory(Psi, L, h, a, s, b, zero_stage=stage, world_size=N)\n    print(f\"  ZeRO-{stage}: model states {(m['params'] + m['grads'] + m['optimizer']) / GiB:6.1f}  \"\n          f\"activations {m['activations'] / GiB:5.1f}  total {m['total'] / GiB:6.1f}\")\n\nrec = training_memory(Psi, L, h, a, s, b, zero_stage=3, world_size=N, recompute=True)\nprint(f\"ZeRO-3 with recompute: activations {rec['activations'] / GiB:.2f} GiB, total {rec['total'] / GiB:.1f} GiB\")",
+        "role": "demo"
+      }
+    ]
+  },
+  "transformer_flops": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def transformer_flops(n_layers, d_model, d_ff, vocab_size, seq_len, batch_size, tied_embeddings=True):\n    d, V, L = d_model, vocab_size, n_layers\n    tokens = batch_size * seq_len\n\n    # Parameters\n    embed = V * d\n    lm_head = 0 if tied_embeddings else V * d    # tied head reuses the embedding matrix\n    per_layer = 4 * d * d + 2 * d * d_ff + 4 * d  # Q,K,V,O; MLP up/down; 2 LayerNorms (gamma, beta)\n    params = embed + lm_head + L * per_layer + 2 * d  # + final LayerNorm\n\n    # Forward FLOPs (one multiply-add = 2 FLOPs)\n    # Weight matmuls: every token goes through every layer and through the LM head\n    weight_flops = 2 * tokens * (L * (4 * d * d + 2 * d * d_ff) + V * d)\n    # Attention: QK^T and attn @ V over the full seq_len x seq_len score matrix\n    attn_flops = L * 4 * batch_size * seq_len * seq_len * d\n    forward = weight_flops + attn_flops\n\n    # Backward pass costs about twice the forward pass\n    return {\"params\": params, \"forward_flops\": forward, \"train_flops\": 3 * forward}",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "L, d, d_ff, V, s = 12, 768, 3072, 50257, 1024\nout = transformer_flops(L, d, d_ff, V, s, batch_size=1)\nprint(f\"GPT-2 small params (tied): {out['params'] / 1e6:.1f}M\")\nprint(f\"Forward FLOPs for one 1024-token sequence: {out['forward_flops']:.3e}\")\nprint(f\"Train FLOPs: {out['train_flops']:.3e}\")\n\nrule_of_thumb = 6 * out['params'] * s\nprint(f\"6 * params * tokens = {rule_of_thumb:.3e}  (ratio to exact: {rule_of_thumb / out['train_flops']:.3f})\")\n\nuntied = transformer_flops(L, d, d_ff, V, s, batch_size=1, tied_embeddings=False)\nprint(f\"Untied params: {untied['params'] / 1e6:.1f}M, forward FLOPs unchanged: {untied['forward_flops'] == out['forward_flops']}\")",
+        "role": "demo"
+      }
+    ]
+  },
+  "varlen_attention": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def varlen_attention(q, k, v, cu_seqlens, causal=True):\n    T, H, D = q.shape\n    scale = D ** -0.5\n\n    pos = torch.arange(T, device=q.device)\n    # Sequence id of every packed token: cu_seqlens[j] <= t < cu_seqlens[j+1]\n    seg = torch.searchsorted(cu_seqlens, pos, right=True) - 1\n\n    # Block-diagonal mask: a token may only attend within its own sequence\n    mask = seg[:, None] == seg[None, :]\n    if causal:\n        # Packed order inside a sequence matches the position within it\n        mask = mask & (pos[None, :] <= pos[:, None])\n\n    scores = torch.einsum('ihd,jhd->hij', q, k) * scale  # (H, T, T)\n    scores = scores.masked_fill(~mask, float('-inf'))\n    attn = torch.softmax(scores, dim=-1)\n    return torch.einsum('hij,jhd->ihd', attn, v)",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nT, H, D = 9, 2, 4\ncu = torch.tensor([0, 3, 5, 9], dtype=torch.int64)  # lengths 3, 2, 4\nq = torch.randn(T, H, D)\nk = torch.randn(T, H, D)\nv = torch.randn(T, H, D)\n\nout = varlen_attention(q, k, v, cu, causal=True)\nprint('packed output shape:', tuple(out.shape))\n\n# Changing sequence 3 must leave sequences 1 and 2 untouched\nk2, v2 = k.clone(), v.clone()\nk2[5:] += 10.0\nv2[5:] -= 10.0\nout2 = varlen_attention(q, k2, v2, cu, causal=True)\nprint('max change in sequence 1 + 2:', (out2[:5] - out[:5]).abs().max().item())\nprint('max change in sequence 3:', (out2[5:] - out[5:]).abs().max().item())",
+        "role": "demo"
+      }
+    ]
+  },
   "vit_patch": {
     "cells": [
       {
@@ -716,6 +884,20 @@
       }
     ]
   },
+  "continuous_batching": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def schedule_continuous_batching(requests, max_batch_tokens, max_num_seqs):\n    for _, prompt_len, _ in requests:\n        if prompt_len > max_batch_tokens:\n            raise ValueError(f\"prompt_len {prompt_len} can never fit in max_batch_tokens={max_batch_tokens}\")\n    # waiting requests in FCFS order: by arrival step, then by id\n    waiting = sorted(range(len(requests)), key=lambda i: (requests[i][0], i))\n    left = [out_len for _, _, out_len in requests]  # output tokens still to produce\n    running = []  # admitted and not finished\n    steps = []\n    step = 0\n    while any(left):\n        # (1) every running request decodes one token\n        ran = list(running)\n        tokens = len(running)\n        # (2) admit arrived requests in FCFS order; stop at the first one that does not fit\n        admitted = []\n        while waiting and requests[waiting[0]][0] <= step:\n            rid = waiting[0]\n            prompt_len = requests[rid][1]\n            if len(running) + len(admitted) + 1 > max_num_seqs:\n                break\n            if tokens + prompt_len > max_batch_tokens:\n                break\n            waiting.pop(0)\n            admitted.append(rid)\n            tokens += prompt_len\n        ran += admitted\n        # every request that ran in this step produces one output token\n        for rid in ran:\n            left[rid] -= 1\n        steps.append(sorted(ran))\n        # requests that produced their last token leave after this step\n        running = [rid for rid in ran if left[rid] > 0]\n        step += 1\n    return steps",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "requests = [(0, 6, 3), (1, 4, 2), (2, 2, 1), (9, 3, 2)]  # (arrival, prompt_len, output_len)\nsteps = schedule_continuous_batching(requests, max_batch_tokens=10, max_num_seqs=3)\nfor t, ids in enumerate(steps):\n    print(f'step {t:2d}: running {ids}')",
+        "role": "demo"
+      }
+    ]
+  },
   "diff_attention": {
     "cells": [
       {
@@ -730,6 +912,20 @@
       }
     ]
   },
+  "expert_dispatch": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "import math\n\n\ndef moe_dispatch(x, router_logits, experts, top_k=2, capacity_factor=1.25):\n    N, D = x.shape\n    E = router_logits.shape[-1]\n    capacity = math.ceil(capacity_factor * N * top_k / E)\n\n    # Top-k gates, renormalized to sum to 1 per token\n    probs = torch.softmax(router_logits, dim=-1)               # (N, E)\n    top_vals, top_idx = probs.topk(top_k, dim=-1)              # (N, k), sorted desc\n    gates = top_vals / top_vals.sum(dim=-1, keepdim=True)      # (N, k)\n\n    # Priority: all rank-0 choices (token order), then all rank-1 choices, ...\n    fill = [0] * E\n    accepted = [[] for _ in range(E)]   # per expert: list of (token, gate)\n    num_dropped = 0\n    for r in range(top_k):\n        for n in range(N):\n            e = int(top_idx[n, r])\n            if fill[e] < capacity:\n                fill[e] += 1\n                accepted[e].append((n, gates[n, r]))\n            else:\n                num_dropped += 1\n\n    # One batched call per expert; scatter gate-weighted outputs back to tokens\n    out = torch.zeros_like(x)\n    for e, slots in enumerate(accepted):\n        if not slots:\n            continue\n        tokens = torch.tensor([n for n, _ in slots], device=x.device)\n        w = torch.stack([g for _, g in slots])                 # (n_e,)\n        y = experts[e](x[tokens])                              # (n_e, D)\n        out = out.index_add(0, tokens, w.unsqueeze(-1) * y)\n    return out, num_dropped",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\nimport torch.nn as nn\n\ntorch.manual_seed(0)\nN, D, E = 8, 4, 4\nx = torch.randn(N, D)\nlogits = torch.randn(N, E)\nexperts = [nn.Linear(D, D) for _ in range(E)]\n\nout, dropped = moe_dispatch(x, logits, experts, top_k=2, capacity_factor=1.0)\nprint('Output shape:', tuple(out.shape), '| dropped assignments (C=1.0):', dropped)\n\nout_big, dropped_big = moe_dispatch(x, logits, experts, top_k=2, capacity_factor=4.0)\nprint('Output shape:', tuple(out_big.shape), '| dropped assignments (C=4.0):', dropped_big)",
+        "role": "demo"
+      }
+    ]
+  },
   "flash_attention": {
     "cells": [
       {
@@ -740,6 +936,20 @@
       {
         "type": "code",
         "source": "Q, K, V = torch.randn(1, 16, 8), torch.randn(1, 16, 8), torch.randn(1, 16, 8)\nout = flash_attention(Q, K, V, block_size=4)\nscores = torch.bmm(Q, K.transpose(1,2)) / math.sqrt(8)\nref = torch.bmm(torch.softmax(scores, dim=-1), V)\nprint('Shape:', out.shape)\nprint('Max diff:', (out - ref).abs().max().item())",
+        "role": "demo"
+      }
+    ]
+  },
+  "flash_decoding": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def flash_decoding(q, K, V, num_splits):\n    B, H, D = q.shape\n    scale = D ** -0.5\n\n    K_chunks = torch.tensor_split(K, num_splits, dim=2)\n    V_chunks = torch.tensor_split(V, num_splits, dim=2)\n\n    outs, lses = [], []\n    for Kc, Vc in zip(K_chunks, V_chunks):\n        # Scores for this chunk only: (B, H, len_c)\n        scores = torch.einsum('bhd,bhsd->bhs', q, Kc) * scale\n        # Partial result of this chunk: its own logsumexp and softmax-weighted V\n        lse_i = torch.logsumexp(scores, dim=-1)                  # (B, H)\n        p = torch.exp(scores - lse_i.unsqueeze(-1))              # softmax within the chunk\n        outs.append(torch.einsum('bhs,bhsd->bhd', p, Vc))        # (B, H, D)\n        lses.append(lse_i)\n\n    outs = torch.stack(outs, dim=0)                              # (num_splits, B, H, D)\n    lses = torch.stack(lses, dim=0)                              # (num_splits, B, H)\n\n    # Merge: rescale each partial by its share of the total softmax mass\n    lse = torch.logsumexp(lses, dim=0)                           # (B, H)\n    weights = torch.exp(lses - lse)                              # (num_splits, B, H)\n    out = (weights.unsqueeze(-1) * outs).sum(dim=0)              # (B, H, D)\n    return out, lse",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nB, H, S, D = 2, 4, 37, 16\nq = torch.randn(B, H, D)\nK = torch.randn(B, H, S, D)\nV = torch.randn(B, H, S, D)\n\nscores = torch.einsum('bhd,bhsd->bhs', q, K) * D ** -0.5\nref_out = torch.einsum('bhs,bhsd->bhd', torch.softmax(scores, dim=-1), V)\nref_lse = torch.logsumexp(scores, dim=-1)\n\nfor n in [1, 2, 4, 5, 8]:\n    sizes = [c.shape[2] for c in torch.tensor_split(K, n, dim=2)]\n    out, lse = flash_decoding(q, K, V, n)\n    out_diff = (out - ref_out).abs().max().item()\n    lse_diff = (lse - ref_lse).abs().max().item()\n    print(f'num_splits={n}  chunk sizes={sizes}  out_diff={out_diff:.2e}  lse_diff={lse_diff:.2e}')",
         "role": "demo"
       }
     ]
@@ -814,6 +1024,20 @@
       {
         "type": "code",
         "source": "logps = torch.tensor([0.0, -0.5, -1.0, -1.5])\nrewards = torch.tensor([1.0, 0.8, 0.2, 0.0])\ngroup_ids = torch.tensor([0, 0, 1, 1])\nprint('Loss:', grpo_loss(logps, rewards, group_ids).item())",
+        "role": "demo"
+      }
+    ]
+  },
+  "int4_group_quant": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def int4_group_quantize(w, group_size):\n    out_features, in_features = w.shape\n    n_groups = in_features // group_size\n\n    # View each row as contiguous groups: (out, n_groups, group_size)\n    wg = w.reshape(out_features, n_groups, group_size)\n    # The range always includes 0, so the zero point is an exact integer in [0, 15]\n    mn = wg.amin(dim=-1, keepdim=True).clamp(max=0)\n    mx = wg.amax(dim=-1, keepdim=True).clamp(min=0)\n\n    scale = (mx - mn) / 15.0\n    scale = torch.where(scale == 0, torch.ones_like(scale), scale)  # all-zero group\n    zero = torch.clamp(torch.round(-mn / scale), 0, 15)\n\n    q = torch.clamp(torch.round(wg / scale) + zero, 0, 15)\n    q = q.reshape(out_features, in_features).to(torch.uint8)\n\n    # Element 2i goes to the low nibble of byte i, element 2i+1 to the high nibble\n    packed = q[:, 0::2] | (q[:, 1::2] << 4)\n\n    scales = scale.squeeze(-1)\n    zeros = zero.squeeze(-1).to(torch.uint8)\n    return packed, scales, zeros",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nout_f, in_f, g = 4, 16, 8\nw = torch.randn(out_f, in_f)\n\npacked, scales, zeros = int4_group_quantize(w, g)\nprint('packed:', tuple(packed.shape), packed.dtype)\nprint('scales:', tuple(scales.shape), scales.dtype)\nprint('zeros: ', tuple(zeros.shape), zeros.dtype)\n\n# Unpack and dequantize\nlow = packed & 0x0F\nhigh = packed >> 4\nq = torch.stack([low, high], dim=-1).reshape(out_f, in_f).float()\nw_hat = (q - zeros.float().repeat_interleave(g, dim=1)) * scales.repeat_interleave(g, dim=1)\nprint('max abs error:', (w_hat - w).abs().max().item())\nprint('compression vs fp32:', w.numel() * 4 / (packed.numel() + scales.numel() * 4 + zeros.numel()))",
         "role": "demo"
       }
     ]
@@ -953,6 +1177,20 @@
       }
     ]
   },
+  "prefix_caching": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "import heapq\n\n\nclass PrefixCache:\n    def __init__(self, num_blocks: int, block_size: int):\n        self.block_size = block_size\n        self.refs = [0] * num_blocks\n        self.free_heap = list(range(num_blocks))  # never-used or unregistered blocks\n        self.key_of = {}  # registered block id -> prefix key\n        self.cache = {}  # prefix key -> registered block id\n        self.evictable = {}  # ref-0 registered block id -> tick when it became evictable\n        self.tick = 0\n\n    def allocate_sequence(self, tokens: list[int]) -> tuple[list[int], int]:\n        bs = self.block_size\n        block_table = []\n        reused = 0\n        reusing = True  # False once the first block misses\n        for i in range(-(-len(tokens) // bs)):  # ceil division\n            end = min((i + 1) * bs, len(tokens))\n            full = end - i * bs == bs\n            key = tuple(tokens[:end])\n            if reusing and full and key in self.cache:\n                block_id = self.cache[key]\n                if self.refs[block_id] == 0:\n                    del self.evictable[block_id]  # revived: no longer evictable\n                self.refs[block_id] += 1\n                block_table.append(block_id)\n                reused += 1\n                continue\n            reusing = False\n            block_id = self._take_block()\n            self.refs[block_id] = 1\n            if full and key not in self.cache:\n                self.cache[key] = block_id\n                self.key_of[block_id] = key\n            block_table.append(block_id)\n        return block_table, reused * bs\n\n    def free_sequence(self, block_table: list[int]) -> None:\n        for block_id in block_table:  # earlier positions become evictable first\n            self.refs[block_id] -= 1\n            if self.refs[block_id] == 0:\n                if block_id in self.key_of:\n                    self.evictable[block_id] = self.tick\n                    self.tick += 1\n                else:\n                    heapq.heappush(self.free_heap, block_id)\n\n    def ref_count(self, block_id: int) -> int:\n        return self.refs[block_id]\n\n    def num_cached_blocks(self) -> int:\n        return len(self.key_of)\n\n    def _take_block(self) -> int:\n        if self.free_heap:\n            return heapq.heappop(self.free_heap)\n        if self.evictable:\n            victim = min(self.evictable, key=self.evictable.get)  # least recently released\n            del self.evictable[victim]\n            del self.cache[self.key_of.pop(victim)]\n            return victim\n        raise RuntimeError(\"no free or evictable KV blocks\")",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "cache = PrefixCache(6, 2)\nsystem = [101, 102, 103, 104]  # shared system prompt: two full blocks\n\nt1, n1 = cache.allocate_sequence(system + [7])\nprint('seq1 blocks:', t1, '| cached tokens:', n1)\nt2, n2 = cache.allocate_sequence(system + [8, 9])\nprint('seq2 blocks:', t2, '| cached tokens:', n2)\nprint('ref counts of shared blocks:', [cache.ref_count(b) for b in t1[:2]])\n\ncache.free_sequence(t1)\ncache.free_sequence(t2)\nprint('cached blocks after both finish:', cache.num_cached_blocks())",
+        "role": "demo"
+      }
+    ]
+  },
   "qlora": {
     "cells": [
       {
@@ -1009,6 +1247,20 @@
       }
     ]
   },
+  "ulysses_attention": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def ulysses_attention(q_shards, k_shards, v_shards, causal=False):\n    P = len(q_shards)\n    B, S_local, H, D = q_shards[0].shape\n    H_local = H // P\n    S = S_local * P\n    scale = D ** -0.5\n\n    def all_to_all_seq_to_head(shards):\n        # Rank r takes head block r from every sequence shard, then joins them along the sequence\n        return [\n            torch.cat([shards[s][:, :, r * H_local:(r + 1) * H_local] for s in range(P)], dim=1)\n            for r in range(P)\n        ]  # P tensors of (B, S, H/P, D)\n\n    q_full = all_to_all_seq_to_head(q_shards)\n    k_full = all_to_all_seq_to_head(k_shards)\n    v_full = all_to_all_seq_to_head(v_shards)\n\n    # Causal mask over global positions of the full sequence\n    mask = torch.ones(S, S, dtype=torch.bool, device=q_shards[0].device)\n    if causal:\n        mask = torch.tril(mask)\n\n    # Each rank runs ordinary attention over the full sequence for its H/P heads\n    outs = []\n    for q, k, v in zip(q_full, k_full, v_full):\n        scores = torch.einsum('bihd,bjhd->bhij', q, k) * scale  # (B, H/P, S, S)\n        scores = scores.masked_fill(~mask, float('-inf'))\n        attn = torch.softmax(scores, dim=-1)\n        outs.append(torch.einsum('bhij,bjhd->bihd', attn, v))   # (B, S, H/P, D)\n\n    # All-to-all back: rank s keeps sequence chunk s from every head block, joined along the heads\n    result = []\n    for s in range(P):\n        chunks = [outs[r][:, s * S_local:(s + 1) * S_local] for r in range(P)]\n        result.append(torch.cat(chunks, dim=2))  # (B, S/P, H, D)\n    return result",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nB, S, H, D, P = 1, 8, 4, 4, 4\nq = torch.randn(B, S, H, D)\nk = torch.randn(B, S, H, D)\nv = torch.randn(B, S, H, D)\nSl = S // P\n\nouts = ulysses_attention(list(q.split(Sl, dim=1)), list(k.split(Sl, dim=1)), list(v.split(Sl, dim=1)), causal=True)\nprint(f'ranks={P}  shard shape={tuple(outs[0].shape)}  heads per rank in step 1={H // P}')\n\nsc = torch.einsum('bihd,bjhd->bhij', q, k) * D ** -0.5\nsc = sc.masked_fill(~torch.tril(torch.ones(S, S, dtype=torch.bool)), float('-inf'))\nref = torch.einsum('bhij,bjhd->bihd', torch.softmax(sc, dim=-1), v)\nfor r, o in enumerate(outs):\n    diff = (o - ref[:, r * Sl:(r + 1) * Sl]).abs().max().item()\n    print(f'rank {r}: positions [{r * Sl}, {(r + 1) * Sl})  max_diff={diff:.2e}')",
+        "role": "demo"
+      }
+    ]
+  },
   "vit_block": {
     "cells": [
       {
@@ -1019,6 +1271,20 @@
       {
         "type": "code",
         "source": "torch.manual_seed(0)\nbatch, num_patches, d_model, num_heads = 2, 16, 64, 4\n\nblock = ViTBlock(d_model, num_heads)\nx = torch.randn(batch, num_patches, d_model)\nout = block(x)\n\nprint(\"Input shape: \", x.shape)    # (2, 16, 64)\nprint(\"Output shape:\", out.shape)  # (2, 16, 64)\nassert out.shape == x.shape, \"Shape mismatch!\"\nprint(\"Shape preserved: True\")",
+        "role": "demo"
+      }
+    ]
+  },
+  "zero_optimizer": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def zero2_adam_step(flat_param, rank_grads, opt_states, step, lr=1e-3, betas=(0.9, 0.999), eps=1e-8):\n    W = len(rank_grads)\n    n = flat_param.numel() // W  # partition size\n    b1, b2 = betas\n\n    new_parts, new_states = [], []\n    for r in range(W):\n        lo, hi = r * n, (r + 1) * n\n\n        # 1. Reduce-scatter: rank r receives the average gradient of its partition\n        g = torch.stack([grad[lo:hi] for grad in rank_grads]).mean(dim=0)\n\n        # 2. Local Adam update on this partition only\n        m = b1 * opt_states[r][\"m\"] + (1 - b1) * g\n        v = b2 * opt_states[r][\"v\"] + (1 - b2) * g * g\n        m_hat = m / (1 - b1 ** step)\n        v_hat = v / (1 - b2 ** step)\n        new_parts.append(flat_param[lo:hi] - lr * m_hat / (v_hat.sqrt() + eps))\n        new_states.append({\"m\": m, \"v\": v})\n\n    # 3. All-gather: every rank reassembles the full updated parameter\n    new_flat = torch.cat(new_parts)\n    return new_flat, new_states",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "torch.manual_seed(0)\nN, W = 8, 4\nflat = torch.randn(N)\nstates = [{\"m\": torch.zeros(N // W), \"v\": torch.zeros(N // W)} for _ in range(W)]\n\np = torch.nn.Parameter(flat.clone())\nopt = torch.optim.Adam([p], lr=1e-3)\nfor step in range(1, 4):\n    grads = [torch.randn(N) for _ in range(W)]  # per-rank gradients\n    flat, states = zero2_adam_step(flat, grads, states, step)\n    p.grad = torch.stack(grads).mean(dim=0)\n    opt.step()\n\nprint(\"Full param shape:\", flat.shape)                       # expect (8,)\nprint(\"Moments per rank:\", [s[\"m\"].numel() for s in states])  # expect [2, 2, 2, 2]\nprint(\"Max diff vs torch Adam:\", (flat - p.detach()).abs().max().item())  # expect ~0",
         "role": "demo"
       }
     ]

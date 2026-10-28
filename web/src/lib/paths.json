@@ -41,6 +41,16 @@
       "prerequisites": ["transformer-internals"]
     },
     {
+      "id": "ai-infra",
+      "titleEn": "AI Infra",
+      "titleZh": "AI Infra",
+      "descriptionEn": "The systems side of LLMs, as asked in infra interviews: estimate FLOPs and memory, hand-write backward passes, build a vLLM-style serving stack, quantize to INT4/FP8, and simulate ZeRO, pipeline, sequence and expert parallelism.",
+      "descriptionZh": "LLM 的系统侧，也是 Infra 面试的高频考点：估算 FLOPs 与显存，手写反向传播，搭一套 vLLM 风格的推理调度，做 INT4/FP8 量化，并模拟 ZeRO、流水线、序列与专家并行。",
+      "icon": "Server",
+      "problems": ["transformer_flops", "training_memory", "inference_roofline", "softmax_backward", "layernorm_backward", "flash_attention", "chunked_cross_entropy", "kv_cache", "kv_block_allocator", "paged_attention", "prefix_caching", "continuous_batching", "flash_decoding", "varlen_attention", "sampling_penalties", "speculative_decoding", "int8_quantization", "int4_group_quant", "fp8_scaling", "mixed_precision", "activation_checkpointing", "gradient_accumulation", "ring_allreduce", "zero_optimizer", "fsdp_step", "tensor_parallel", "pipeline_1f1b", "ring_attention", "ulysses_attention", "expert_dispatch"],
+      "prerequisites": ["transformer-internals"]
+    },
+    {
       "id": "alignment-agents",
       "titleEn": "Alignment & Agent Reasoning",
       "titleZh": "对齐与 Agent 推理",

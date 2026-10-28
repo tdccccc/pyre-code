@@ -338,7 +338,7 @@ export function HomeContent({ stats }: HomeContentProps) {
         <section className="py-20" style={{ borderTop: '1px solid var(--line)' }}>
           <SectionHeader
             eyebrow={locale === 'zh' ? '§ 01 — 题目集' : '§ 01 — Problem set'}
-            title={locale === 'zh' ? '九条路径覆盖全部核心领域。' : 'Nine paths. Every core domain covered.'}
+            title={locale === 'zh' ? `${paths.length} 条路径覆盖全部核心领域。` : `${paths.length} paths. Every core domain covered.`}
             linkText={locale === 'zh' ? `全部 ${stats.total} 题` : `All ${stats.total} problems`}
             linkHref="/problems"
           />
