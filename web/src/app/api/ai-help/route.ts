@@ -46,85 +46,85 @@ function extractMessageContent(content: unknown): string {
   return '';
 }
 
-function buildPrompt(request: AiHelpRequest) {
+const MAX_HISTORY_MESSAGES = 20;
+
+/* Problem context lives in the system prompt and is rebuilt on every turn, so the model
+   always sees the learner's latest code rather than whatever they had when the chat began. */
+function buildSystemPrompt(request: AiHelpRequest) {
   const testsText = request.sampleTests
     .map((test, index) => `Sample Test ${index + 1}: ${test.name}\n${test.code}`)
     .join('\n\n');
-  const hasUserCode = Boolean(request.userCode?.trim());
-  const hasCustomPrompt = Boolean(request.customPrompt?.trim());
-
-  const responseInstruction = request.locale === 'zh'
-    ? hasCustomPrompt
-      ? [
-          '请用中文并使用 Markdown 输出。',
-          '严格遵循用户提示词的要求来回答。',
-          ...(hasUserCode ? ['如果给了学习者当前代码，请优先分析代码并给出修改建议。'] : []),
-          '不要给完整可提交实现；如果需要举例，只给局部代码片段。',
-        ].join('\n')
-      : hasUserCode
-      ? [
-          '请用中文并使用 Markdown 输出。',
-          '请优先分析学习者当前代码，而不是泛泛讲题。',
-          '按以下结构回答：',
-          '## 现有实现中做对了什么',
-          '## 主要问题',
-          '## 修改建议',
-          '## 下一步验证',
-          '如果需要举例，只给局部代码片段，不要给完整可提交实现。',
-        ].join('\n')
-      : [
-          '请用中文并使用 Markdown 输出。',
-          '按以下结构回答：',
-          '## 核心思路',
-          '## 实现步骤',
-          '## 容易出错的地方',
-          '## 建议先验证的测试',
-          '不要给完整可提交实现；如果需要举例，只给局部代码片段。',
-        ].join('\n')
-    : hasCustomPrompt
-      ? [
-          'Reply in English and format the answer with Markdown.',
-          'Follow the custom user prompt closely.',
-          ...(hasUserCode ? ['If learner code is provided, analyze it first and give concrete modification suggestions.'] : []),
-          'Do not provide a full submit-ready implementation. If you include examples, keep them to small local snippets.',
-        ].join('\n')
-    : hasUserCode
-      ? [
-          'Reply in English and format the answer with Markdown.',
-          'Prioritize analyzing the learner code instead of giving a generic explanation.',
-          'Use this structure:',
-          '## What is already correct',
-          '## Main issues',
-          '## How to modify the code',
-          '## What to verify next',
-          'If you include examples, keep them to small local snippets, not a full submit-ready implementation.',
-        ].join('\n')
-      : [
-          'Reply in English and format the answer with Markdown.',
-          'Use this structure:',
-          '## Core idea',
-          '## Implementation steps',
-          '## Common mistakes',
-          '## Tests to validate first',
-          'Do not provide a full submit-ready implementation. If you include examples, keep them to small local snippets.',
-        ].join('\n');
+  const userCode = request.userCode?.trim();
 
   return [
-    `Problem ID: ${request.problemId}`,
-    `Problem Title: ${request.problemTitle}`,
-    `Target Function: ${request.functionName}`,
+    'You are chatting with someone practicing on Pyre Code, a site where people implement the building blocks of modern AI and LLMs from scratch in PyTorch. Think of yourself as an experienced colleague sitting next to them: talk naturally, answer what they actually ask, and follow the conversation wherever it goes: concepts, math intuition, papers, how real systems do it, or their code.',
     '',
-    'Problem Description:',
+    'A few things to keep in mind:',
+    '- Talk like a person, not a report. Short questions get short answers; use headings or lists only when they genuinely help.',
+    '- They are here to learn by doing, so while they are working on the problem, lean toward explanations and hints that let them get there themselves. If they explicitly ask for the full solution, it is fine to give it.',
+    '- The problem, a reference solution and their current code are below as background. Bring the code up when it is relevant to what they asked; do not turn every reply into a code review.',
+    '- When you do point out a problem in their code, be specific about which line and why.',
+    '- Write formulas as plain text or code blocks; the chat does not render LaTeX.',
+    `- Reply in the language the learner writes in (default: ${request.locale === 'zh' ? 'Chinese' : 'English'}).`,
+    '',
+    '## Problem',
+    `ID: ${request.problemId}`,
+    `Title: ${request.problemTitle}`,
+    `Target function: ${request.functionName}`,
+    '',
     request.description,
     '',
-    'Sample Tests:',
+    '## Sample tests',
     testsText || 'No sample tests available.',
-    ...(hasCustomPrompt ? ['', 'Custom User Prompt:', request.customPrompt!.trim()] : []),
-    ...(!hasCustomPrompt ? ['', 'Reference Solution Code:', request.solutionCode || 'No reference solution available.'] : []),
-    ...(request.userCode ? ['', 'Learner Current Code:', request.userCode] : []),
     '',
-    responseInstruction,
+    '## Reference solution (the learner can also open it in the Solution tab)',
+    request.solutionCode || 'No reference solution available.',
+    '',
+    '## Learner\'s current code (latest snapshot; it may have changed since earlier messages)',
+    request.userCode === undefined
+      ? 'The learner chose not to share their code.'
+      : userCode || 'The editor is empty.',
   ].join('\n');
+}
+
+function sanitizeMessages(messages: AiHelpRequest['messages'] | undefined) {
+  return (Array.isArray(messages) ? messages : [])
+    .filter((m) => (m?.role === 'user' || m?.role === 'assistant') && typeof m.content === 'string' && m.content.trim())
+    .slice(-MAX_HISTORY_MESSAGES)
+    .map((m) => ({ role: m.role, content: m.content }));
+}
+
+/* Turns an OpenAI-compatible SSE stream into a plain-text stream of content deltas. */
+function sseToTextStream(body: ReadableStream<Uint8Array>): ReadableStream<Uint8Array> {
+  const decoder = new TextDecoder();
+  const encoder = new TextEncoder();
+  let buffer = '';
+
+  const emitLine = (line: string, controller: TransformStreamDefaultController<Uint8Array>) => {
+    const trimmed = line.trim();
+    if (!trimmed.startsWith('data:')) return;
+    const data = trimmed.slice(5).trim();
+    if (!data || data === '[DONE]') return;
+    try {
+      const delta = JSON.parse(data)?.choices?.[0]?.delta?.content;
+      // Raw string deltas must not be trimmed: token boundaries often fall on spaces
+      const text = typeof delta === 'string' ? delta : extractMessageContent(delta);
+      if (text) controller.enqueue(encoder.encode(text));
+    } catch {}
+  };
+
+  return body.pipeThrough(new TransformStream<Uint8Array, Uint8Array>({
+    transform(chunk, controller) {
+      buffer += decoder.decode(chunk, { stream: true });
+      const lines = buffer.split('\n');
+      buffer = lines.pop() ?? '';
+      for (const line of lines) emitLine(line, controller);
+    },
+    flush(controller) {
+      buffer += decoder.decode();
+      if (buffer) emitLine(buffer, controller);
+    },
+  }));
 }
 
 export async function POST(request: Request) {
@@ -147,26 +147,16 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Missing baseUrl, apiKey, or model.' }, { status: 400 });
   }
 
+  const messages = sanitizeMessages(body.messages);
+  if (messages.at(-1)?.role !== 'user') {
+    return NextResponse.json({ error: 'The last message must come from the user.' }, { status: 400 });
+  }
+
+  // No `temperature`: some models (reasoning models, newer Claude) reject non-default values
   const payload = {
     model,
-    stream: false,
-    temperature: 0.4,
-    messages: [
-      {
-        role: 'system',
-        content: [
-          'You are an AI tutor for PyTorch and deep learning coding exercises.',
-          'Focus on hints, debugging guidance, conceptual explanations, and next steps.',
-          'Do not provide a complete final answer or a full submit-ready implementation.',
-          'When learner code is present, analyze the code first and give concrete modification suggestions.',
-          'Always return Markdown with clear headings and short bullet lists where helpful.',
-        ].join(' '),
-      },
-      {
-        role: 'user',
-        content: buildPrompt(body),
-      },
-    ],
+    stream: true,
+    messages: [{ role: 'system', content: buildSystemPrompt(body) }, ...messages],
   };
 
   try {
@@ -177,8 +167,16 @@ export async function POST(request: Request) {
         Authorization: `Bearer ${apiKey}`,
       },
       body: JSON.stringify(payload),
+      // Stop generating upstream when the learner hits "stop" or leaves
+      signal: request.signal,
     });
 
+    const textHeaders = { 'Content-Type': 'text/plain; charset=utf-8', 'Cache-Control': 'no-cache' };
+    if (upstream.ok && upstream.body && upstream.headers.get('content-type')?.includes('text/event-stream')) {
+      return new Response(sseToTextStream(upstream.body), { headers: textHeaders });
+    }
+
+    // Error, or an endpoint that ignores `stream: true` and answers with plain JSON
     const data = await upstream.json().catch(() => null);
     if (!upstream.ok) {
       if (upstream.status === 401) {
@@ -194,12 +192,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: errorMessage }, { status: 502 });
     }
 
-    const guidance = extractMessageContent(data?.choices?.[0]?.message?.content);
-    if (!guidance) {
+    const reply = extractMessageContent(data?.choices?.[0]?.message?.content);
+    if (!reply) {
       return NextResponse.json({ error: 'Model returned an empty response.' }, { status: 502 });
     }
 
-    return NextResponse.json({ guidance, model: data?.model || model });
+    return new Response(reply, { headers: textHeaders });
   } catch {
     return NextResponse.json({ error: 'Failed to reach the configured AI endpoint.' }, { status: 502 });
   }

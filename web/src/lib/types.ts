@@ -85,6 +85,13 @@ export interface AiHelpConfig {
   includeUserCode: boolean;
 }
 
+export interface AiChatMessage {
+  role: 'user' | 'assistant';
+  content: string;
+  /** Short text shown in the bubble instead of content (used for quick-action prompts). */
+  label?: string;
+}
+
 export interface AiHelpRequest {
   problemId: string;
   problemTitle: string;
@@ -92,13 +99,8 @@ export interface AiHelpRequest {
   description: string;
   solutionCode: string;
   sampleTests: Array<{ name: string; code: string }>;
-  customPrompt?: string;
+  messages: Array<Pick<AiChatMessage, 'role' | 'content'>>;
   userCode?: string;
   locale: Locale;
   config: Omit<AiHelpConfig, 'includeUserCode'>;
-}
-
-export interface AiHelpResponse {
-  guidance: string;
-  model?: string;
 }
