@@ -4,6 +4,7 @@ import { useState } from 'react';
 import { Lightbulb, ChevronDown, ChevronRight, ExternalLink } from 'lucide-react';
 import { Badge } from '@/components/ui/Badge';
 import { CaseBlock } from '@/components/workspace/CaseBlock';
+import { MarkdownContent } from '@/components/workspace/MarkdownContent';
 import { useLocale } from '@/context/LocaleContext';
 import { useProblemStore } from '@/store/problemStore';
 import type { Problem } from '@/lib/types';
@@ -43,16 +44,6 @@ function parseInline(text: string): (string | JSX.Element)[] {
     }
   }
   return parts;
-}
-
-function renderDescription(text: string) {
-  return text.split('\n').map((line, i) => {
-    if (line === '') return <div key={i} className="h-2" />;
-    if (line.startsWith('- ')) {
-      return <li key={i} className="ml-4 list-disc text-sm text-text-2 leading-relaxed">{parseInline(line.slice(2))}</li>;
-    }
-    return <p key={i} className="text-sm text-text-2 leading-relaxed">{parseInline(line)}</p>;
-  });
 }
 
 interface DescriptionTabProps {
@@ -107,19 +98,17 @@ export function DescriptionTab({ problem }: DescriptionTabProps) {
         <p className="text-sm text-text-2">{task}</p>
       </div>
 
-      {description && (
-        <div className="space-y-1">{renderDescription(description)}</div>
-      )}
+      {description && <MarkdownContent content={description} />}
 
       {isAcm && problem.acm && (
         <div className="space-y-4">
           <div className="space-y-1">
             <h3 className="text-sm font-medium text-text">{t('inputFormat')}</h3>
-            {renderDescription(locale === 'zh' ? problem.acm.inputZh : problem.acm.inputEn)}
+            <MarkdownContent content={locale === 'zh' ? problem.acm.inputZh : problem.acm.inputEn} />
           </div>
           <div className="space-y-1">
             <h3 className="text-sm font-medium text-text">{t('outputFormat')}</h3>
-            {renderDescription(locale === 'zh' ? problem.acm.outputZh : problem.acm.outputEn)}
+            <MarkdownContent content={locale === 'zh' ? problem.acm.outputZh : problem.acm.outputEn} />
           </div>
           {sample?.input != null && (
             <div className="grid grid-cols-2 gap-3 max-[700px]:grid-cols-1">
@@ -150,8 +139,9 @@ export function DescriptionTab({ problem }: DescriptionTabProps) {
               }}
             >
               <span className="mono text-[10.5px] tracking-[0.12em] uppercase text-accent font-semibold block mb-1">⚑ HINT</span>
+              {/* Hints are pseudo-code sketches: keep their indentation */}
               {hint.split('\n').map((line, i) => (
-                <p key={i}>{parseInline(line)}</p>
+                <p key={i} className="whitespace-pre-wrap">{parseInline(line)}</p>
               ))}
             </div>
           )}

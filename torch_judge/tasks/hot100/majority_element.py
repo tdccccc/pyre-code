@@ -45,8 +45,8 @@ TASK = {
     "function_name": "majorityElement",
     "params": [("nums", "int[]")],
     "returns": "int",
-    "description_en": "Given an array `nums` of length `n`, return its majority element: the value that appears more than `n / 2` times. The input always contains such a value.\n\n**Example 1:** `nums = [4,1,4,4,7]` → `4`\n\n**Example 2:** `nums = [0,6,0]` → `0`\n\n**Constraints:**\n- `1 <= n <= 5 * 10^4`\n- `-10^9 <= nums[i] <= 10^9`\n- A majority element is guaranteed to exist\n\n**Follow-up:** the answer is easy to find after sorting. Can you find it faster than sorting, using only a few variables?",
-    "description_zh": "给定长度为 `n` 的数组 `nums`，返回它的多数元素：出现次数超过 `n / 2` 的那个值。输入中一定存在这样的值。\n\n**示例 1：** `nums = [4,1,4,4,7]` → `4`\n\n**示例 2：** `nums = [0,6,0]` → `0`\n\n**约束：**\n- `1 <= n <= 5 * 10^4`\n- `-10^9 <= nums[i] <= 10^9`\n- 保证多数元素存在\n\n**进阶：** 排序之后很容易找到它。你能不排序、只用几个变量，比排序更快地找到吗？",
+    "description_en": "Given an array `nums` of length `n`, return its majority element: the value that appears more than `n / 2` times. The input always contains such a value.\n\n**Example 1:** `nums = [4,1,4,4,7]` → `4`\n\n**Example 2:** `nums = [0,6,0]` → `0`\n\n**Constraints:**\n- $1 \\le \\texttt{n} \\le 5 \\times 10^{4}$\n- $-10^{9} \\le \\texttt{nums[i]} \\le 10^{9}$\n- A majority element is guaranteed to exist\n\n**Follow-up:** the answer is easy to find after sorting. Can you find it faster than sorting, using only a few variables?",
+    "description_zh": "给定长度为 `n` 的数组 `nums`，返回它的多数元素：出现次数超过 `n / 2` 的那个值。输入中一定存在这样的值。\n\n**示例 1：** `nums = [4,1,4,4,7]` → `4`\n\n**示例 2：** `nums = [0,6,0]` → `0`\n\n**约束：**\n- $1 \\le \\texttt{n} \\le 5 \\times 10^{4}$\n- $-10^{9} \\le \\texttt{nums[i]} \\le 10^{9}$\n- 保证多数元素存在\n\n**进阶：** 排序之后很容易找到它。你能不排序、只用几个变量，比排序更快地找到吗？",
     "hint": "Boyer-Moore voting: a matching value adds a vote, a different one removes a vote, and the candidate is replaced whenever the count reaches zero. Sorting or counting also works.",
     "hint_zh": "Boyer-Moore 投票：相同的值加一票，不同的值减一票，计数归零时更换候选值。排序或计数也可以。",
     "cases": [

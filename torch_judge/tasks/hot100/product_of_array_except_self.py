@@ -41,8 +41,8 @@ TASK = {
     "function_name": "productExceptSelf",
     "params": [("nums", "int[]")],
     "returns": "int[]",
-    "description_en": "Given an integer array `nums`, return an array `answer` where `answer[i]` is the product of every element of `nums` except `nums[i]`.\n\nDo not use division.\n\n**Example 1:** `nums = [2,3,4,5]` → `[60,40,30,24]`\n\n**Example 2:** `nums = [-1,0,4]` → `[0,-4,0]`\n\n**Constraints:**\n- `2 <= nums.length <= 10^5`\n- `-30 <= nums[i] <= 30`\n- Every answer fits in a 32-bit signed integer\n\n**Follow-up:** can you do it in O(n) time with O(1) extra space, not counting the output array?",
-    "description_zh": "给定整数数组 `nums`，返回数组 `answer`，其中 `answer[i]` 等于 `nums` 中除 `nums[i]` 以外所有元素的乘积。\n\n不能使用除法。\n\n**示例 1：** `nums = [2,3,4,5]` → `[60,40,30,24]`\n\n**示例 2：** `nums = [-1,0,4]` → `[0,-4,0]`\n\n**约束：**\n- `2 <= nums.length <= 10^5`\n- `-30 <= nums[i] <= 30`\n- 每个答案都能用 32 位有符号整数表示\n\n**进阶：** 你能在 O(n) 时间内完成，且除输出数组外只使用 O(1) 的额外空间吗？",
+    "description_en": "Given an integer array `nums`, return an array `answer` where `answer[i]` is the product of every element of `nums` except `nums[i]`.\n\nDo not use division.\n\n**Example 1:** `nums = [2,3,4,5]` → `[60,40,30,24]`\n\n**Example 2:** `nums = [-1,0,4]` → `[0,-4,0]`\n\n**Constraints:**\n- $2 \\le \\texttt{nums.length} \\le 10^{5}$\n- $-30 \\le \\texttt{nums[i]} \\le 30$\n- Every answer fits in a 32-bit signed integer\n\n**Follow-up:** can you do it in O(n) time with O(1) extra space, not counting the output array?",
+    "description_zh": "给定整数数组 `nums`，返回数组 `answer`，其中 `answer[i]` 等于 `nums` 中除 `nums[i]` 以外所有元素的乘积。\n\n不能使用除法。\n\n**示例 1：** `nums = [2,3,4,5]` → `[60,40,30,24]`\n\n**示例 2：** `nums = [-1,0,4]` → `[0,-4,0]`\n\n**约束：**\n- $2 \\le \\texttt{nums.length} \\le 10^{5}$\n- $-30 \\le \\texttt{nums[i]} \\le 30$\n- 每个答案都能用 32 位有符号整数表示\n\n**进阶：** 你能在 O(n) 时间内完成，且除输出数组外只使用 O(1) 的额外空间吗？",
     "hint": "Build the answer in two passes. The first pass multiplies in everything to the left of each index; the second pass multiplies in everything to the right.",
     "hint_zh": "分两遍计算。第一遍乘上每个下标左边所有元素的积；第二遍乘上右边所有元素的积。",
     "cases": [

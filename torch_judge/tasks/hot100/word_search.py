@@ -83,8 +83,8 @@ TASK = {
 **Example 2:** the same board with `word = "AA"` → `false` (there is only one A, and a cell cannot be reused)
 
 **Constraints:**
-- `1 <= m, n <= 6`
-- `1 <= word.length <= 15`
+- $1 \\le \\texttt{m},\\ \\texttt{n} \\le 6$
+- $1 \\le \\texttt{word.length} \\le 15$
 - `board` and `word` consist of uppercase English letters only""",
     "description_zh": """给定一个 `m × n` 的大写字母网格 `board` 和一个字符串 `word`，判断 `word` 能否在网格中找到。依次读出 `word` 的字母时，所经过的相邻格子必须上下左右相连，并且同一个格子不能使用两次。
 
@@ -93,8 +93,8 @@ TASK = {
 **示例 2：** 同一网格，`word = "AA"` → `false`（只有一个 A，且同一格子不能重复使用）
 
 **约束：**
-- `1 <= m, n <= 6`
-- `1 <= word.length <= 15`
+- $1 \\le \\texttt{m},\\ \\texttt{n} \\le 6$
+- $1 \\le \\texttt{word.length} \\le 15$
 - `board` 和 `word` 只包含大写英文字母""",
     "hint": "Try each cell as the first letter, then search the four neighbours for the next letter. Mark a cell as used while the path goes through it, and unmark it when that branch fails, so other branches can use it.",
     "hint_zh": "从每个格子出发尝试作为第一个字母，然后在四个相邻格子中找下一个字母。路径经过时标记该格子为已用；某个分支失败时取消标记，好让其他分支使用它。",

@@ -47,8 +47,8 @@ TASK = {
     "function_name": "isPalindrome",
     "params": [("head", "ListNode")],
     "returns": "bool",
-    "description_en": "Given the head of a singly linked list, decide whether its values read the same forwards and backwards. Return `true` if they do, otherwise `false`.\n\n**Example 1:** `head = [6,1,6]` → `true`\n\n**Example 2:** `head = [9,4,4,7]` → `false`\n\n**Constraints:**\n- The list has between `1` and `10^5` nodes\n- `0 <= Node.val <= 9`\n\n**Follow-up:** can you check it without copying the values into an array, using constant extra memory?",
-    "description_zh": "给定单链表的头节点 `head`，判断它的值从前往后读和从后往前读是否相同。相同返回 `true`，否则返回 `false`。\n\n**示例 1：** `head = [6,1,6]` → `true`\n\n**示例 2：** `head = [9,4,4,7]` → `false`\n\n**约束：**\n- 链表节点数在 `1` 到 `10^5` 之间\n- `0 <= Node.val <= 9`\n\n**进阶：** 你能不把值复制到数组里，只用常数额外内存完成判断吗？",
+    "description_en": "Given the head of a singly linked list, decide whether its values read the same forwards and backwards. Return `true` if they do, otherwise `false`.\n\n**Example 1:** `head = [6,1,6]` → `true`\n\n**Example 2:** `head = [9,4,4,7]` → `false`\n\n**Constraints:**\n- The list has between `1` and $10^{5}$ nodes\n- $0 \\le \\texttt{Node.val} \\le 9$\n\n**Follow-up:** can you check it without copying the values into an array, using constant extra memory?",
+    "description_zh": "给定单链表的头节点 `head`，判断它的值从前往后读和从后往前读是否相同。相同返回 `true`，否则返回 `false`。\n\n**示例 1：** `head = [6,1,6]` → `true`\n\n**示例 2：** `head = [9,4,4,7]` → `false`\n\n**约束：**\n- 链表节点数在 `1` 到 $10^{5}$ 之间\n- $0 \\le \\texttt{Node.val} \\le 9$\n\n**进阶：** 你能不把值复制到数组里，只用常数额外内存完成判断吗？",
     "hint": "Find the middle with a slow and a fast pointer, reverse the second half, then compare the two halves node by node.",
     "hint_zh": "用快慢指针找中点，反转后半段，然后逐个节点比较两半。",
     "cases": [

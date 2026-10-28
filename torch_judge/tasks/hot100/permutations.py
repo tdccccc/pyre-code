@@ -34,8 +34,8 @@ TASK = {
 **Example 2:** `nums = [1]` → `[[1]]`
 
 **Constraints:**
-- `1 <= nums.length <= 8`
-- `-10 <= nums[i] <= 10`
+- $1 \\le \\texttt{nums.length} \\le 8$
+- $-10 \\le \\texttt{nums[i]} \\le 10$
 - All integers in `nums` are distinct""",
     "description_zh": """给定一个由互不相同的整数组成的列表 `nums`，返回它的全部排列，即把所有元素排成一行的每一种方式。排列的输出顺序任意。
 
@@ -44,8 +44,8 @@ TASK = {
 **示例 2：** `nums = [1]` → `[[1]]`
 
 **约束：**
-- `1 <= nums.length <= 8`
-- `-10 <= nums[i] <= 10`
+- $1 \\le \\texttt{nums.length} \\le 8$
+- $-10 \\le \\texttt{nums[i]} \\le 10$
 - `nums` 中的整数互不相同""",
     "hint": "Build the permutation one position at a time, trying each number that is not used yet. Undo the choice when you backtrack, and save a copy of the list when it is full.",
     "hint_zh": "逐个位置填数，每次尝试一个还没用过的数字。回溯时撤销这次选择；排列填满时保存它的一份副本。",

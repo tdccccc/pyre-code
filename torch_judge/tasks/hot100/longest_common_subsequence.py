@@ -43,8 +43,8 @@ TASK = {
     "function_name": "longestCommonSubsequence",
     "params": [("text1", "str"), ("text2", "str")],
     "returns": "int",
-    "description_en": "Given two strings `text1` and `text2`, return the length of their longest common subsequence, or `0` if they share no characters in order. A subsequence keeps the original order of characters but may skip any of them.\n\n**Example 1:** `text1 = \"pqrsta\", text2 = \"tqsa\"` → `3` (for example `\"qsa\"`)\n\n**Example 2:** `text1 = \"xyz\", text2 = \"zyx\"` → `1`\n\n**Constraints:**\n- `1 <= text1.length, text2.length <= 1000`\n- Both strings consist of lowercase English letters",
-    "description_zh": "给定两个字符串 `text1` 和 `text2`，返回它们最长公共子序列的长度；若没有任何按序相同的字符，返回 `0`。子序列保持字符的原有顺序，但可以跳过任意字符。\n\n**示例 1：** `text1 = \"pqrsta\", text2 = \"tqsa\"` → `3`（例如 `\"qsa\"`）\n\n**示例 2：** `text1 = \"xyz\", text2 = \"zyx\"` → `1`\n\n**约束：**\n- `1 <= text1.length, text2.length <= 1000`\n- 两个字符串都只由小写英文字母组成",
+    "description_en": "Given two strings `text1` and `text2`, return the length of their longest common subsequence, or `0` if they share no characters in order. A subsequence keeps the original order of characters but may skip any of them.\n\n**Example 1:** `text1 = \"pqrsta\", text2 = \"tqsa\"` → `3` (for example `\"qsa\"`)\n\n**Example 2:** `text1 = \"xyz\", text2 = \"zyx\"` → `1`\n\n**Constraints:**\n- $1 \\le \\texttt{text1.length},\\ \\texttt{text2.length} \\le 1000$\n- Both strings consist of lowercase English letters",
+    "description_zh": "给定两个字符串 `text1` 和 `text2`，返回它们最长公共子序列的长度；若没有任何按序相同的字符，返回 `0`。子序列保持字符的原有顺序，但可以跳过任意字符。\n\n**示例 1：** `text1 = \"pqrsta\", text2 = \"tqsa\"` → `3`（例如 `\"qsa\"`）\n\n**示例 2：** `text1 = \"xyz\", text2 = \"zyx\"` → `1`\n\n**约束：**\n- $1 \\le \\texttt{text1.length},\\ \\texttt{text2.length} \\le 1000$\n- 两个字符串都只由小写英文字母组成",
     "hint": "Let dp[i][j] be the answer for the first i characters of text1 and the first j of text2. If the last characters match, extend the answer for the shorter prefixes; otherwise drop one of them.",
     "hint_zh": "设 dp[i][j] 为 text1 前 i 个字符与 text2 前 j 个字符的答案。若两者末尾字符相同，就在更短前缀的答案上加一；否则舍去其中一个字符，取较大者。",
     "cases": [

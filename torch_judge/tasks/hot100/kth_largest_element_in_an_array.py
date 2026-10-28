@@ -29,8 +29,8 @@ TASK = {
     "function_name": "findKthLargest",
     "params": [("nums", "int[]"), ("k", "int")],
     "returns": "int",
-    "description_en": "Given an integer array `nums` and an integer `k`, return the `k`-th largest element in the array. Count repeated values separately: in `[3,3,1]`, the 2nd largest is `3` and the 3rd largest is `1`.\n\n**Example 1:** `nums = [7,2,9,4,4], k = 2` → `7` (sorted high to low: 9, 7, 4, 4, 2)\n\n**Example 2:** `nums = [3,3,1], k = 3` → `1`\n\n**Constraints:**\n- `1 <= k <= nums.length <= 10^5`\n- `-10^4 <= nums[i] <= 10^4`\n\n**Follow-up:** can you do better than sorting the whole array?",
-    "description_zh": "给定整数数组 `nums` 和整数 `k`，返回数组中第 `k` 大的元素。重复的值要分开计数：在 `[3,3,1]` 中，第 2 大的是 `3`，第 3 大的是 `1`。\n\n**示例 1：** `nums = [7,2,9,4,4], k = 2` → `7`（从大到小排列为 9, 7, 4, 4, 2）\n\n**示例 2：** `nums = [3,3,1], k = 3` → `1`\n\n**约束：**\n- `1 <= k <= nums.length <= 10^5`\n- `-10^4 <= nums[i] <= 10^4`\n\n**进阶：** 你能做到比完整排序更快吗？",
+    "description_en": "Given an integer array `nums` and an integer `k`, return the `k`-th largest element in the array. Count repeated values separately: in `[3,3,1]`, the 2nd largest is `3` and the 3rd largest is `1`.\n\n**Example 1:** `nums = [7,2,9,4,4], k = 2` → `7` (sorted high to low: 9, 7, 4, 4, 2)\n\n**Example 2:** `nums = [3,3,1], k = 3` → `1`\n\n**Constraints:**\n- $1 \\le \\texttt{k} \\le \\texttt{nums.length} \\le 10^{5}$\n- $-10^{4} \\le \\texttt{nums[i]} \\le 10^{4}$\n\n**Follow-up:** can you do better than sorting the whole array?",
+    "description_zh": "给定整数数组 `nums` 和整数 `k`，返回数组中第 `k` 大的元素。重复的值要分开计数：在 `[3,3,1]` 中，第 2 大的是 `3`，第 3 大的是 `1`。\n\n**示例 1：** `nums = [7,2,9,4,4], k = 2` → `7`（从大到小排列为 9, 7, 4, 4, 2）\n\n**示例 2：** `nums = [3,3,1], k = 3` → `1`\n\n**约束：**\n- $1 \\le \\texttt{k} \\le \\texttt{nums.length} \\le 10^{5}$\n- $-10^{4} \\le \\texttt{nums[i]} \\le 10^{4}$\n\n**进阶：** 你能做到比完整排序更快吗？",
     "hint": "Keep a min-heap holding the k largest values seen so far. Its top is the k-th largest once every value has been read.",
     "hint_zh": "维护一个大小为 k 的小根堆，保存目前见过的 k 个最大值。读完所有元素后，堆顶就是第 k 大的值。",
     "cases": [

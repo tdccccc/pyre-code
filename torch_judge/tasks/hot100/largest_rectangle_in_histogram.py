@@ -44,8 +44,8 @@ TASK = {
     "function_name": "largestRectangleArea",
     "params": [("heights", "int[]")],
     "returns": "int",
-    "description_en": "A histogram is drawn with bars of width `1`, where `heights[i]` is the height of bar `i`. Return the area of the largest rectangle that fits entirely inside the histogram. The rectangle is made of consecutive bars, and its height is the height of the shortest bar it covers.\n\n**Example 1:** `heights = [1,3,3,1,2]` → `6` (the two bars of height 3)\n\n**Example 2:** `heights = [2,7]` → `7`\n\n**Constraints:**\n- `1 <= heights.length <= 10^5`\n- `1 <= heights[i] <= 10^4`",
-    "description_zh": "柱状图由宽度为 `1` 的柱子组成，`heights[i]` 是第 `i` 根柱子的高度。返回柱状图中能完全包含在其内的最大矩形面积。矩形由相邻的柱子组成，它的高度是所覆盖的柱子中最矮的那根的高度。\n\n**示例 1：** `heights = [1,3,3,1,2]` → `6`（两根高度为 3 的柱子）\n\n**示例 2：** `heights = [2,7]` → `7`\n\n**约束：**\n- `1 <= heights.length <= 10^5`\n- `1 <= heights[i] <= 10^4`",
+    "description_en": "A histogram is drawn with bars of width `1`, where `heights[i]` is the height of bar `i`. Return the area of the largest rectangle that fits entirely inside the histogram. The rectangle is made of consecutive bars, and its height is the height of the shortest bar it covers.\n\n**Example 1:** `heights = [1,3,3,1,2]` → `6` (the two bars of height 3)\n\n**Example 2:** `heights = [2,7]` → `7`\n\n**Constraints:**\n- $1 \\le \\texttt{heights.length} \\le 10^{5}$\n- $1 \\le \\texttt{heights[i]} \\le 10^{4}$",
+    "description_zh": "柱状图由宽度为 `1` 的柱子组成，`heights[i]` 是第 `i` 根柱子的高度。返回柱状图中能完全包含在其内的最大矩形面积。矩形由相邻的柱子组成，它的高度是所覆盖的柱子中最矮的那根的高度。\n\n**示例 1：** `heights = [1,3,3,1,2]` → `6`（两根高度为 3 的柱子）\n\n**示例 2：** `heights = [2,7]` → `7`\n\n**约束：**\n- $1 \\le \\texttt{heights.length} \\le 10^{5}$\n- $1 \\le \\texttt{heights[i]} \\le 10^{4}$",
     "hint": "For each bar, find how far it can stretch left and right before meeting a shorter bar. A stack of bars with increasing heights finds those boundaries in one pass. Remember to flush the stack at the end.",
     "hint_zh": "对每根柱子，找出它向左、向右能延伸到哪里，直到遇到更矮的柱子。用一个保存递增高度柱子的栈，一次遍历就能找到这些边界。别忘了在结尾把栈清空处理。",
     "cases": [

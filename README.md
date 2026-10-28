@@ -19,9 +19,9 @@
 
 ## 🧠 What is Pyre Code?
 
-76 problems. You write the implementation, a local grading service runs the tests, you see what broke. That's it.
+95 problems. You write the implementation, a local grading service runs the tests, you see what broke. That's it.
 
-The problems cover what's actually inside Transformers, vLLM, TRL, diffusion models, and GNNs — attention variants, training tricks, inference kernels, alignment algorithms, graph neural networks. No GPU needed.
+The problems cover what's actually inside Transformers, vLLM, TRL, diffusion models, and GNNs — attention variants, training tricks, inference kernels, alignment algorithms, graph neural networks, and the AI infra systems around them. No GPU needed.
 
 ### Who is this for?
 
@@ -51,6 +51,7 @@ The problems cover what's actually inside Transformers, vLLM, TRL, diffusion mod
 
 ## 📢 News
 
+- **[2026/10/28]** New AI Infra learning path — 19 new problems on FLOPs/memory estimation, hand-written backward passes, vLLM-style serving (block allocator, prefix caching, continuous batching, Flash-Decoding), INT4/FP8 quantization, and ZeRO, pipeline, Ulysses and expert parallelism. 🔥
 - **[2026/04/20]** New GNN learning path — 8 problems covering GCN, GAT, GIN, MPNN, GraphSAGE, link prediction, and graph autoencoders. 🔥
 - **[2026/04/20]** New UI redesign with OKLch color system, dark mode, and Geist typography — classic design still available via toggle. 🔥
 - **[2026/04/13]** Submission history — review all your past attempts per problem.
@@ -160,7 +161,7 @@ Any OpenAI-compatible endpoint works (OpenAI, Anthropic via proxy, Ollama, etc.)
 
 ## 📋 Problem Set
 
-76 problems organized by category:
+95 problems organized by category:
 
 | Category | Problems |
 |---|---|
@@ -170,8 +171,10 @@ Any OpenAI-compatible endpoint works (OpenAI, Anthropic via proxy, Ollama, etc.)
 | **Position Encoding** | Sinusoidal PE, RoPE, ALiBi, NTK-aware RoPE |
 | **Architecture** | SwiGLU MLP, GPT-2 Block, ViT Patch, ViT Block, Conv2D, Max Pool, Depthwise Conv, MoE, MoE Load Balance |
 | **Training** | Adam, Cosine LR, Gradient Clipping, Gradient Accumulation, Mixed Precision, Activation Checkpointing |
-| **Distributed** | Tensor Parallel, FSDP, Ring Attention |
-| **Inference** | KV Cache, Top-k Sampling, Beam Search, Speculative Decoding, BPE, INT8 Quantization, Paged Attention |
+| **Distributed** | Tensor Parallel, FSDP, Ring Attention, Ring All-Reduce, ZeRO-2 Sharded Adam, Pipeline 1F1B, Ulysses Sequence Parallel, MoE Capacity Dispatch |
+| **Inference** | KV Cache, Top-k Sampling, Beam Search, Speculative Decoding, BPE, INT8 Quantization, Paged Attention, KV Block Allocator, Prefix Caching, Continuous Batching, Flash-Decoding, Packed Varlen Attention, Sampling Penalties, INT4 Group Quantization, FP8 Delayed Scaling |
+| **Systems Estimation** | Transformer Params & FLOPs, Training Memory (ZeRO), Decode Roofline & KV Cache |
+| **Backward & Kernels** | Softmax Backward, LayerNorm Backward, Chunked LM-Head Cross-Entropy |
 | **Loss & Alignment** | Cross Entropy, Label Smoothing, Focal Loss, Contrastive Loss, DPO, GRPO, PPO, Reward Model |
 | **Diffusion & DiT** | Noise Schedule, DDIM Step, Flow Matching, adaLN-Zero |
 | **Adaptation** | LoRA, QLoRA |
@@ -189,6 +192,7 @@ Pick one based on what you're working toward:
 | **Attention & Position Encoding** | 13 | Every attention variant + RoPE, ALiBi, NTK-RoPE |
 | **Train a GPT from Scratch** | 15 | Embeddings → architecture → loss → optimizer → training tricks |
 | **Inference & Distributed Training** | 9 | KV cache, quantization, sampling, tensor parallel, FSDP |
+| **AI Infra** | 30 | Estimation → backward passes → vLLM-style serving → INT4/FP8 → ZeRO, pipeline, sequence & expert parallel |
 | **Alignment & Agent Reasoning** | 6 | Reward model → DPO → GRPO → PPO → MCTS |
 | **Vision Transformer Pipeline** | 7 | Conv → patch embedding → ViT block |
 | **Diffusion Models & DiT** | 5 | Noise schedule → DDIM → flow matching → adaLN-Zero |
@@ -201,7 +205,7 @@ Not sure where to start?
 Fundamentals ──→ Transformer Internals ──→ Train a GPT from Scratch
                        │                          │
                        ▼                          ▼
-              Attention & Position       Inference & Distributed
+              Attention & Position       Inference & Distributed ──→ AI Infra
                        │                          │
                        ▼                          ▼
               LLM Frontier Archs         Alignment & Reasoning

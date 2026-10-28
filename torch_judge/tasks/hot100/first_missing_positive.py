@@ -33,8 +33,8 @@ TASK = {
     "function_name": "firstMissingPositive",
     "params": [("nums", "int[]")],
     "returns": "int",
-    "description_en": "Given an unsorted integer array `nums`, return the smallest positive integer that does not appear in `nums`.\n\n**Example 1:** `nums = [7,1,-4,2]` → `3`\n\n**Example 2:** `nums = [2,2,5]` → `1`\n\n**Constraints:**\n- `1 <= nums.length <= 5 * 10^5`\n- `-2^31 <= nums[i] <= 2^31 - 1`\n\n**Follow-up:** can you run in O(n) time with O(1) extra space? You may rearrange `nums` while you work.",
-    "description_zh": "给定一个未排序的整数数组 `nums`，返回未出现在其中的最小正整数。\n\n**示例 1：** `nums = [7,1,-4,2]` → `3`\n\n**示例 2：** `nums = [2,2,5]` → `1`\n\n**约束：**\n- `1 <= nums.length <= 5 * 10^5`\n- `-2^31 <= nums[i] <= 2^31 - 1`\n\n**进阶：** 你能在 O(n) 时间内、只使用 O(1) 的额外空间完成吗？（过程中可以重新排列 `nums`。）",
+    "description_en": "Given an unsorted integer array `nums`, return the smallest positive integer that does not appear in `nums`.\n\n**Example 1:** `nums = [7,1,-4,2]` → `3`\n\n**Example 2:** `nums = [2,2,5]` → `1`\n\n**Constraints:**\n- $1 \\le \\texttt{nums.length} \\le 5 \\times 10^{5}$\n- $-2^{31} \\le \\texttt{nums[i]} \\le 2^{31} - 1$\n\n**Follow-up:** can you run in O(n) time with O(1) extra space? You may rearrange `nums` while you work.",
+    "description_zh": "给定一个未排序的整数数组 `nums`，返回未出现在其中的最小正整数。\n\n**示例 1：** `nums = [7,1,-4,2]` → `3`\n\n**示例 2：** `nums = [2,2,5]` → `1`\n\n**约束：**\n- $1 \\le \\texttt{nums.length} \\le 5 \\times 10^{5}$\n- $-2^{31} \\le \\texttt{nums[i]} \\le 2^{31} - 1$\n\n**进阶：** 你能在 O(n) 时间内、只使用 O(1) 的额外空间完成吗？（过程中可以重新排列 `nums`。）",
     "hint": "The answer always lies between 1 and n + 1, so values outside 1..n can be ignored. Try moving each value v in 1..n to index v - 1 by swapping.",
     "hint_zh": "答案一定在 1 到 n + 1 之间，所以超出 1..n 范围的值可以忽略。试着通过交换，把每个值 v（1 ≤ v ≤ n）放到下标 v - 1 处。",
     "cases": [

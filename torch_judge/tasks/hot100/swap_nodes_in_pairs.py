@@ -32,8 +32,8 @@ TASK = {
     "function_name": "swapPairs",
     "params": [("head", "ListNode")],
     "returns": "ListNode",
-    "description_en": "Given the head of a singly linked list, swap every two adjacent nodes and return the head of the changed list. Swap the nodes themselves, not just their values.\n\nIf the list has an odd number of nodes, the final node has no partner and stays where it is.\n\n**Example 1:** `head = [5,6,7,8,9]` → `[6,5,8,7,9]`\n\n**Example 2:** `head = [4,9]` → `[9,4]`\n\n**Constraints:**\n- The list has `0` to `100` nodes\n- `0 <= Node.val <= 100`",
-    "description_zh": "给定单链表的头节点 `head`，两两交换相邻的节点，返回交换后链表的头节点。必须交换节点本身，而不能只交换节点里的值。\n\n如果节点数为奇数，最后一个节点没有配对的对象，保持原位即可。\n\n**示例 1：** `head = [5,6,7,8,9]` → `[6,5,8,7,9]`\n\n**示例 2：** `head = [4,9]` → `[9,4]`\n\n**约束：**\n- 链表节点数在 `0` 到 `100` 之间\n- `0 <= Node.val <= 100`",
+    "description_en": "Given the head of a singly linked list, swap every two adjacent nodes and return the head of the changed list. Swap the nodes themselves, not just their values.\n\nIf the list has an odd number of nodes, the final node has no partner and stays where it is.\n\n**Example 1:** `head = [5,6,7,8,9]` → `[6,5,8,7,9]`\n\n**Example 2:** `head = [4,9]` → `[9,4]`\n\n**Constraints:**\n- The list has `0` to `100` nodes\n- $0 \\le \\texttt{Node.val} \\le 100$",
+    "description_zh": "给定单链表的头节点 `head`，两两交换相邻的节点，返回交换后链表的头节点。必须交换节点本身，而不能只交换节点里的值。\n\n如果节点数为奇数，最后一个节点没有配对的对象，保持原位即可。\n\n**示例 1：** `head = [5,6,7,8,9]` → `[6,5,8,7,9]`\n\n**示例 2：** `head = [4,9]` → `[9,4]`\n\n**约束：**\n- 链表节点数在 `0` 到 `100` 之间\n- $0 \\le \\texttt{Node.val} \\le 100$",
     "hint": "Handle one pair at a time with a `prev` pointer that stays just before the pair. Rewire `prev → b → a → rest`, then move `prev` to `a`. Stop when a pair is incomplete.",
     "hint_zh": "每次处理一对节点，用 `prev` 指针停在这一对的前面。把连接改成 `prev → b → a → 剩余部分`，然后让 `prev` 移到 `a`。遇到不完整的一对时停止。",
     "cases": [

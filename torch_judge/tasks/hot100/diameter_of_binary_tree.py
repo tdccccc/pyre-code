@@ -76,8 +76,8 @@ TASK = {
     "function_name": "diameterOfBinaryTree",
     "params": [("root", "TreeNode")],
     "returns": "int",
-    "description_en": "Given the `root` of a binary tree, return its **diameter**: the number of edges on the longest route between any two nodes. That route may pass through the root or stay inside one subtree.\n\nTrees are written in level order, with `null` for a missing child.\n\n**Example 1:** `root = [1,2,null,3,6,4,null,null,7,5]` → `5` (the route 5 → 4 → 3 → 2 → 6 → 7 never touches the root)\n\n**Example 2:** `root = [4,-1]` → `1`\n\n**Constraints:**\n- The tree has `1` to `10^4` nodes\n- `-100 <= Node.val <= 100`",
-    "description_zh": "给定二叉树的根节点 `root`，返回它的**直径**：树中任意两个节点之间最长路径所含的边数。这条路径可以经过根节点，也可以只在某一棵子树内部。\n\n二叉树按层序写成数组，缺失的子节点写作 `null`。\n\n**示例 1：** `root = [1,2,null,3,6,4,null,null,7,5]` → `5`（路径 5 → 4 → 3 → 2 → 6 → 7 没有经过根节点）\n\n**示例 2：** `root = [4,-1]` → `1`\n\n**约束：**\n- 节点数在 `1` 到 `10^4` 之间\n- `-100 <= Node.val <= 100`",
+    "description_en": "Given the `root` of a binary tree, return its **diameter**: the number of edges on the longest route between any two nodes. That route may pass through the root or stay inside one subtree.\n\nTrees are written in level order, with `null` for a missing child.\n\n**Example 1:** `root = [1,2,null,3,6,4,null,null,7,5]` → `5` (the route 5 → 4 → 3 → 2 → 6 → 7 never touches the root)\n\n**Example 2:** `root = [4,-1]` → `1`\n\n**Constraints:**\n- The tree has `1` to $10^{4}$ nodes\n- $-100 \\le \\texttt{Node.val} \\le 100$",
+    "description_zh": "给定二叉树的根节点 `root`，返回它的**直径**：树中任意两个节点之间最长路径所含的边数。这条路径可以经过根节点，也可以只在某一棵子树内部。\n\n二叉树按层序写成数组，缺失的子节点写作 `null`。\n\n**示例 1：** `root = [1,2,null,3,6,4,null,null,7,5]` → `5`（路径 5 → 4 → 3 → 2 → 6 → 7 没有经过根节点）\n\n**示例 2：** `root = [4,-1]` → `1`\n\n**约束：**\n- 节点数在 `1` 到 $10^{4}$ 之间\n- $-100 \\le \\texttt{Node.val} \\le 100$",
     "hint": "For each node, the longest route that bends at it is the height of its left subtree plus the height of its right subtree. Compute heights bottom-up and record the best bend along the way.",
     "hint_zh": "对每个节点，以它为转折点的最长路径等于左子树高度加上右子树高度。自底向上计算高度，同时记录沿途的最佳转折。",
     "cases": [

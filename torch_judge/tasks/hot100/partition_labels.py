@@ -39,8 +39,8 @@ TASK = {
     "function_name": "partitionLabels",
     "params": [("s", "str")],
     "returns": "int[]",
-    "description_en": "Split the lowercase string `s` into contiguous pieces so that each letter appears in at most one piece. Make as many pieces as possible. Return the sizes of the pieces in order from left to right.\n\n**Example 1:** `s = \"abcabdde\"` → `[5,2,1]` (`abcab`, `dd`, `e`)\n\n**Example 2:** `s = \"zzz\"` → `[3]`\n\n**Constraints:**\n- `1 <= s.length <= 500`\n- `s` consists of lowercase English letters",
-    "description_zh": "把小写字符串 `s` 切分成若干连续的片段，使得每个字母最多只出现在一个片段中。要求片段尽可能多。按从左到右的顺序返回每个片段的长度。\n\n**示例 1：** `s = \"abcabdde\"` → `[5,2,1]`（`abcab`、`dd`、`e`）\n\n**示例 2：** `s = \"zzz\"` → `[3]`\n\n**约束：**\n- `1 <= s.length <= 500`\n- `s` 由小写英文字母组成",
+    "description_en": "Split the lowercase string `s` into contiguous pieces so that each letter appears in at most one piece. Make as many pieces as possible. Return the sizes of the pieces in order from left to right.\n\n**Example 1:** `s = \"abcabdde\"` → `[5,2,1]` (`abcab`, `dd`, `e`)\n\n**Example 2:** `s = \"zzz\"` → `[3]`\n\n**Constraints:**\n- $1 \\le \\texttt{s.length} \\le 500$\n- `s` consists of lowercase English letters",
+    "description_zh": "把小写字符串 `s` 切分成若干连续的片段，使得每个字母最多只出现在一个片段中。要求片段尽可能多。按从左到右的顺序返回每个片段的长度。\n\n**示例 1：** `s = \"abcabdde\"` → `[5,2,1]`（`abcab`、`dd`、`e`）\n\n**示例 2：** `s = \"zzz\"` → `[3]`\n\n**约束：**\n- $1 \\le \\texttt{s.length} \\le 500$\n- `s` 由小写英文字母组成",
     "hint": "Record where each letter last appears. Walk left to right and keep the furthest last-position you have seen; the piece ends when your index catches up with it.",
     "hint_zh": "先记下每个字母最后一次出现的位置。从左到右遍历，记录已见字母中最远的最后位置；当下标追上这个位置时，当前片段结束。",
     "cases": [

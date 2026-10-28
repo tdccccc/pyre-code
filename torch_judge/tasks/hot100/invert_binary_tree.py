@@ -53,8 +53,8 @@ TASK = {
     "function_name": "invertTree",
     "params": [("root", "TreeNode")],
     "returns": "TreeNode",
-    "description_en": "Given the `root` of a binary tree, mirror it: at every node, swap the left and right children. Return the root of the mirrored tree.\n\nTrees are written in level order, with `null` for a missing child.\n\n**Example 1:** `root = [1,2,3,4,5]` → `[1,3,2,null,null,5,4]`\n\n**Example 2:** `root = [7,null,9]` → `[7,9]`\n\n**Constraints:**\n- The tree has `0` to `10^4` nodes\n- `-100 <= Node.val <= 100`",
-    "description_zh": "给定二叉树的根节点 `root`，将整棵树镜像翻转：在每个节点上交换它的左子节点与右子节点。返回翻转后的根节点。\n\n二叉树按层序写成数组，缺失的子节点写作 `null`。\n\n**示例 1：** `root = [1,2,3,4,5]` → `[1,3,2,null,null,5,4]`\n\n**示例 2：** `root = [7,null,9]` → `[7,9]`\n\n**约束：**\n- 节点数在 `0` 到 `10^4` 之间\n- `-100 <= Node.val <= 100`",
+    "description_en": "Given the `root` of a binary tree, mirror it: at every node, swap the left and right children. Return the root of the mirrored tree.\n\nTrees are written in level order, with `null` for a missing child.\n\n**Example 1:** `root = [1,2,3,4,5]` → `[1,3,2,null,null,5,4]`\n\n**Example 2:** `root = [7,null,9]` → `[7,9]`\n\n**Constraints:**\n- The tree has `0` to $10^{4}$ nodes\n- $-100 \\le \\texttt{Node.val} \\le 100$",
+    "description_zh": "给定二叉树的根节点 `root`，将整棵树镜像翻转：在每个节点上交换它的左子节点与右子节点。返回翻转后的根节点。\n\n二叉树按层序写成数组，缺失的子节点写作 `null`。\n\n**示例 1：** `root = [1,2,3,4,5]` → `[1,3,2,null,null,5,4]`\n\n**示例 2：** `root = [7,null,9]` → `[7,9]`\n\n**约束：**\n- 节点数在 `0` 到 $10^{4}$ 之间\n- $-100 \\le \\texttt{Node.val} \\le 100$",
     "hint": "Inverting a tree means swapping the two children of every node. Do the swap at the current node, then invert both children.",
     "hint_zh": "翻转树就是交换每个节点的两个子节点。先在当前节点交换，再分别翻转两个子节点。",
     "cases": [

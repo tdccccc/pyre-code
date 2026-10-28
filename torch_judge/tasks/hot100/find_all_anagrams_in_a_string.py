@@ -54,8 +54,8 @@ TASK = {
     "params": [("s", "str"), ("p", "str")],
     "returns": "int[]",
     "check": "unordered",
-    "description_en": "Given two strings `s` and `p`, return the starting index of every substring of `s` that is an anagram of `p`. An anagram here means the same letters with the same counts, in any order. The indices may be returned in any order.\n\n**Example 1:** `s = \"abcabcab\", p = \"abc\"` → `[0,1,2,3,4,5]`\n\n**Example 2:** `s = \"xyzzy\", p = \"zy\"` → `[1,3]` (the substrings `yz` and `zy`)\n\n**Constraints:**\n- `1 <= p.length, s.length <= 3 * 10^4`\n- `s` and `p` consist of lowercase English letters",
-    "description_zh": "给定两个字符串 `s` 和 `p`，返回 `s` 中每个是 `p` 的字母异位词的子串的起始下标。这里的异位词指字母种类和每种字母的个数都相同、只是顺序不同。下标可以按任意顺序返回。\n\n**示例 1：** `s = \"abcabcab\", p = \"abc\"` → `[0,1,2,3,4,5]`\n\n**示例 2：** `s = \"xyzzy\", p = \"zy\"` → `[1,3]`（子串 `yz` 和 `zy`）\n\n**约束：**\n- `1 <= p.length, s.length <= 3 * 10^4`\n- `s` 和 `p` 只由小写英文字母组成",
+    "description_en": "Given two strings `s` and `p`, return the starting index of every substring of `s` that is an anagram of `p`. An anagram here means the same letters with the same counts, in any order. The indices may be returned in any order.\n\n**Example 1:** `s = \"abcabcab\", p = \"abc\"` → `[0,1,2,3,4,5]`\n\n**Example 2:** `s = \"xyzzy\", p = \"zy\"` → `[1,3]` (the substrings `yz` and `zy`)\n\n**Constraints:**\n- $1 \\le \\texttt{p.length},\\ \\texttt{s.length} \\le 3 \\times 10^{4}$\n- `s` and `p` consist of lowercase English letters",
+    "description_zh": "给定两个字符串 `s` 和 `p`，返回 `s` 中每个是 `p` 的字母异位词的子串的起始下标。这里的异位词指字母种类和每种字母的个数都相同、只是顺序不同。下标可以按任意顺序返回。\n\n**示例 1：** `s = \"abcabcab\", p = \"abc\"` → `[0,1,2,3,4,5]`\n\n**示例 2：** `s = \"xyzzy\", p = \"zy\"` → `[1,3]`（子串 `yz` 和 `zy`）\n\n**约束：**\n- $1 \\le \\texttt{p.length},\\ \\texttt{s.length} \\le 3 \\times 10^{4}$\n- `s` 和 `p` 只由小写英文字母组成",
     "hint": "Keep a window of length `len(p)` and move it one character at a time. Track how far the window's letter counts are from p's counts; the window is an anagram when every difference is zero.",
     "hint_zh": "维护一个长度为 `len(p)` 的窗口，每次只增减一个字符。记录窗口字母计数与 p 的差值，所有差值都为 0 时即为异位词。",
     "cases": [

@@ -40,8 +40,8 @@ TASK = {
     "function_name": "maxSlidingWindow",
     "params": [("nums", "int[]"), ("k", "int")],
     "returns": "int[]",
-    "description_en": "Given an integer array `nums` and an integer `k`, a window of `k` consecutive values slides from the left end of the array to the right end, one step at a time. Return the largest value inside the window at each position, in order.\n\n**Example 1:** `nums = [4,2,12,11,-5,7], k = 3` → `[12,12,12,11]`\n\n**Example 2:** `nums = [9,8,7,6], k = 4` → `[9]`\n\n**Constraints:**\n- `1 <= k <= nums.length <= 10^5`\n- `-10^4 <= nums[i] <= 10^4`",
-    "description_zh": "给定整数数组 `nums` 和整数 `k`。一个包含 `k` 个连续元素的窗口从数组最左端开始，每次向右移动一步，直到最右端。依次返回每个窗口位置中的最大值。\n\n**示例 1：** `nums = [4,2,12,11,-5,7], k = 3` → `[12,12,12,11]`\n\n**示例 2：** `nums = [9,8,7,6], k = 4` → `[9]`\n\n**约束：**\n- `1 <= k <= nums.length <= 10^5`\n- `-10^4 <= nums[i] <= 10^4`",
+    "description_en": "Given an integer array `nums` and an integer `k`, a window of `k` consecutive values slides from the left end of the array to the right end, one step at a time. Return the largest value inside the window at each position, in order.\n\n**Example 1:** `nums = [4,2,12,11,-5,7], k = 3` → `[12,12,12,11]`\n\n**Example 2:** `nums = [9,8,7,6], k = 4` → `[9]`\n\n**Constraints:**\n- $1 \\le \\texttt{k} \\le \\texttt{nums.length} \\le 10^{5}$\n- $-10^{4} \\le \\texttt{nums[i]} \\le 10^{4}$",
+    "description_zh": "给定整数数组 `nums` 和整数 `k`。一个包含 `k` 个连续元素的窗口从数组最左端开始，每次向右移动一步，直到最右端。依次返回每个窗口位置中的最大值。\n\n**示例 1：** `nums = [4,2,12,11,-5,7], k = 3` → `[12,12,12,11]`\n\n**示例 2：** `nums = [9,8,7,6], k = 4` → `[9]`\n\n**约束：**\n- $1 \\le \\texttt{k} \\le \\texttt{nums.length} \\le 10^{5}$\n- $-10^{4} \\le \\texttt{nums[i]} \\le 10^{4}$",
     "hint": "Keep a deque of indices whose values decrease from front to back. Its front is the window's maximum. Drop smaller values from the back when a new value arrives, and drop the front once its index leaves the window.",
     "hint_zh": "维护一个下标双端队列，队列中的值从前到后递减。队首就是窗口的最大值。新值到来时，弹出队尾比它小的下标；队首下标离开窗口时，从队首弹出。",
     "cases": [

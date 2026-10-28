@@ -25,8 +25,8 @@ TASK = {
     "params": [("nums", "int[]")],
     "returns": "void",
     "inplace": "nums",
-    "description_en": "Given an integer array `nums`, move every `0` to the end while keeping the non-zero elements in their original relative order.\n\nModify `nums` **in place**; do not return anything and do not build a copy of the array.\n\n**Example 1:** `nums = [0,3,0,7,9]` → `nums` becomes `[3,7,9,0,0]`\n\n**Example 2:** `nums = [0]` → `[0]`\n\n**Constraints:**\n- `1 <= nums.length <= 10^4`\n- `-2^31 <= nums[i] <= 2^31 - 1`\n\n**Follow-up:** can you keep the number of writes small?",
-    "description_zh": "给定整数数组 `nums`，把所有 `0` 移到末尾，同时保持非零元素原有的相对顺序。\n\n必须**原地**修改 `nums`，不要返回任何值，也不要复制数组。\n\n**示例 1：** `nums = [0,3,0,7,9]` → `nums` 变为 `[3,7,9,0,0]`\n\n**示例 2：** `nums = [0]` → `[0]`\n\n**约束：**\n- `1 <= nums.length <= 10^4`\n- `-2^31 <= nums[i] <= 2^31 - 1`\n\n**进阶：** 你能尽量减少写操作的次数吗？",
+    "description_en": "Given an integer array `nums`, move every `0` to the end while keeping the non-zero elements in their original relative order.\n\nModify `nums` **in place**; do not return anything and do not build a copy of the array.\n\n**Example 1:** `nums = [0,3,0,7,9]` → `nums` becomes `[3,7,9,0,0]`\n\n**Example 2:** `nums = [0]` → `[0]`\n\n**Constraints:**\n- $1 \\le \\texttt{nums.length} \\le 10^{4}$\n- $-2^{31} \\le \\texttt{nums[i]} \\le 2^{31} - 1$\n\n**Follow-up:** can you keep the number of writes small?",
+    "description_zh": "给定整数数组 `nums`，把所有 `0` 移到末尾，同时保持非零元素原有的相对顺序。\n\n必须**原地**修改 `nums`，不要返回任何值，也不要复制数组。\n\n**示例 1：** `nums = [0,3,0,7,9]` → `nums` 变为 `[3,7,9,0,0]`\n\n**示例 2：** `nums = [0]` → `[0]`\n\n**约束：**\n- $1 \\le \\texttt{nums.length} \\le 10^{4}$\n- $-2^{31} \\le \\texttt{nums[i]} \\le 2^{31} - 1$\n\n**进阶：** 你能尽量减少写操作的次数吗？",
     "hint": "Keep a write pointer for where the next non-zero goes. Scan with a read pointer; when it sees a non-zero, swap it into the write position.",
     "hint_zh": "维护一个「下一个非零元素该放哪」的写指针。读指针向后扫描，遇到非零元素就把它交换到写指针的位置。",
     "cases": [

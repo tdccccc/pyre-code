@@ -52,7 +52,7 @@ Return every valid placement. A placement is a list of `n` strings, one per row,
 **Example 2:** `n = 2` → `[]`
 
 **Constraints:**
-- `1 <= n <= 9`""",
+- $1 \\le \\texttt{n} \\le 9$""",
     "description_zh": """在 `n × n` 的棋盘上放置 `n` 个皇后，使任意两个皇后都不能互相攻击。皇后可以沿所在的行、列和两条斜线攻击，因此任意两个皇后都不能同行、同列或同一条斜线。
 
 返回所有合法的摆法。每种摆法是一个由 `n` 个字符串组成的列表，每个字符串对应一行：`Q` 表示皇后，`.` 表示空格。摆法的顺序任意。
@@ -62,7 +62,7 @@ Return every valid placement. A placement is a list of `n` strings, one per row,
 **示例 2：** `n = 2` → `[]`
 
 **约束：**
-- `1 <= n <= 9`""",
+- $1 \\le \\texttt{n} \\le 9$""",
     "hint": "Place one queen per row. Keep three sets: the columns in use, the \"/\" diagonals (row + col) and the \"\\\" diagonals (row - col). A column is safe when it is in none of the sets.",
     "hint_zh": "每行放一个皇后。维护三个集合：已占用的列、「/」斜线（行 + 列）和「\\」斜线（行 - 列）。某一列三个集合都不包含它时才能放。",
     "cases": [

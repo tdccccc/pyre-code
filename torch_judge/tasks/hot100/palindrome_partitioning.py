@@ -53,7 +53,7 @@ TASK = {
 **Example 2:** `s = "abc"` → `[["a","b","c"]]`
 
 **Constraints:**
-- `1 <= s.length <= 14`
+- $1 \\le \\texttt{s.length} \\le 14$
 - `s` consists of lowercase English letters only""",
     "description_zh": """给定字符串 `s`，把它切分成若干段连续的子串，使每一段都是回文串（正着读和倒着读都一样）。返回 `s` 所有可能的切分方案。每种方案是按从左到右顺序排列的各段子串组成的列表。方案的顺序任意。
 
@@ -62,7 +62,7 @@ TASK = {
 **示例 2：** `s = "abc"` → `[["a","b","c"]]`
 
 **约束：**
-- `1 <= s.length <= 14`
+- $1 \\le \\texttt{s.length} \\le 14$
 - `s` 只包含小写英文字母""",
     "hint": "Choose the first piece as a palindrome starting at position 0, then solve the rest of the string the same way. Precompute which substrings are palindromes so each check is a lookup.",
     "hint_zh": "从位置 0 开始选一段回文串作为第一段，然后用同样的方法处理剩下的部分。可以预先算好每个子串是否为回文，使每次判断只需查表。",

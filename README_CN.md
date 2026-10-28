@@ -19,7 +19,7 @@
 
 ## 🧠 这是什么？
 
-76 道实现题，覆盖注意力机制、训练技巧、推理优化、对齐算法、图神经网络等核心模块。你写代码，本地评测跑测试，红了就改，绿了就过。不需要 GPU。
+95 道实现题，覆盖注意力机制、训练技巧、推理优化、对齐算法、图神经网络、AI Infra 等核心模块。你写代码，本地评测跑测试，红了就改，绿了就过。不需要 GPU。
 
 ### 谁适合用？
 
@@ -49,6 +49,7 @@
 
 ## 📢 最新动态
 
+- **[2026/10/28]** 新增 AI Infra 学习路径 — 19 道新题覆盖 FLOPs 与显存估算、手写反向传播、vLLM 风格推理调度（块分配器、前缀缓存、连续批处理、Flash-Decoding）、INT4/FP8 量化，以及 ZeRO、流水线、Ulysses 与专家并行。🔥
 - **[2026/04/20]** 新增 GNN 学习路径 — 8 道题覆盖 GCN、GAT、GIN、MPNN、GraphSAGE、链接预测、图自编码器。🔥
 - **[2026/04/20]** 全新 UI 设计，采用 OKLch 色彩系统、暗色模式和 Geist 字体 — 可一键切换回经典设计。🔥
 - **[2026/04/13]** 提交历史 — 查看每道题的所有历史提交记录。
@@ -158,7 +159,7 @@ AI_HELP_MODEL=gpt-4o-mini
 
 ## 📋 题目一览
 
-76 道题，按方向分组：
+95 道题，按方向分组：
 
 | 方向                 | 题目                                                                                               |
 | -------------------- | -------------------------------------------------------------------------------------------------- |
@@ -168,8 +169,10 @@ AI_HELP_MODEL=gpt-4o-mini
 | **位置编码**   | 正弦编码、RoPE、ALiBi、NTK-aware RoPE                                                              |
 | **架构**       | SwiGLU MLP、GPT-2 Block、ViT Patch、ViT Block、Conv2D、Max Pool、深度可分离卷积、MoE、MoE 负载均衡 |
 | **训练**       | Adam、余弦学习率、梯度裁剪、梯度累积、混合精度、激活检查点                                         |
-| **分布式**     | 张量并行、FSDP、环形注意力                                                                         |
-| **推理**       | KV Cache、Top-k 采样、束搜索、推测解码、BPE、INT8 量化、分页注意力                                 |
+| **分布式**     | 张量并行、FSDP、环形注意力、环形 All-Reduce、ZeRO-2 分片 Adam、流水线 1F1B、Ulysses 序列并行、MoE 容量分发 |
+| **推理**       | KV Cache、Top-k 采样、束搜索、推测解码、BPE、INT8 量化、分页注意力、KV Cache 块分配器、前缀缓存、连续批处理、Flash-Decoding、变长序列打包注意力、采样惩罚、INT4 分组量化、FP8 延迟缩放 |
+| **系统估算**   | Transformer 参数量与 FLOPs、训练显存估算（ZeRO）、解码 Roofline 与 KV Cache                         |
+| **反向与算子** | Softmax 反向传播、LayerNorm 反向传播、分块 LM Head 交叉熵                                           |
 | **损失与对齐** | 交叉熵、标签平滑、Focal Loss、对比损失、DPO、GRPO、PPO、奖励模型                                   |
 | **扩散与 DiT** | 噪声调度、DDIM 步骤、流匹配、adaLN-Zero                                                            |
 | **适配**       | LoRA、QLoRA                                                                                        |
@@ -187,6 +190,7 @@ AI_HELP_MODEL=gpt-4o-mini
 | **注意力与位置编码**     | 13   | 所有注意力变体 + RoPE、ALiBi、NTK-RoPE          |
 | **从零训练 GPT**         | 15   | Embedding → 架构 → 损失 → 优化器 → 训练技巧 |
 | **推理与分布式**         | 9    | KV Cache、量化、采样、张量并行、FSDP            |
+| **AI Infra**             | 30   | 估算 → 手写反向 → vLLM 风格推理调度 → INT4/FP8 → ZeRO、流水线、序列与专家并行 |
 | **对齐与推理搜索**       | 6    | 奖励模型 → DPO → GRPO → PPO → MCTS          |
 | **ViT 全流程**           | 7    | 卷积 → Patch Embedding → ViT Block            |
 | **扩散模型与 DiT**       | 5    | 噪声调度 → DDIM → 流匹配 → adaLN-Zero        |
@@ -199,7 +203,7 @@ AI_HELP_MODEL=gpt-4o-mini
 基础 ──→ Transformer 内部机制 ──→ 从零训练 GPT
                  │                        │
                  ▼                        ▼
-        注意力与位置编码            推理与分布式
+        注意力与位置编码            推理与分布式 ──→ AI Infra
                  │                        │
                  ▼                        ▼
         LLM 前沿架构             对齐与推理搜索

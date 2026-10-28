@@ -38,8 +38,8 @@ TASK = {
     "function_name": "longestValidParentheses",
     "params": [("s", "str")],
     "returns": "int",
-    "description_en": "Given a string `s` made only of `(` and `)`, return the length of the longest substring that is a valid bracket sequence: every `(` is closed by a later `)`, and the pairs nest properly without crossing. The empty string gives `0`.\n\n**Example 1:** `s = \"(()))(\"` → `4` (the substring `(())`)\n\n**Example 2:** `s = \"))()()\"` → `4` (the substring `()()`)\n\n**Constraints:**\n- `0 <= s.length <= 3 * 10^4`\n- `s[i]` is `(` or `)`",
-    "description_zh": "给定只由字符 `(` 和 `)` 组成的字符串 `s`，返回最长有效括号子串的长度。有效括号子串指：每个 `(` 都能与其后某个 `)` 配对，且所有配对互相嵌套、不交叉。空字符串的结果是 `0`。\n\n**示例 1：** `s = \"(()))(\"` → `4`（子串 `(())`）\n\n**示例 2：** `s = \"))()()\"` → `4`（子串 `()()`）\n\n**约束：**\n- `0 <= s.length <= 3 * 10^4`\n- `s[i]` 为 `(` 或 `)`",
+    "description_en": "Given a string `s` made only of `(` and `)`, return the length of the longest substring that is a valid bracket sequence: every `(` is closed by a later `)`, and the pairs nest properly without crossing. The empty string gives `0`.\n\n**Example 1:** `s = \"(()))(\"` → `4` (the substring `(())`)\n\n**Example 2:** `s = \"))()()\"` → `4` (the substring `()()`)\n\n**Constraints:**\n- $0 \\le \\texttt{s.length} \\le 3 \\times 10^{4}$\n- `s[i]` is `(` or `)`",
+    "description_zh": "给定只由字符 `(` 和 `)` 组成的字符串 `s`，返回最长有效括号子串的长度。有效括号子串指：每个 `(` 都能与其后某个 `)` 配对，且所有配对互相嵌套、不交叉。空字符串的结果是 `0`。\n\n**示例 1：** `s = \"(()))(\"` → `4`（子串 `(())`）\n\n**示例 2：** `s = \"))()()\"` → `4`（子串 `()()`）\n\n**约束：**\n- $0 \\le \\texttt{s.length} \\le 3 \\times 10^{4}$\n- `s[i]` 为 `(` 或 `)`",
     "hint": "Keep a stack of indices. Push each '('. On ')', pop; if the stack is now empty, this ')' is unmatched and becomes the new starting point. Otherwise the valid run ends here and starts after the index on top of the stack.",
     "hint_zh": "用栈保存下标。遇到 '(' 就入栈；遇到 ')' 就出栈。如果出栈后栈空，说明这个 ')' 没有配对，它成为新的起点。否则有效串在此结束，起点是栈顶下标的下一位。",
     "cases": [

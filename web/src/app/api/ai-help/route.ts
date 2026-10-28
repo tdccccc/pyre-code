@@ -75,7 +75,7 @@ function buildSystemPrompt(request: AiHelpRequest) {
     '- They are here to learn by doing, so while they are working on the problem, lean toward explanations and hints that let them get there themselves. If they explicitly ask for the full solution, it is fine to give it.',
     '- The problem, a reference solution and their current code are below as background. Bring the code up when it is relevant to what they asked; do not turn every reply into a code review.',
     '- When you do point out a problem in their code, be specific about which line and why.',
-    '- Write formulas as plain text or code blocks; the chat does not render LaTeX.',
+    '- The chat renders Markdown (including tables) and LaTeX: use $...$ for inline math and $$...$$ on their own lines for display math; keep code in fenced code blocks.',
     `- Reply in the language the learner writes in (default: ${request.locale === 'zh' ? 'Chinese' : 'English'}).`,
     '',
     '## Problem',

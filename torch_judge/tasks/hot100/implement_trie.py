@@ -92,9 +92,9 @@ TASK = {
 **Example 2:** `insert("car")`, `search("card")` → `false`, `startsWith("ca")` → `true`, `insert("card")`, `search("card")` → `true`
 
 **Constraints:**
-- `1 <= word.length, prefix.length <= 40`
+- $1 \\le \\texttt{word.length},\\ \\texttt{prefix.length} \\le 40$
 - `word` and `prefix` consist of lowercase English letters only
-- At most `3 * 10^4` calls in total to `insert`, `search` and `startsWith`
+- At most $3 \\times 10^{4}$ calls in total to `insert`, `search` and `startsWith`
 
 Each call should take time proportional to the length of its string, not to the number of stored words.""",
     "description_zh": """设计一个存放小写单词的词典，并且能快速回答前缀类的问题。实现 `Trie` 类：
@@ -109,9 +109,9 @@ Each call should take time proportional to the length of its string, not to the 
 **示例 2：** `insert("car")`、`search("card")` → `false`，`startsWith("ca")` → `true`，`insert("card")`、`search("card")` → `true`
 
 **约束：**
-- `1 <= word.length, prefix.length <= 40`
+- $1 \\le \\texttt{word.length},\\ \\texttt{prefix.length} \\le 40$
 - `word` 和 `prefix` 只包含小写英文字母
-- `insert`、`search` 和 `startsWith` 的总调用次数不超过 `3 * 10^4`
+- `insert`、`search` 和 `startsWith` 的总调用次数不超过 $3 \\times 10^{4}$
 
 每次调用的时间应与字符串的长度成正比，而不是与词典中单词的数量成正比。""",
     "hint": "Store the words as a tree of characters: each node has children keyed by letter and a flag that says a word ends there. `search` walks the path and checks the flag; `startsWith` only needs the path to exist.",

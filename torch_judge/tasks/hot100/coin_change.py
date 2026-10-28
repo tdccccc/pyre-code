@@ -37,8 +37,8 @@ TASK = {
     "function_name": "coinChange",
     "params": [("coins", "int[]"), ("amount", "int")],
     "returns": "int",
-    "description_en": "You have coins of the denominations in `coins`, with an unlimited supply of each. Return the fewest coins that add up to exactly `amount`, or `-1` if no combination does.\n\n**Example 1:** `coins = [1,3,4], amount = 6` → `2` (3 + 3; greedy 4 + 1 + 1 uses three)\n\n**Example 2:** `coins = [2], amount = 3` → `-1`\n\n**Constraints:**\n- `1 <= coins.length <= 12`\n- `1 <= coins[i] <= 2^31 - 1`\n- `0 <= amount <= 10^4`",
-    "description_zh": "你有面额为 `coins` 中各值的硬币，每种数量不限。返回凑出恰好 `amount` 所需的最少硬币数；如果凑不出，返回 `-1`。\n\n**示例 1：** `coins = [1,3,4], amount = 6` → `2`（3 + 3；贪心的 4 + 1 + 1 要用三枚）\n\n**示例 2：** `coins = [2], amount = 3` → `-1`\n\n**约束：**\n- `1 <= coins.length <= 12`\n- `1 <= coins[i] <= 2^31 - 1`\n- `0 <= amount <= 10^4`",
+    "description_en": "You have coins of the denominations in `coins`, with an unlimited supply of each. Return the fewest coins that add up to exactly `amount`, or `-1` if no combination does.\n\n**Example 1:** `coins = [1,3,4], amount = 6` → `2` (3 + 3; greedy 4 + 1 + 1 uses three)\n\n**Example 2:** `coins = [2], amount = 3` → `-1`\n\n**Constraints:**\n- $1 \\le \\texttt{coins.length} \\le 12$\n- $1 \\le \\texttt{coins[i]} \\le 2^{31} - 1$\n- $0 \\le \\texttt{amount} \\le 10^{4}$",
+    "description_zh": "你有面额为 `coins` 中各值的硬币，每种数量不限。返回凑出恰好 `amount` 所需的最少硬币数；如果凑不出，返回 `-1`。\n\n**示例 1：** `coins = [1,3,4], amount = 6` → `2`（3 + 3；贪心的 4 + 1 + 1 要用三枚）\n\n**示例 2：** `coins = [2], amount = 3` → `-1`\n\n**约束：**\n- $1 \\le \\texttt{coins.length} \\le 12$\n- $1 \\le \\texttt{coins[i]} \\le 2^{31} - 1$\n- $0 \\le \\texttt{amount} \\le 10^{4}$",
     "hint": "Greedy fails (see example 1). Let dp[a] be the fewest coins for amount a: dp[0] = 0, and dp[a] = 1 + min(dp[a - c]) over coins c <= a.",
     "hint_zh": "贪心不对（见示例 1）。设 dp[a] 为凑出金额 a 的最少硬币数：dp[0] = 0，dp[a] = 1 + min(dp[a - c])，c 取所有不超过 a 的面额。",
     "cases": [

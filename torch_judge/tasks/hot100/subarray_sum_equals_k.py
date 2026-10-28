@@ -38,8 +38,8 @@ TASK = {
     "function_name": "subarraySum",
     "params": [("nums", "int[]"), ("k", "int")],
     "returns": "int",
-    "description_en": "Given an integer array `nums` and an integer `k`, return the number of contiguous, non-empty subarrays whose values add up to exactly `k`. The numbers may be negative.\n\n**Example 1:** `nums = [2,-1,3,0,-2], k = 2` → `4` (the subarrays `[2]`, `[-1,3]`, `[-1,3,0]` and the whole array)\n\n**Example 2:** `nums = [1,-1,1,1], k = 1` → `5`\n\n**Constraints:**\n- `1 <= nums.length <= 2 * 10^4`\n- `-1000 <= nums[i] <= 1000`\n- `-10^7 <= k <= 10^7`",
-    "description_zh": "给定整数数组 `nums` 和整数 `k`，返回和恰好等于 `k` 的连续非空子数组的个数。数组中的数可以是负数。\n\n**示例 1：** `nums = [2,-1,3,0,-2], k = 2` → `4`（子数组 `[2]`、`[-1,3]`、`[-1,3,0]` 以及整个数组）\n\n**示例 2：** `nums = [1,-1,1,1], k = 1` → `5`\n\n**约束：**\n- `1 <= nums.length <= 2 * 10^4`\n- `-1000 <= nums[i] <= 1000`\n- `-10^7 <= k <= 10^7`",
+    "description_en": "Given an integer array `nums` and an integer `k`, return the number of contiguous, non-empty subarrays whose values add up to exactly `k`. The numbers may be negative.\n\n**Example 1:** `nums = [2,-1,3,0,-2], k = 2` → `4` (the subarrays `[2]`, `[-1,3]`, `[-1,3,0]` and the whole array)\n\n**Example 2:** `nums = [1,-1,1,1], k = 1` → `5`\n\n**Constraints:**\n- $1 \\le \\texttt{nums.length} \\le 2 \\times 10^{4}$\n- $-1000 \\le \\texttt{nums[i]} \\le 1000$\n- $-10^{7} \\le \\texttt{k} \\le 10^{7}$",
+    "description_zh": "给定整数数组 `nums` 和整数 `k`，返回和恰好等于 `k` 的连续非空子数组的个数。数组中的数可以是负数。\n\n**示例 1：** `nums = [2,-1,3,0,-2], k = 2` → `4`（子数组 `[2]`、`[-1,3]`、`[-1,3,0]` 以及整个数组）\n\n**示例 2：** `nums = [1,-1,1,1], k = 1` → `5`\n\n**约束：**\n- $1 \\le \\texttt{nums.length} \\le 2 \\times 10^{4}$\n- $-1000 \\le \\texttt{nums[i]} \\le 1000$\n- $-10^{7} \\le \\texttt{k} \\le 10^{7}$",
     "hint": "Let `P` be the running prefix sum. A subarray sums to `k` exactly when an earlier prefix equals `P - k`. Count prefix sums in a hash map. A sliding window does not work here because of the negative numbers.",
     "hint_zh": "设 P 为当前的前缀和。某个子数组的和为 k，当且仅当某个更早的前缀和等于 P - k。用哈希表统计前缀和出现的次数。由于存在负数，滑动窗口在这里不适用。",
     "cases": [

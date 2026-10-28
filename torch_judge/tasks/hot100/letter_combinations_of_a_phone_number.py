@@ -41,7 +41,7 @@ Given a string `digits`, return every string of letters that can be typed by pre
 **Example 2:** `digits = ""` → `[]`
 
 **Constraints:**
-- `0 <= digits.length <= 4`
+- $0 \\le \\texttt{digits.length} \\le 4$
 - `digits[i]` is a digit from `2` to `9`""",
     "description_zh": """数字 `2` 到 `9` 各自对应老式电话键盘上的一个按键，每个按键上有若干字母：
 
@@ -54,7 +54,7 @@ Given a string `digits`, return every string of letters that can be typed by pre
 **示例 2：** `digits = ""` → `[]`
 
 **约束：**
-- `0 <= digits.length <= 4`
+- $0 \\le \\texttt{digits.length} \\le 4$
 - `digits[i]` 是 `2` 到 `9` 之间的数字""",
     "hint": "Extend the strings one digit at a time: for each string built so far, append each letter of the next digit's key. Think about what the starting value should be so that an empty input gives an empty list.",
     "hint_zh": "每次处理一个数字：对已有的每个字符串，逐个追加下一个数字按键上的字母。想一想起始值应该是什么，才能让空输入得到空列表。",

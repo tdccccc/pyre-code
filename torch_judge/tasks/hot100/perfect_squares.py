@@ -36,8 +36,8 @@ TASK = {
     "function_name": "numSquares",
     "params": [("n", "int")],
     "returns": "int",
-    "description_en": "A perfect square is an integer that is the square of an integer, such as `1`, `4`, `9`, and `16`. Given a positive integer `n`, return the fewest perfect squares whose sum is exactly `n`. The same square may be used more than once.\n\n**Example 1:** `n = 18` → `2` (9 + 9)\n\n**Example 2:** `n = 6` → `3` (4 + 1 + 1)\n\n**Constraints:**\n- `1 <= n <= 10^4`",
-    "description_zh": "完全平方数是某个整数的平方，例如 `1`、`4`、`9`、`16`。给定正整数 `n`，返回和恰好等于 `n` 的完全平方数的最少个数。同一个平方数可以使用多次。\n\n**示例 1：** `n = 18` → `2`（9 + 9）\n\n**示例 2：** `n = 6` → `3`（4 + 1 + 1）\n\n**约束：**\n- `1 <= n <= 10^4`",
+    "description_en": "A perfect square is an integer that is the square of an integer, such as `1`, `4`, `9`, and `16`. Given a positive integer `n`, return the fewest perfect squares whose sum is exactly `n`. The same square may be used more than once.\n\n**Example 1:** `n = 18` → `2` (9 + 9)\n\n**Example 2:** `n = 6` → `3` (4 + 1 + 1)\n\n**Constraints:**\n- $1 \\le \\texttt{n} \\le 10^{4}$",
+    "description_zh": "完全平方数是某个整数的平方，例如 `1`、`4`、`9`、`16`。给定正整数 `n`，返回和恰好等于 `n` 的完全平方数的最少个数。同一个平方数可以使用多次。\n\n**示例 1：** `n = 18` → `2`（9 + 9）\n\n**示例 2：** `n = 6` → `3`（4 + 1 + 1）\n\n**约束：**\n- $1 \\le \\texttt{n} \\le 10^{4}$",
     "hint": "Let best[m] be the fewest squares that sum to m. Each m is best[m - s] + 1 minimised over every square s <= m. Taking the largest square each time is not always optimal.",
     "hint_zh": "设 best[m] 为和为 m 的完全平方数的最少个数。对每个 m，在所有不超过 m 的平方数 s 上取 best[m - s] + 1 的最小值。每次都取最大的平方数并不总是最优。",
     "cases": [
