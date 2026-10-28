@@ -2,11 +2,13 @@
 
 import { useEffect, useRef, useState } from 'react';
 import * as Collapsible from '@radix-ui/react-collapsible';
-import { ChevronDown, Loader2, Settings2, Sparkles, ServerCog } from 'lucide-react';
+import { Check, ChevronDown, Loader2, RefreshCw, Settings2, Sparkles, ServerCog } from 'lucide-react';
 import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/context/LocaleContext';
 import { MarkdownContent } from '@/components/workspace/MarkdownContent';
+import { AI_HELP_PROMPT_PRESETS, DEFAULT_AI_HELP_PROMPT_PRESET } from '@/lib/aiHelpPrompts';
 import { getSampleTests, getSolutionCode } from '@/lib/problemContext';
+import { cn } from '@/lib/utils';
 import { useProblemStore } from '@/store/problemStore';
 import type { Problem, AiHelpRequest, AiHelpResponse } from '@/lib/types';
 
@@ -21,6 +23,12 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
   const { locale, t } = useLocale();
   const hasLoadedConfig = useRef(false);
   const [serverConfigured, setServerConfigured] = useState(false);
+  const modelBoxRef = useRef<HTMLDivElement>(null);
+  const [models, setModels] = useState<string[]>([]);
+  const [modelsLoading, setModelsLoading] = useState(false);
+  const [modelsError, setModelsError] = useState<string | null>(null);
+  const [modelListOpen, setModelListOpen] = useState(false);
+  const [modelQuery, setModelQuery] = useState('');
   const {
     currentCode,
     aiHelpConfig, setAiHelpConfig,
@@ -34,24 +42,28 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
   useEffect(() => {
     const saved = localStorage.getItem(STORAGE_KEY);
     hasLoadedConfig.current = true;
-    if (!saved) return;
-    try {
-      const parsed = JSON.parse(saved) as Partial<typeof aiHelpConfig>;
-      setAiHelpConfig({ baseUrl: parsed.baseUrl ?? '', apiKey: parsed.apiKey ?? '', model: parsed.model ?? '' });
-    } catch {}
+    if (saved) {
+      try {
+        const parsed = JSON.parse(saved) as Partial<typeof aiHelpConfig>;
+        setAiHelpConfig({ baseUrl: parsed.baseUrl ?? '', apiKey: parsed.apiKey ?? '', model: parsed.model ?? '' });
+      } catch {}
+    }
+    // First visit (nothing saved yet) starts from the default template
     const savedPrompt = localStorage.getItem(CUSTOM_PROMPT_STORAGE_KEY);
-    if (savedPrompt !== null) setAiHelpCustomPrompt(savedPrompt);
-  }, [setAiHelpConfig, setAiHelpCustomPrompt]);
+    setAiHelpCustomPrompt(savedPrompt ?? DEFAULT_AI_HELP_PROMPT_PRESET.prompt[locale]);
+  }, [locale, setAiHelpConfig, setAiHelpCustomPrompt]);
 
+  // Read from the store, not the render closure: on mount the closure still holds the
+  // pre-load values, and persisting those would clobber what was just loaded.
   useEffect(() => {
     if (!hasLoadedConfig.current) return;
-    const { baseUrl, apiKey, model } = aiHelpConfig;
+    const { baseUrl, apiKey, model } = useProblemStore.getState().aiHelpConfig;
     localStorage.setItem(STORAGE_KEY, JSON.stringify({ baseUrl, apiKey, model }));
   }, [aiHelpConfig.baseUrl, aiHelpConfig.apiKey, aiHelpConfig.model]);
 
   useEffect(() => {
     if (!hasLoadedConfig.current) return;
-    localStorage.setItem(CUSTOM_PROMPT_STORAGE_KEY, aiHelpCustomPrompt);
+    localStorage.setItem(CUSTOM_PROMPT_STORAGE_KEY, useProblemStore.getState().aiHelpCustomPrompt);
   }, [aiHelpCustomPrompt]);
 
   useEffect(() => {
@@ -60,6 +72,45 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
       .then((d: { configured: boolean }) => setServerConfigured(d.configured))
       .catch(() => setServerConfigured(false));
   }, []);
+
+  useEffect(() => {
+    if (!modelListOpen) return;
+    const handlePointerDown = (e: MouseEvent) => {
+      if (!modelBoxRef.current?.contains(e.target as Node)) setModelListOpen(false);
+    };
+    document.addEventListener('mousedown', handlePointerDown);
+    return () => document.removeEventListener('mousedown', handlePointerDown);
+  }, [modelListOpen]);
+
+  const handleFetchModels = async () => {
+    if (!aiHelpConfig.baseUrl.trim() || !aiHelpConfig.apiKey.trim()) {
+      setModelsError(t('aiHelpFetchModelsNeedConfig'));
+      return;
+    }
+    setModelsLoading(true);
+    setModelsError(null);
+    try {
+      const res = await fetch('/api/ai-help/models', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ baseUrl: aiHelpConfig.baseUrl, apiKey: aiHelpConfig.apiKey }),
+      });
+      if (!res.ok) throw new Error(`${res.status}`);
+      const data: { models: string[] } = await res.json();
+      setModels(data.models);
+      setModelQuery('');
+      setModelListOpen(true);
+    } catch {
+      setModelsError(t('aiHelpFetchModelsFailed'));
+    } finally {
+      setModelsLoading(false);
+    }
+  };
+
+  const activePresetId = AI_HELP_PROMPT_PRESETS.find(
+    (p) => p.prompt.zh === aiHelpCustomPrompt || p.prompt.en === aiHelpCustomPrompt,
+  )?.id;
+  const filteredModels = models.filter((m) => m.toLowerCase().includes(modelQuery.trim().toLowerCase()));
 
   const handleGenerate = async () => {
     if (!serverConfigured && (!aiHelpConfig.baseUrl.trim() || !aiHelpConfig.apiKey.trim() || !aiHelpConfig.model.trim())) {
@@ -109,17 +160,36 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
       </div>
 
       <div className="space-y-3">
-        <label className="block space-y-1">
+        <div className="space-y-1.5">
           <span className="text-xs font-medium text-text-2">{t('aiHelpCustomPrompt')}</span>
+          <div className="flex flex-wrap items-center gap-1.5">
+            <span className="text-xs text-text-3">{t('aiHelpPresets')}</span>
+            {AI_HELP_PROMPT_PRESETS.map((preset) => (
+              <button
+                key={preset.id}
+                type="button"
+                onClick={() => setAiHelpCustomPrompt(preset.prompt[locale])}
+                className={cn(
+                  'rounded-full border px-2.5 py-0.5 text-xs transition-colors cursor-pointer',
+                  activePresetId === preset.id
+                    ? 'border-accent-line bg-accent-wash text-accent-ink'
+                    : 'border-line text-text-2 hover:border-line-strong hover:text-text',
+                )}
+              >
+                {preset.label[locale]}
+              </button>
+            ))}
+          </div>
           <textarea
             value={aiHelpCustomPrompt}
             onChange={(e) => setAiHelpCustomPrompt(e.target.value)}
-            className="w-full rounded-lg px-3 py-2 text-sm text-text outline-none resize-none"
+            className="w-full rounded-lg px-3 py-2 text-sm text-text outline-none resize-y"
             style={inputStyle}
-            rows={2}
+            rows={6}
             placeholder={t('aiHelpCustomPromptPlaceholder')}
+            aria-label={t('aiHelpCustomPrompt')}
           />
-        </label>
+        </div>
 
         <label className="flex items-center gap-2 text-sm text-text-2">
           <input
@@ -174,17 +244,58 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
                     placeholder="sk-..."
                   />
                 </label>
-                <label className="block space-y-1">
+                <div className="space-y-1">
                   <span className="text-xs font-medium text-text-2">{t('aiHelpModel')}</span>
-                  <input
-                    type="text"
-                    value={aiHelpConfig.model}
-                    onChange={(e) => setAiHelpConfig({ model: e.target.value })}
-                    className="w-full rounded-lg px-3 py-2 text-sm text-text outline-none"
-                    style={inputStyle}
-                    placeholder="gpt-4o-mini"
-                  />
-                </label>
+                  <div ref={modelBoxRef} className="relative">
+                    <div className="flex gap-2">
+                      <input
+                        type="text"
+                        value={aiHelpConfig.model}
+                        onChange={(e) => {
+                          setAiHelpConfig({ model: e.target.value });
+                          setModelQuery(e.target.value);
+                          if (models.length) setModelListOpen(true);
+                        }}
+                        onFocus={() => models.length && setModelListOpen(true)}
+                        onKeyDown={(e) => e.key === 'Escape' && setModelListOpen(false)}
+                        className="w-full min-w-0 rounded-lg px-3 py-2 text-sm text-text outline-none"
+                        style={inputStyle}
+                        placeholder="gpt-4o-mini"
+                        aria-label={t('aiHelpModel')}
+                        autoComplete="off"
+                      />
+                      <Button variant="secondary" onClick={handleFetchModels} disabled={modelsLoading} className="shrink-0">
+                        {modelsLoading ? <Loader2 className="w-3.5 h-3.5 animate-spin" /> : <RefreshCw className="w-3.5 h-3.5" />}
+                        {t('aiHelpFetchModels')}
+                      </Button>
+                    </div>
+                    {modelListOpen && models.length > 0 && (
+                      <ul
+                        className="absolute z-20 mt-1 w-full max-h-60 overflow-y-auto rounded-lg py-1 text-sm shadow-lg"
+                        style={{ background: 'var(--bg-elev)', border: '1px solid var(--line)' }}
+                      >
+                        {filteredModels.length ? filteredModels.map((m) => (
+                          <li key={m}>
+                            <button
+                              type="button"
+                              onClick={() => {
+                                setAiHelpConfig({ model: m });
+                                setModelListOpen(false);
+                              }}
+                              className="flex w-full items-center justify-between gap-2 px-3 py-1.5 text-left text-text-2 hover:text-text hover:bg-[color-mix(in_oklab,var(--text)_5%,transparent)] cursor-pointer"
+                            >
+                              <span className="truncate">{m}</span>
+                              {m === aiHelpConfig.model && <Check className="w-3.5 h-3.5 shrink-0 text-accent" />}
+                            </button>
+                          </li>
+                        )) : (
+                          <li className="px-3 py-1.5 text-text-3">{t('aiHelpNoModels')}</li>
+                        )}
+                      </ul>
+                    )}
+                  </div>
+                  {modelsError && <div className="text-xs text-hard">{modelsError}</div>}
+                </div>
               </>
             )}
           </Collapsible.Content>
