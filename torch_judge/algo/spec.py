@@ -361,8 +361,12 @@ _OUTPUT_DESC = {
              "若干行，从头到尾每行一个节点：它的值和 random 指针指向的节点下标（为空写 `null`）"),
 }
 
+_MULTI_LINE = {"int[][]", "str[][]", "char[][]", "str[]"}
+
 _CHECK_NOTE = {
     "unordered": ("Elements may be printed in any order.", "元素可以按任意顺序输出。"),
+    # Multi-line answers: only the lines are unordered, each line's contents keep their order
+    "unordered_lines": ("The lines may be printed in any order.", "各行之间的顺序不限。"),
     "unordered_nested": ("Groups, and the elements within a group, may be in any order.", "组与组之间、组内元素的顺序均不限。"),
     "custom": ("If several answers are valid, print any one of them.", "答案不唯一时，输出任意一个正确答案即可。"),
     "float": ("Answers within 1e-5 of the expected value are accepted.", "与标准答案相差不超过 1e-5 即视为正确。"),
@@ -406,8 +410,12 @@ def acm_format(task: dict) -> dict[str, str]:
     if task.get("inplace"):
         out_en = f"`{task['inplace']}` after the operation, as {out_en}"
         out_zh = f"操作完成后的 `{task['inplace']}`，格式为{out_zh}"
-    out_en, out_zh = f"Print {out_en}.", f"输出{out_zh}。"
-    note = _CHECK_NOTE.get(task.get("check", "exact"))
+    # A space between Chinese text and inline code, as everywhere else in the descriptions
+    out_en, out_zh = f"Print {out_en}.", f"输出{' ' if out_zh.startswith('`') else ''}{out_zh}。"
+    check = task.get("check", "exact")
+    if check == "unordered" and out_type in _MULTI_LINE:
+        check = "unordered_lines"
+    note = _CHECK_NOTE.get(check)
     if note:
         out_en, out_zh = f"{out_en} {note[0]}", f"{out_zh}{note[1]}"
     return {

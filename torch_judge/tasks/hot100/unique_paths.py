@@ -13,9 +13,9 @@ def _paths(m: int, n: int) -> int:
 
 
 def _large_case():
-    # The full 100 x 100 grid. The answer is C(198, 99), about 2·10⁵⁸: Python integers
-    # keep it exact. Recursion without memoisation would never finish at this size
-    return {"args": [100, 100], "expected": _paths(100, 100)}
+    # The largest square-ish grid whose answer stays within the 2 * 10^9 guarantee:
+    # C(33, 16) ≈ 1.2 * 10^9 routes. Recursion without memoisation visits every one of them
+    return {"args": [17, 18], "expected": _paths(17, 18)}
 
 
 def _random_case(rng):
@@ -32,8 +32,8 @@ TASK = {
     "function_name": "uniquePaths",
     "params": [("m", "int"), ("n", "int")],
     "returns": "int",
-    "description_en": "A robot stands on the top-left cell of a grid with `m` rows and `n` columns, and wants to reach the bottom-right cell. Each step it moves one cell either **right** or **down**. Return how many different routes lead from the start to the finish.\n\n**Example 1:** `m = 2, n = 4` → `4` (the single down-step can be taken after 0, 1, 2 or 3 right-steps)\n\n**Example 2:** `m = 1, n = 6` → `1` (the only route runs straight along the row)\n\n**Constraints:**\n- `1 <= m, n <= 100`",
-    "description_zh": "一个机器人站在有 `m` 行 `n` 列的网格左上角，想走到右下角。每一步它只能向**右**或向**下**走一格。返回从起点到终点共有多少条不同的路线。\n\n**示例 1：** `m = 2, n = 4` → `4`（唯一一次向下的移动，可以在向右走 0、1、2 或 3 步之后进行）\n\n**示例 2：** `m = 1, n = 6` → `1`（唯一的路线是沿着这一行一直向右）\n\n**约束：**\n- `1 <= m, n <= 100`",
+    "description_en": "A robot stands on the top-left cell of a grid with `m` rows and `n` columns, and wants to reach the bottom-right cell. Each step it moves one cell either **right** or **down**. Return how many different routes lead from the start to the finish.\n\n**Example 1:** `m = 2, n = 4` → `4` (the single down-step can be taken after 0, 1, 2 or 3 right-steps)\n\n**Example 2:** `m = 1, n = 6` → `1` (the only route runs straight along the row)\n\n**Constraints:**\n- `1 <= m, n <= 100`\n- The answer is at most `2 * 10^9`",
+    "description_zh": "一个机器人站在有 `m` 行 `n` 列的网格左上角，想走到右下角。每一步它只能向**右**或向**下**走一格。返回从起点到终点共有多少条不同的路线。\n\n**示例 1：** `m = 2, n = 4` → `4`（唯一一次向下的移动，可以在向右走 0、1、2 或 3 步之后进行）\n\n**示例 2：** `m = 1, n = 6` → `1`（唯一的路线是沿着这一行一直向右）\n\n**约束：**\n- `1 <= m, n <= 100`\n- 答案不超过 `2 * 10^9`",
     "hint": "The number of ways to reach a cell is the number of ways to reach the cell above it plus the number to its left. The first row and first column are all 1.",
     "hint_zh": "到达某个格子的路线数等于到达其上方格子的路线数加上到达其左方格子的路线数。第一行和第一列都是 1。",
     "cases": [

@@ -229,11 +229,19 @@ def _parse_token(token: str, cast) -> Any:
     return None if token == "null" else cast(token)
 
 
-def parse_acm_output(type_name: str, text: str) -> Any:
-    """Inverse of acm_output_text, tolerant of trailing whitespace. Raises ValueError."""
-    lines = [line.rstrip() for line in text.replace("\r\n", "\n").split("\n")]
-    while lines and lines[-1] == "":
-        lines.pop()
+def parse_acm_output(type_name: str, text: str, keep_empty_rows: bool = False) -> Any:
+    """Inverse of acm_output_text, tolerant of trailing whitespace. Raises ValueError.
+
+    Trailing blank lines are dropped, unless ``keep_empty_rows``: then only the final newline
+    is, so a nested answer can end with an empty row (``[[1], []]`` prints ``1``, then ``""``)."""
+    text = text.replace("\r\n", "\n")
+    if keep_empty_rows:
+        text = text[:-1] if text.endswith("\n") else text
+        lines = [line.rstrip() for line in text.split("\n")] if text else []
+    else:
+        lines = [line.rstrip() for line in text.split("\n")]
+        while lines and lines[-1] == "":
+            lines.pop()
     nullable = type_name.endswith("?")
     type_name = type_name.rstrip("?")
     if nullable and type_name != "str" and [line.strip() for line in lines] == ["null"]:

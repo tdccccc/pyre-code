@@ -31,12 +31,12 @@ def _build(vals, left, right):
 
 
 def _large_case():
-    # 10^5 nodes in a deep, nearly path-shaped tree (about 75,000 levels): a recursive search
-    # needs tens of thousands of frames
+    # 10^5 nodes in a deep tree (about 6700 levels): a recursive search needs thousands of
+    # frames, within the judge's recursion limit
     rng = random.Random(236)
     n = 100000
     vals = rng.sample(range(-10**9, 10**9), n)
-    left, right = _random_shape(rng, n, window=3)
+    left, right = _random_shape(rng, n, window=40)
     parent = [-1] * n
     for i in range(n):
         for c in (left[i], right[i]):

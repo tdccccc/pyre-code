@@ -17,6 +17,11 @@ from pathlib import Path
 from torch_judge.algo import runner, spec
 
 TIME_LIMIT_S = 3.0
+# Like core mode (and LeetCode), ACM programs may recurse over 10^4-deep trees and lists
+ACM_BOOTSTRAP = (
+    "import runpy, sys; sys.setrecursionlimit(20000); "
+    "runpy.run_path(sys.argv[1], run_name='__main__')"
+)
 PARALLEL_CASES = 4
 RUNNER_PATH = Path(runner.__file__)
 MAX_STDERR_LINES = 12
@@ -102,7 +107,7 @@ def _run_acm_case(program: Path, task: dict, case: dict) -> dict:
     start = time.perf_counter()
     try:
         proc = subprocess.run(
-            [sys.executable, "-I", str(program)],
+            [sys.executable, "-I", "-c", ACM_BOOTSTRAP, str(program)],
             input=spec.acm_stdin(task, case), capture_output=True, text=True,
             timeout=TIME_LIMIT_S, cwd=program.parent,
         )
@@ -133,8 +138,17 @@ def _acm_matches(task: dict, case: dict, stdout: str) -> bool:
             return False
         return all(runner.check("approx", runner.parse_acm_output(ret, line), value)
                    for line, (ret, value) in zip(got, want))
-    parsed = runner.parse_acm_output(spec.acm_output_type(task), stdout)
-    return runner.check_answer(spec.runner_spec(task), case["args"], parsed, case["expected"])
+    out_type = spec.acm_output_type(task)
+    task_spec = spec.runner_spec(task)
+    parsed = runner.parse_acm_output(out_type, stdout)
+    if runner.check_answer(task_spec, case["args"], parsed, case["expected"]):
+        return True
+    # A nested answer may end with an empty row ([] printed last), which reads as a
+    # trailing blank line; try again keeping it
+    if out_type in ("int[][]", "str[][]"):
+        parsed = runner.parse_acm_output(out_type, stdout, keep_empty_rows=True)
+        return runner.check_answer(task_spec, case["args"], parsed, case["expected"])
+    return False
 
 
 def grade(task_id: str, task: dict, code: str, mode: str = "core", test_indices: list[int] | None = None) -> dict:

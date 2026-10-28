@@ -31,12 +31,13 @@ def _build(vals, left, right):
 
 
 def _large_case():
-    # 3 * 10^4 nodes in a deep tree (about as deep as it is wide), so a recursive DFS needs
-    # tens of thousands of frames. The expected value comes from a pass over the index arrays
+    # 3 * 10^4 nodes in a deep tree (about 7700 levels): a recursive DFS needs thousands of
+    # frames, within the judge's recursion limit. The expected value comes from a pass over
+    # the index arrays
     rng = random.Random(124)
     n = 30000
     vals = [rng.randint(-1000, 1000) for _ in range(n)]
-    left, right = _random_shape(rng, n, window=3)
+    left, right = _random_shape(rng, n, window=10)
     gain = [0] * n  # best downward path sum that starts at each node
     best = None
     for i in reversed(range(n)):  # a child always has a larger index than its parent
