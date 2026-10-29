@@ -52,5 +52,11 @@
     "titleZh": "对齐与 RL",
     "titleEn": "Alignment & RL",
     "problems": ["reward_model", "ppo_loss", "dpo_loss", "grpo_loss", "mcts_search"]
+  },
+  {
+    "id": "io_kernels",
+    "titleZh": "IO 感知 kernel",
+    "titleEn": "IO-aware Kernels",
+    "problems": ["flash_attention", "flash_decoding"]
   }
 ]
