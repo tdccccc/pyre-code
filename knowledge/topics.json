@@ -40,5 +40,11 @@
     "titleZh": "损失函数",
     "titleEn": "Loss Functions",
     "problems": ["cross_entropy", "label_smoothing", "focal_loss", "contrastive_loss", "chunked_cross_entropy"]
+  },
+  {
+    "id": "backprop",
+    "titleZh": "手写反向传播",
+    "titleEn": "Manual Backpropagation",
+    "problems": ["softmax_backward", "layernorm_backward"]
   }
 ]

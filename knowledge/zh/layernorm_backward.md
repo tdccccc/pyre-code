@@ -82,3 +82,25 @@ $\operatorname{mean}$ 沿最后一维。
 - **忘了先乘 $\gamma$**：公式里用的是 $\mathrm{d}\hat{x} = \mathrm{d}y \odot \gamma$，而 $\mathrm{d}\gamma$ 用的是原始的 $\mathrm{d}y$。
 - **只减均值、漏了投影项**：结果会和 autograd 对不上。
 - 自检：$\gamma$ 全为 $1$ 时，每行 $\mathrm{d}x$ 之和为 $0$。
+
+## 延伸
+
+- **保存什么**：融合实现通常保存输入 $x$（或输出）和每行的 $\mu$、$r$，两个统计量各是 `(*,)` 的小张量；反向里 $\hat{x}$ 用它们廉价地重算。autograd 沿着拆开的运算回传，则要保存好几份与 $x$ 同形状的中间张量。本题只传入 $x$ 和 $\gamma$，统计量在反向里重新算出。
+- **两个行内归约**：$\operatorname{mean}(\mathrm{d}\hat{x})$ 和 $\operatorname{mean}(\mathrm{d}\hat{x}\odot\hat{x})$ 可以在同一遍扫描里一起求出，然后一个逐元素式子给出 $\mathrm{d}x$。
+- **跨行归约**：$\mathrm{d}\gamma$、$\mathrm{d}\beta$ 要把所有行累加起来，行分散在不同的线程块里，实现时常见的做法是先各块求部分和，再做一次第二级归约。这部分往往比 $\mathrm{d}x$ 更麻烦。
+- **关于 $\epsilon$**：上面「几何意义」里的正交性在 $\epsilon$ 可忽略时严格成立。$\epsilon > 0$ 时 $\hat{x}$ 的均方略小于 $1$，$\mathrm{d}x$ 与 $\hat{x}$ 只是近似正交；但推导中没有做任何近似，公式本身仍然是精确的。
+- **精度**：统计量和归约在 fp32 下做，哪怕输入输出是 fp16 / bf16。
+- **同族的写法**：RMSNorm 的反向去掉均值项；BatchNorm 的形式相同、但均值沿 batch 方向。对比见「手写反向传播」专题。
+
+## 面试追问
+
+1. **$\mathrm{d}x$ 公式里的三项分别来自哪里？**
+   $x_j$ 影响 $\hat{x}_i$ 有三条路：直接的 $x_j - \mu$ 里的 $x_j$（第一项 $\mathrm{d}\hat{x}$）、经过均值 $\mu$（第二项，减去 $\mathrm{d}\hat{x}$ 的均值）、经过方差（第三项，减去 $\mathrm{d}\hat{x}$ 在 $\hat{x}$ 方向的投影）。
+2. **为什么 $\gamma$ 全为 $1$ 时，每行 $\mathrm{d}x$ 之和为 $0$？**
+   LayerNorm 对平移不变，所有 $x_j$ 同加常数，输出不变，所以梯度在全 $1$ 方向的分量为 $0$。代入公式：$\mathrm{d}\hat{x}$ 与它的均值项求和后相消，第三项含 $\sum_j \hat{x}_j = 0$，所以每行之和恰好为 $0$。
+3. **为什么 $\mathrm{d}\gamma$、$\mathrm{d}\beta$ 要对 $B$ 和 $S$ 都求和？**
+   $\gamma$、$\beta$ 被每个 token 共享，前向相当于把它们广播到 `(B, S, D)`；反向就要把所有位置的梯度加回 `(D,)`。只对第 $0$ 维求和是常见的错误。
+4. **为什么 $\mathrm{d}\gamma$ 用 $\mathrm{d}y$，而 $\mathrm{d}x$ 要用 $\mathrm{d}\hat{x} = \mathrm{d}y \odot \gamma$？**
+   $y = \gamma \hat{x} + \beta$，$\gamma$ 对 $y$ 的导数是 $\hat{x}$，用原始的 $\mathrm{d}y$；而 $x$ 是经 $\hat{x}$ 才影响 $y$，要先过 $\gamma$ 这一步，所以用 $\mathrm{d}y \odot \gamma$。
+5. **手写融合反向相比 autograd 好在哪？**
+   省显存：只保存 $x$ 和每行两个统计量，而不是整条链上的中间张量。省访存：LayerNorm 是访存受限的，融合后 $\mathrm{d}y$、$x$ 各读一次、$\mathrm{d}x$ 写一次。代价是要自己保证公式正确，用 float64 的 `gradcheck` 验证。
