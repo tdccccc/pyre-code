@@ -16,5 +16,11 @@
     "titleZh": "卷积与视觉",
     "titleEn": "Convolution & Vision",
     "problems": ["conv2d", "max_pool2d", "depthwise_conv", "vit_patch", "vit_block"]
+  },
+  {
+    "id": "losses",
+    "titleZh": "损失函数",
+    "titleEn": "Loss Functions",
+    "problems": ["cross_entropy", "label_smoothing", "focal_loss", "contrastive_loss", "chunked_cross_entropy"]
   }
 ]
