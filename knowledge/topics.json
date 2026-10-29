@@ -96,6 +96,12 @@
     "problems": ["noise_schedule", "ddim_step", "flow_matching", "adaln_zero"]
   },
   {
+    "id": "gnn",
+    "titleZh": "图神经网络",
+    "titleEn": "Graph Neural Networks",
+    "problems": ["gcn_layer", "graphsage_layer", "gat_layer", "gin_layer", "mpnn_layer", "graph_readout", "link_prediction", "gae"]
+  },
+  {
     "id": "tokenization",
     "titleZh": "分词",
     "titleEn": "Tokenization",
