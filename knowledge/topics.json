@@ -90,6 +90,12 @@
     "problems": ["int8_quantization", "int4_group_quant", "fp8_scaling", "lora", "qlora"]
   },
   {
+    "id": "distributed",
+    "titleZh": "分布式训练",
+    "titleEn": "Distributed Training",
+    "problems": ["ring_allreduce", "zero_optimizer", "fsdp_step", "tensor_parallel", "pipeline_1f1b", "ring_attention", "ulysses_attention", "expert_dispatch"]
+  },
+  {
     "id": "diffusion",
     "titleZh": "扩散与流匹配",
     "titleEn": "Diffusion & Flow Matching",
