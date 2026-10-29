@@ -20,17 +20,17 @@ $$
 
 **一步的三个阶段**（$N$ 个参数，$W$ 个 rank，分区大小 $n = N/W$）：
 
-1. **reduce-scatter**：rank $r$ 得到第 $r$ 段的**平均**梯度
+**① reduce-scatter**：rank $r$ 得到第 $r$ 段的**平均**梯度
 
 $$
 g^{(r)} = \frac{1}{W} \sum_{k=1}^{W} \text{grad}_k\bigl[\, rn : (r+1)n \,\bigr]
 $$
 
-   取平均是因为全局损失是全局 batch 上的均值，每个 rank 的梯度只是其中一份数据的梯度。
+取平均是因为全局损失是全局 batch 上的均值，每个 rank 的梯度只是其中一份数据的梯度。
 
-2. **本地 Adam**：rank $r$ 用 $g^{(r)}$ 和自己保存的 $m^{(r)}$、$v^{(r)}$ 更新第 $r$ 段参数。
+**② 本地 Adam**：rank $r$ 用 $g^{(r)}$ 和自己保存的 $m^{(r)}$、$v^{(r)}$ 更新第 $r$ 段参数。
 
-3. **all-gather**：把 $W$ 段新参数按顺序拼接。
+**③ all-gather**：把 $W$ 段新参数按顺序拼接。
 
 **显存**：每个 rank 的优化器状态和梯度降为原来的 $1/W$。**通信**：reduce-scatter + all-gather 的总量和一次 all-reduce 相同，没有额外开销。
 
