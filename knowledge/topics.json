@@ -10,5 +10,11 @@
     "titleZh": "位置编码",
     "titleEn": "Position Encoding",
     "problems": ["sinusoidal_pe", "rope", "alibi", "ntk_rope"]
+  },
+  {
+    "id": "vision",
+    "titleZh": "卷积与视觉",
+    "titleEn": "Convolution & Vision",
+    "problems": ["conv2d", "max_pool2d", "depthwise_conv", "vit_patch", "vit_block"]
   }
 ]
