@@ -4,5 +4,11 @@
     "titleZh": "归一化",
     "titleEn": "Normalization",
     "problems": ["layernorm", "rmsnorm", "batchnorm"]
+  },
+  {
+    "id": "position_encoding",
+    "titleZh": "位置编码",
+    "titleEn": "Position Encoding",
+    "problems": ["sinusoidal_pe", "rope", "alibi", "ntk_rope"]
   }
 ]
