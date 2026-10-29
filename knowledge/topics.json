@@ -42,6 +42,12 @@
     "problems": ["cross_entropy", "label_smoothing", "focal_loss", "contrastive_loss", "chunked_cross_entropy"]
   },
   {
+    "id": "optimization",
+    "titleZh": "优化与训练技巧",
+    "titleEn": "Optimization & Training",
+    "problems": ["adam", "cosine_lr", "gradient_clipping", "gradient_accumulation", "mixed_precision", "activation_checkpointing"]
+  },
+  {
     "id": "backprop",
     "titleZh": "手写反向传播",
     "titleEn": "Manual Backpropagation",
