@@ -24,6 +24,12 @@
     "problems": ["conv2d", "max_pool2d", "depthwise_conv", "vit_patch", "vit_block"]
   },
   {
+    "id": "architecture",
+    "titleZh": "模型架构",
+    "titleEn": "Model Architecture",
+    "problems": ["gpt2_block", "moe", "moe_load_balance", "multi_token_prediction", "mamba_ssm"]
+  },
+  {
     "id": "losses",
     "titleZh": "损失函数",
     "titleEn": "Loss Functions",
