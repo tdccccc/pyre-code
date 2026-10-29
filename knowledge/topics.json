@@ -1,5 +1,11 @@
 [
   {
+    "id": "basic_layers",
+    "titleZh": "基础层与激活",
+    "titleEn": "Basic Layers & Activations",
+    "problems": ["linear_regression", "linear", "relu", "gelu", "swiglu", "mlp", "embedding", "dropout", "weight_init"]
+  },
+  {
     "id": "normalization",
     "titleZh": "归一化",
     "titleEn": "Normalization",
