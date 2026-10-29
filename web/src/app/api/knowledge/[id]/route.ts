@@ -6,9 +6,9 @@ export async function GET(
   { params }: { params: Promise<{ id: string }> }
 ) {
   const { id } = await params;
-  const note = getKnowledge(id);
-  if (!note) {
+  const entry = getKnowledge(id);
+  if (!entry) {
     return NextResponse.json({ error: 'Knowledge note not found' }, { status: 404 });
   }
-  return NextResponse.json(note);
+  return NextResponse.json(entry);
 }

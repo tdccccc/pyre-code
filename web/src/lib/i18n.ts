@@ -98,6 +98,9 @@ const en = {
   noSolution: 'No solution available yet.',
   loadingKnowledge: 'Loading concepts...',
   noKnowledge: 'No concept notes for this problem yet.',
+  knowledgeThisProblem: 'This problem',
+  knowledgeTopic: 'Topic',
+  topicProblems: 'Problems in this topic',
   backToProblem: 'Back to problem',
   // home features
   feat1Title: 'Instant Feedback',
@@ -227,6 +230,9 @@ const zh: Translations = {
   noSolution: '暂无题解。',
   loadingKnowledge: '加载知识点中...',
   noKnowledge: '这道题还没有知识点讲解。',
+  knowledgeThisProblem: '本题',
+  knowledgeTopic: '专题',
+  topicProblems: '本专题的题',
   backToProblem: '返回题目',
   // test panel
   testCasesTab: '测试用例',

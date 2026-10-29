@@ -1,0 +1,8 @@
+[
+  {
+    "id": "normalization",
+    "titleZh": "归一化",
+    "titleEn": "Normalization",
+    "problems": ["layernorm", "rmsnorm", "batchnorm"]
+  }
+]
