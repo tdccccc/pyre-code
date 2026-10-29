@@ -90,6 +90,12 @@
     "problems": ["int8_quantization", "int4_group_quant", "fp8_scaling", "lora", "qlora"]
   },
   {
+    "id": "diffusion",
+    "titleZh": "扩散与流匹配",
+    "titleEn": "Diffusion & Flow Matching",
+    "problems": ["noise_schedule", "ddim_step", "flow_matching", "adaln_zero"]
+  },
+  {
     "id": "tokenization",
     "titleZh": "分词",
     "titleEn": "Tokenization",
