@@ -70,5 +70,11 @@
     "titleZh": "IO 感知 kernel",
     "titleEn": "IO-aware Kernels",
     "problems": ["flash_attention", "flash_decoding"]
+  },
+  {
+    "id": "decoding",
+    "titleZh": "解码与采样",
+    "titleEn": "Decoding & Sampling",
+    "problems": ["topk_sampling", "sampling_penalties", "beam_search", "speculative_decoding"]
   }
 ]
