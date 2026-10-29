@@ -60,6 +60,12 @@
     "problems": ["reward_model", "ppo_loss", "dpo_loss", "grpo_loss", "mcts_search"]
   },
   {
+    "id": "estimation",
+    "titleZh": "性能估算",
+    "titleEn": "Performance Estimation",
+    "problems": ["transformer_flops", "training_memory", "inference_roofline"]
+  },
+  {
     "id": "io_kernels",
     "titleZh": "IO 感知 kernel",
     "titleEn": "IO-aware Kernels",
