@@ -76,5 +76,11 @@
     "titleZh": "解码与采样",
     "titleEn": "Decoding & Sampling",
     "problems": ["topk_sampling", "sampling_penalties", "beam_search", "speculative_decoding"]
+  },
+  {
+    "id": "quantization",
+    "titleZh": "量化与高效微调",
+    "titleEn": "Quantization & Efficient Fine-tuning",
+    "problems": ["int8_quantization", "int4_group_quant", "fp8_scaling", "lora", "qlora"]
   }
 ]
