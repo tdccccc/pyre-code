@@ -12,6 +12,12 @@
     "problems": ["layernorm", "rmsnorm", "batchnorm"]
   },
   {
+    "id": "attention",
+    "titleZh": "注意力",
+    "titleEn": "Attention",
+    "problems": ["softmax", "attention", "causal_attention", "mha", "cross_attention", "gqa", "mla", "sliding_window", "varlen_attention", "diff_attention", "linear_attention"]
+  },
+  {
     "id": "position_encoding",
     "titleZh": "位置编码",
     "titleEn": "Position Encoding",
