@@ -17,9 +17,10 @@
 **每一步的预算约束**：
 
 $$
-\underbrace{|\text{running}|}_{\text{decode 各 1}} + \sum_{r \in \text{本步新准入}} \text{prompt\_len}_r \le \text{max\_batch\_tokens},
-\qquad
-|\text{running}| + |\text{新准入}| \le \text{max\_num\_seqs}
+\begin{aligned}
+\underbrace{|\text{running}|}_{\text{decode 各 1}} + \sum_{r \in \text{本步新准入}} \text{prompt\_len}_r &\le \text{max\_batch\_tokens} \\
+|\text{running}| + |\text{新准入}| &\le \text{max\_num\_seqs}
+\end{aligned}
 $$
 
 **严格先来先服务（FCFS）**：按到达时间（再按编号）排队，队首放不下就停止准入，**不跳过**它去准入后面更小的请求。否则大请求可能永远排不上（饥饿）。

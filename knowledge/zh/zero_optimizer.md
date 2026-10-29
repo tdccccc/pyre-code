@@ -9,11 +9,11 @@
 **为什么可以切**：Adam 的更新是**逐元素**的，每个参数的新值只依赖它自己的梯度和动量：
 
 $$
-m_i \leftarrow \beta_1 m_i + (1 - \beta_1) g_i,
-\qquad
-v_i \leftarrow \beta_2 v_i + (1 - \beta_2) g_i^2,
-\qquad
-p_i \leftarrow p_i - \eta \frac{m_i / (1 - \beta_1^t)}{\sqrt{v_i / (1 - \beta_2^t)} + \epsilon}
+\begin{aligned}
+m_i &\leftarrow \beta_1 m_i + (1 - \beta_1) g_i \\
+v_i &\leftarrow \beta_2 v_i + (1 - \beta_2) g_i^2 \\
+p_i &\leftarrow p_i - \eta \frac{m_i / (1 - \beta_1^t)}{\sqrt{v_i / (1 - \beta_2^t)} + \epsilon}
+\end{aligned}
 $$
 
 所以把元素任意分组、各组独立更新，结果和整体更新完全一样。

@@ -31,7 +31,10 @@ $$
 **为什么输出分布恰好是 $p$**：记总接受概率 $\beta = \sum_x q(x) \min\!\bigl(1, \tfrac{p(x)}{q(x)}\bigr) = \sum_x \min\bigl(q(x), p(x)\bigr)$。注意 $\sum_x \max(0, p - q) = 1 - \sum_x \min(p, q) = 1 - \beta$。于是最终输出 $x$ 的概率为
 
 $$
-\underbrace{\min\bigl(q(x), p(x)\bigr)}_{\text{提议并被接受}} + \underbrace{(1 - \beta)\cdot \frac{\max\bigl(0, p(x) - q(x)\bigr)}{1 - \beta}}_{\text{被拒绝后重采样}} = \min(q, p) + \max(0, p - q) = p(x)
+\begin{aligned}
+P(\text{输出 } x) &= \underbrace{\min\bigl(q(x), p(x)\bigr)}_{\text{提议并被接受}} + \underbrace{(1 - \beta)\cdot \frac{\max\bigl(0, p(x) - q(x)\bigr)}{1 - \beta}}_{\text{被拒绝后重采样}} \\
+&= \min(q, p) + \max(0, p - q) = p(x)
+\end{aligned}
 $$
 
 ## 形状

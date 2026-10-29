@@ -10,13 +10,15 @@
 
 $$
 \mu = \frac{1}{D}\sum_i x_i,
-\quad
+\qquad
 \sigma^2 = \frac{1}{D}\sum_i (x_i - \mu)^2,
-\quad
-r = \frac{1}{\sqrt{\sigma^2 + \epsilon}},
-\quad
+\qquad
+r = \frac{1}{\sqrt{\sigma^2 + \epsilon}}
+$$
+
+$$
 \hat{x}_i = (x_i - \mu)\, r,
-\quad
+\qquad
 y_i = \gamma_i \hat{x}_i + \beta_i
 $$
 
@@ -35,8 +37,10 @@ $$
 $$
 \frac{\partial \mu}{\partial x_j} = \frac{1}{D},
 \qquad
-\frac{\partial \sigma^2}{\partial x_j} = \frac{2(x_j - \mu)}{D},
-\qquad
+\frac{\partial \sigma^2}{\partial x_j} = \frac{2(x_j - \mu)}{D}
+$$
+
+$$
 \frac{\partial r}{\partial x_j} = -\frac12 (\sigma^2 + \epsilon)^{-3/2} \cdot \frac{2(x_j - \mu)}{D} = -\frac{r^2\, \hat{x}_j}{D}
 $$
 

@@ -26,7 +26,11 @@ $$
 **形状变化**（单个 rank）：
 
 $$
-(B,\ S/P,\ H,\ D) \xrightarrow{\text{all-to-all}} (B,\ S,\ H/P,\ D) \xrightarrow{\text{注意力}} (B,\ S,\ H/P,\ D) \xrightarrow{\text{all-to-all}} (B,\ S/P,\ H,\ D)
+\begin{aligned}
+(B,\ S/P,\ H,\ D) &\xrightarrow{\text{all-to-all}} (B,\ S,\ H/P,\ D) \\
+&\xrightarrow{\text{注意力}} (B,\ S,\ H/P,\ D) \\
+&\xrightarrow{\text{all-to-all}} (B,\ S/P,\ H,\ D)
+\end{aligned}
 $$
 
 **通信**：每次 all-to-all，每个 rank 留下自己的 $1/P$，把其余 $(P-1)/P$ 发出去。

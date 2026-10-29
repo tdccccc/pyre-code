@@ -25,9 +25,10 @@ $$
 **在完整 DiT 块中**，两组参数分别用于注意力和 MLP 两个子层：
 
 $$
-x \leftarrow x + \alpha_1 \odot \operatorname{Attn}\bigl(\gamma_1 \odot \operatorname{LN}(x) + \beta_1\bigr),
-\qquad
-x \leftarrow x + \alpha_2 \odot \operatorname{MLP}\bigl(\gamma_2 \odot \operatorname{LN}(x) + \beta_2\bigr)
+\begin{aligned}
+x &\leftarrow x + \alpha_1 \odot \operatorname{Attn}\bigl(\gamma_1 \odot \operatorname{LN}(x) + \beta_1\bigr) \\
+x &\leftarrow x + \alpha_2 \odot \operatorname{MLP}\bigl(\gamma_2 \odot \operatorname{LN}(x) + \beta_2\bigr)
+\end{aligned}
 $$
 
 **为什么零初始化**：$W$、$b$ 初始化为 $0$，则 $\alpha = 0$，每个残差分支的输出都是 $0$：
