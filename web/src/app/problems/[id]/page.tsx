@@ -9,6 +9,7 @@ import { SplitPane, VerticalSplitPane } from '@/components/ui/SplitPane';
 import { ProblemDrawer } from '@/components/layout/ProblemDrawer';
 import { FeedbackModal } from '@/components/workspace/FeedbackModal';
 import { DescriptionTab } from '@/components/workspace/DescriptionTab';
+import { KnowledgeTab } from '@/components/workspace/KnowledgeTab';
 import { SolutionTab } from '@/components/workspace/SolutionTab';
 import { AIHelpTab } from '@/components/workspace/AIHelpTab';
 import { SubmissionHistory as SubmissionHistoryTab } from '@/components/workspace/SubmissionHistory';
@@ -245,7 +246,8 @@ function WorkspacePageNew() {
           style={{ borderBottom: '1px solid var(--line)', background: 'var(--bg)' }}
         >
           <Tabs.List className="flex gap-0.5">
-            {(['description', 'solution', 'aiHelp', 'submissionsTab'] as const).map((tab) => (
+            {/* Concept notes are written for the AI problems only */}
+            {(['description', ...(isHot100 ? [] : ['knowledge'] as const), 'solution', 'aiHelp', 'submissionsTab'] as const).map((tab) => (
               <Tabs.Trigger
                 key={tab}
                 value={tab}
@@ -262,6 +264,9 @@ function WorkspacePageNew() {
         </div>
         <Tabs.Content value="description" className="flex-1 overflow-y-auto">
           <DescriptionTab problem={problem} />
+        </Tabs.Content>
+        <Tabs.Content value="knowledge" className="flex-1 overflow-y-auto">
+          <KnowledgeTab problemId={id} />
         </Tabs.Content>
         <Tabs.Content value="solution" className="flex-1 overflow-y-auto">
           <SolutionTab problemId={id} />
