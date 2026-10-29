@@ -72,6 +72,12 @@
     "problems": ["flash_attention", "flash_decoding"]
   },
   {
+    "id": "serving",
+    "titleZh": "推理服务",
+    "titleEn": "Inference Serving",
+    "problems": ["kv_cache", "kv_block_allocator", "paged_attention", "prefix_caching", "continuous_batching"]
+  },
+  {
     "id": "decoding",
     "titleZh": "解码与采样",
     "titleEn": "Decoding & Sampling",
