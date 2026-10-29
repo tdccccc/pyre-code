@@ -46,5 +46,11 @@
     "titleZh": "手写反向传播",
     "titleEn": "Manual Backpropagation",
     "problems": ["softmax_backward", "layernorm_backward"]
+  },
+  {
+    "id": "alignment",
+    "titleZh": "对齐与 RL",
+    "titleEn": "Alignment & RL",
+    "problems": ["reward_model", "ppo_loss", "dpo_loss", "grpo_loss", "mcts_search"]
   }
 ]
