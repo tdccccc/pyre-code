@@ -306,7 +306,8 @@ function WorkspacePageNew() {
           <SolutionTab problemId={id} />
         </Tabs.Content>
         <Tabs.Content value="aiHelp" className="flex-1 min-h-0">
-          <AIHelpTab problem={problem} />
+          {/* Keyed so the unsent message reloads for the new problem */}
+          <AIHelpTab key={problem.id} problem={problem} />
         </Tabs.Content>
         <Tabs.Content value="submissionsTab" className="flex-1 min-h-0">
           <SubmissionHistoryTab showMode={isHot100} />

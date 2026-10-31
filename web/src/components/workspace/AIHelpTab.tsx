@@ -13,7 +13,26 @@ import { useProblemStore } from '@/store/problemStore';
 import type { Problem, AiChatMessage, AiHelpRequest } from '@/lib/types';
 
 const STORAGE_KEY = 'ai_help_config';
+const INPUT_KEY_PREFIX = 'ai_help_input:';
 const INPUT_MAX_HEIGHT = 160;
+
+// The unsent message is kept per problem, since switching tabs or problems unmounts this panel
+function loadUnsentInput(problemId: string): string {
+  try {
+    return localStorage.getItem(INPUT_KEY_PREFIX + problemId) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function saveUnsentInput(problemId: string, value: string) {
+  try {
+    if (value) localStorage.setItem(INPUT_KEY_PREFIX + problemId, value);
+    else localStorage.removeItem(INPUT_KEY_PREFIX + problemId);
+  } catch {
+    // Ignore storage write failures.
+  }
+}
 
 const inputStyle = {
   background: 'var(--bg-elev)',
@@ -34,7 +53,11 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [input, setInput] = useState('');
+  const [input, setInputState] = useState(() => loadUnsentInput(problem.id));
+  const setInput = (value: string) => {
+    setInputState(value);
+    saveUnsentInput(problem.id, value);
+  };
   const [serverConfigured, setServerConfigured] = useState(false);
   const {
     aiHelpConfig, setAiHelpConfig,
