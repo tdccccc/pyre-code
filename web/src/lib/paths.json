@@ -52,12 +52,12 @@
     },
     {
       "id": "alignment-agents",
-      "titleEn": "Alignment & Agent Reasoning",
-      "titleZh": "对齐与 Agent 推理",
-      "descriptionEn": "Implement the loss functions and search algorithms behind modern AI alignment — from reward modeling to PPO and MCTS.",
-      "descriptionZh": "实现现代 AI 对齐背后的损失函数和搜索算法——从奖励建模到 PPO 和 MCTS。",
+      "titleEn": "Post-training & RL",
+      "titleZh": "后训练与强化学习",
+      "descriptionEn": "From SFT to RL as it runs in TRL and verl: per-token log-probs and loss masks, reward models, PPO with GAE, DPO and its variants, GRPO and its successors (DAPO, Dr. GRPO, RLOO, GSPO), verifiable rewards, pass@k, distillation and agent trajectories.",
+      "descriptionZh": "从 SFT 到强化学习，按 TRL、verl 里的真实写法实现：逐 token 对数概率与损失掩码、奖励模型、PPO 与 GAE、DPO 及其变体、GRPO 及后续改进（DAPO、Dr. GRPO、RLOO、GSPO）、可验证奖励、pass@k、蒸馏与 Agent 轨迹。",
       "icon": "Target",
-      "problems": ["cross_entropy", "reward_model", "ppo_loss", "dpo_loss", "grpo_loss", "mcts_search"],
+      "problems": ["cross_entropy", "token_logprobs", "sft_loss", "reward_model", "kl_estimators", "ppo_loss", "gae_advantage", "ppo_token_loss", "dpo_loss", "preference_variants", "kto_loss", "grpo_loss", "grpo_token_loss", "group_advantages", "loss_aggregation", "dapo_loss", "gspo_loss", "math_reward", "prm_loss", "pass_at_k", "answer_voting", "distill_loss", "agent_rollout_tensors", "mcts_search"],
       "prerequisites": []
     },
     {

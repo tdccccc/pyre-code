@@ -19,9 +19,9 @@
 
 ## 🧠 What is Pyre Code?
 
-95 problems. You write the implementation, a local grading service runs the tests, you see what broke. That's it.
+113 problems. You write the implementation, a local grading service runs the tests, you see what broke. That's it.
 
-The problems cover what's actually inside Transformers, vLLM, TRL, diffusion models, and GNNs — attention variants, training tricks, inference kernels, alignment algorithms, graph neural networks, and the AI infra systems around them. No GPU needed.
+The problems cover what's actually inside Transformers, vLLM, TRL, diffusion models, and GNNs — attention variants, training tricks, inference kernels, post-training and RL algorithms, graph neural networks, and the AI infra systems around them. No GPU needed.
 
 ### Who is this for?
 
@@ -51,6 +51,7 @@ The problems cover what's actually inside Transformers, vLLM, TRL, diffusion mod
 
 ## 📢 News
 
+- **[2026/10/31]** New post-training & RL problems — 18 problems on per-token log-probs and SFT masking, KL estimators, GAE, full PPO/GRPO, DAPO, Dr. GRPO, RLOO, GSPO, DPO variants and KTO, verifiable rewards, process reward models, pass@k, distillation and agent trajectory masks. The alignment path grows into a 24-problem "Post-training & RL" path. 🔥
 - **[2026/10/28]** New AI Infra learning path — 19 new problems on FLOPs/memory estimation, hand-written backward passes, vLLM-style serving (block allocator, prefix caching, continuous batching, Flash-Decoding), INT4/FP8 quantization, and ZeRO, pipeline, Ulysses and expert parallelism. 🔥
 - **[2026/04/20]** New GNN learning path — 8 problems covering GCN, GAT, GIN, MPNN, GraphSAGE, link prediction, and graph autoencoders. 🔥
 - **[2026/04/20]** New UI redesign with OKLch color system, dark mode, and Geist typography — classic design still available via toggle. 🔥
@@ -161,7 +162,7 @@ Any OpenAI-compatible endpoint works (OpenAI, Anthropic via proxy, Ollama, etc.)
 
 ## 📋 Problem Set
 
-95 problems organized by category:
+113 problems organized by category:
 
 | Category | Problems |
 |---|---|
@@ -175,7 +176,9 @@ Any OpenAI-compatible endpoint works (OpenAI, Anthropic via proxy, Ollama, etc.)
 | **Inference** | KV Cache, Top-k Sampling, Beam Search, Speculative Decoding, BPE, INT8 Quantization, Paged Attention, KV Block Allocator, Prefix Caching, Continuous Batching, Flash-Decoding, Packed Varlen Attention, Sampling Penalties, INT4 Group Quantization, FP8 Delayed Scaling |
 | **Systems Estimation** | Transformer Params & FLOPs, Training Memory (ZeRO), Decode Roofline & KV Cache |
 | **Backward & Kernels** | Softmax Backward, LayerNorm Backward, Chunked LM-Head Cross-Entropy |
-| **Loss & Alignment** | Cross Entropy, Label Smoothing, Focal Loss, Contrastive Loss, DPO, GRPO, PPO, Reward Model |
+| **Loss** | Cross Entropy, Label Smoothing, Focal Loss, Contrastive Loss |
+| **Post-training & RL** | Per-Token Log-Probs, SFT Loss Masking, Reward Model, DPO, DPO Variants (IPO/cDPO/SimPO/ORPO), KTO, KL Estimators, PPO, RLHF Rewards & GAE, Token-Level PPO, GRPO, Full GRPO, Group Baselines, Loss Aggregation, DAPO, GSPO, Distillation, Agent Trajectory Mask |
+| **Rewards & Evaluation** | Verifiable Math Reward, Process Reward Model, Unbiased pass@k, Answer Voting |
 | **Diffusion & DiT** | Noise Schedule, DDIM Step, Flow Matching, adaLN-Zero |
 | **Adaptation** | LoRA, QLoRA |
 | **Reasoning** | MCTS, Multi-Token Prediction |
@@ -188,16 +191,16 @@ Pick one based on what you're working toward:
 
 | Path | Problems | Description |
 |---|---|---|
-| **Transformer Internals** | 12 | Activations → Normalization → Attention → GPT-2 Block |
+| **Transformer Internals** | 12 | Linear → Activations → Normalization → Attention → GPT-2 Block |
 | **Attention & Position Encoding** | 13 | Every attention variant + RoPE, ALiBi, NTK-RoPE |
 | **Train a GPT from Scratch** | 15 | Embeddings → architecture → loss → optimizer → training tricks |
-| **Inference & Distributed Training** | 9 | KV cache, quantization, sampling, tensor parallel, FSDP |
+| **Inference & Distributed Training** | 10 | KV cache, sampling and decoding, quantization, tensor parallel, FSDP, Flash → ring attention |
 | **AI Infra** | 30 | Estimation → backward passes → vLLM-style serving → INT4/FP8 → ZeRO, pipeline, sequence & expert parallel |
-| **Alignment & Agent Reasoning** | 6 | Reward model → DPO → GRPO → PPO → MCTS |
+| **Post-training & RL** | 24 | Log-probs & SFT masking → reward model → PPO & GAE → DPO variants → GRPO, DAPO, GSPO → rewards & evaluation → distillation & agents |
 | **Vision Transformer Pipeline** | 7 | Conv → patch embedding → ViT block |
-| **Diffusion Models & DiT** | 5 | Noise schedule → DDIM → flow matching → adaLN-Zero |
+| **Diffusion Models & DiT** | 5 | Noise schedule → DDIM → flow matching → ViT block → adaLN-Zero |
 | **LLM Frontier Architectures** | 7 | GQA, Differential Attention, MLA, MoE, Multi-Token Prediction |
-| **Graph Neural Networks** | 8 | GCN → GAT → GIN → MPNN → GraphSAGE → Link Prediction → GAE |
+| **Graph Neural Networks** | 8 | GCN → GraphSAGE → GAT → GIN → MPNN → Readout → Link Prediction → GAE |
 
 ```
 Not sure where to start?
@@ -208,7 +211,7 @@ Fundamentals ──→ Transformer Internals ──→ Train a GPT from Scratch
               Attention & Position       Inference & Distributed ──→ AI Infra
                        │                          │
                        ▼                          ▼
-              LLM Frontier Archs         Alignment & Reasoning
+              LLM Frontier Archs         Post-training & RL
                        │
                ┌───────┼───────┐
                ▼       ▼       ▼

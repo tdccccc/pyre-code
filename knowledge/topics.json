@@ -54,10 +54,28 @@
     "problems": ["softmax_backward", "layernorm_backward"]
   },
   {
+    "id": "post_training",
+    "titleZh": "后训练基础",
+    "titleEn": "Post-training Basics",
+    "problems": ["token_logprobs", "sft_loss", "distill_loss", "agent_rollout_tensors"]
+  },
+  {
+    "id": "preference",
+    "titleZh": "偏好优化",
+    "titleEn": "Preference Optimization",
+    "problems": ["reward_model", "dpo_loss", "preference_variants", "kto_loss"]
+  },
+  {
     "id": "alignment",
-    "titleZh": "对齐与 RL",
-    "titleEn": "Alignment & RL",
-    "problems": ["reward_model", "ppo_loss", "dpo_loss", "grpo_loss", "mcts_search"]
+    "titleZh": "强化学习对齐",
+    "titleEn": "RL for LLMs",
+    "problems": ["kl_estimators", "ppo_loss", "gae_advantage", "ppo_token_loss", "grpo_loss", "grpo_token_loss", "group_advantages", "loss_aggregation", "dapo_loss", "gspo_loss"]
+  },
+  {
+    "id": "reward_eval",
+    "titleZh": "奖励、评测与推理时搜索",
+    "titleEn": "Rewards, Evaluation & Search",
+    "problems": ["math_reward", "prm_loss", "pass_at_k", "answer_voting", "mcts_search"]
   },
   {
     "id": "estimation",
