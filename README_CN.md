@@ -19,7 +19,7 @@
 
 ## 🧠 这是什么？
 
-95 道实现题，覆盖注意力机制、训练技巧、推理优化、对齐算法、图神经网络、AI Infra 等核心模块。你写代码，本地评测跑测试，红了就改，绿了就过。不需要 GPU。
+113 道实现题，覆盖注意力机制、训练技巧、推理优化、对齐算法、图神经网络、AI Infra 等核心模块。你写代码，本地评测跑测试，红了就改，绿了就过。不需要 GPU。
 
 ### 谁适合用？
 
@@ -49,6 +49,7 @@
 
 ## 📢 最新动态
 
+- **[2026/10/31]** 新增后训练与强化学习方向 — 18 道新题覆盖逐 token 对数概率与 SFT 掩码、KL 估计器、GAE、完整版 PPO/GRPO、DAPO、Dr. GRPO、RLOO、GSPO、DPO 变体与 KTO、可验证奖励、过程奖励模型、pass@k、蒸馏与 Agent 轨迹掩码；「对齐」学习路径扩展为 24 题的「后训练与强化学习」。🔥
 - **[2026/10/28]** 新增 AI Infra 学习路径 — 19 道新题覆盖 FLOPs 与显存估算、手写反向传播、vLLM 风格推理调度（块分配器、前缀缓存、连续批处理、Flash-Decoding）、INT4/FP8 量化，以及 ZeRO、流水线、Ulysses 与专家并行。🔥
 - **[2026/04/20]** 新增 GNN 学习路径 — 8 道题覆盖 GCN、GAT、GIN、MPNN、GraphSAGE、链接预测、图自编码器。🔥
 - **[2026/04/20]** 全新 UI 设计，采用 OKLch 色彩系统、暗色模式和 Geist 字体 — 可一键切换回经典设计。🔥
@@ -159,7 +160,7 @@ AI_HELP_MODEL=gpt-4o-mini
 
 ## 📋 题目一览
 
-95 道题，按方向分组：
+113 道题，按方向分组：
 
 | 方向                 | 题目                                                                                               |
 | -------------------- | -------------------------------------------------------------------------------------------------- |
@@ -173,7 +174,9 @@ AI_HELP_MODEL=gpt-4o-mini
 | **推理**       | KV Cache、Top-k 采样、束搜索、推测解码、BPE、INT8 量化、分页注意力、KV Cache 块分配器、前缀缓存、连续批处理、Flash-Decoding、变长序列打包注意力、采样惩罚、INT4 分组量化、FP8 延迟缩放 |
 | **系统估算**   | Transformer 参数量与 FLOPs、训练显存估算（ZeRO）、解码 Roofline 与 KV Cache                         |
 | **反向与算子** | Softmax 反向传播、LayerNorm 反向传播、分块 LM Head 交叉熵                                           |
-| **损失与对齐** | 交叉熵、标签平滑、Focal Loss、对比损失、DPO、GRPO、PPO、奖励模型                                   |
+| **损失**       | 交叉熵、标签平滑、Focal Loss、对比损失                                                             |
+| **后训练与强化学习** | 逐 token 对数概率、SFT 损失掩码、奖励模型、DPO、DPO 变体（IPO/cDPO/SimPO/ORPO）、KTO、KL 估计器、PPO、RLHF 奖励与 GAE、完整版 PPO、GRPO、完整版 GRPO、组内基线、损失聚合、DAPO、GSPO、知识蒸馏、Agent 轨迹掩码 |
+| **奖励与评测** | 可验证数学奖励、过程奖励模型、pass@k 无偏估计、答案投票                                             |
 | **扩散与 DiT** | 噪声调度、DDIM 步骤、流匹配、adaLN-Zero                                                            |
 | **适配**       | LoRA、QLoRA                                                                                        |
 | **推理搜索**   | MCTS、多 Token 预测                                                                                |
@@ -186,16 +189,16 @@ AI_HELP_MODEL=gpt-4o-mini
 
 | 路径                           | 题数 | 覆盖内容                                        |
 | ------------------------------ | ---- | ----------------------------------------------- |
-| **Transformer 内部机制** | 12   | 激活函数 → 归一化 → 注意力 → GPT-2 Block     |
+| **Transformer 内部机制** | 12   | 线性层 → 激活函数 → 归一化 → 注意力 → GPT-2 Block |
 | **注意力与位置编码**     | 13   | 所有注意力变体 + RoPE、ALiBi、NTK-RoPE          |
 | **从零训练 GPT**         | 15   | Embedding → 架构 → 损失 → 优化器 → 训练技巧 |
-| **推理与分布式**         | 9    | KV Cache、量化、采样、张量并行、FSDP            |
+| **推理与分布式**         | 10   | KV Cache、采样与解码、量化、张量并行、FSDP、Flash → 环形注意力 |
 | **AI Infra**             | 30   | 估算 → 手写反向 → vLLM 风格推理调度 → INT4/FP8 → ZeRO、流水线、序列与专家并行 |
-| **对齐与推理搜索**       | 6    | 奖励模型 → DPO → GRPO → PPO → MCTS          |
+| **后训练与强化学习**     | 24   | 对数概率与 SFT 掩码 → 奖励模型 → PPO 与 GAE → DPO 变体 → GRPO、DAPO、GSPO → 奖励与评测 → 蒸馏与 Agent |
 | **ViT 全流程**           | 7    | 卷积 → Patch Embedding → ViT Block            |
-| **扩散模型与 DiT**       | 5    | 噪声调度 → DDIM → 流匹配 → adaLN-Zero        |
+| **扩散模型与 DiT**       | 5    | 噪声调度 → DDIM → 流匹配 → ViT Block → adaLN-Zero |
 | **LLM 前沿架构**         | 7    | GQA、差分注意力、MLA、MoE、多 Token 预测        |
-| **图神经网络**           | 8    | GCN → GAT → GIN → MPNN → GraphSAGE → 链接预测 → GAE |
+| **图神经网络**           | 8    | GCN → GraphSAGE → GAT → GIN → MPNN → 图读出 → 链接预测 → GAE |
 
 ```
 路径导航：
@@ -206,7 +209,7 @@ AI_HELP_MODEL=gpt-4o-mini
         注意力与位置编码            推理与分布式 ──→ AI Infra
                  │                        │
                  ▼                        ▼
-        LLM 前沿架构             对齐与推理搜索
+        LLM 前沿架构             后训练与强化学习
                  │
           ┌──────┼──────┐
           ▼      ▼      ▼

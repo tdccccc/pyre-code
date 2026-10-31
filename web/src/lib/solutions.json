@@ -1,4 +1,32 @@
 {
+  "agent_rollout_tensors": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def agent_rollout_tensors(turns, max_len, pad_id):\n    roles = (\"system\", \"user\", \"assistant\", \"tool\")\n    ids, loss = [], []\n    for role, token_ids in turns:\n        if role not in roles:\n            raise ValueError(f\"unknown role: {role}\")\n        ids += token_ids                                  # += on a new list: inputs stay intact\n        # Only tokens the policy generated are trained on\n        loss += [1 if role == \"assistant\" else 0] * len(token_ids)\n    if len(ids) > max_len:\n        # Truncated before it finished: the reward is unreliable, so no loss at all\n        ids, loss = ids[:max_len], [0] * max_len\n    n_pad = max_len - len(ids)\n    attn = [1] * len(ids) + [0] * n_pad                 # from the length, not from pad_id\n    ids = ids + [pad_id] * n_pad\n    loss = loss + [0] * n_pad\n    return (torch.tensor(ids, dtype=torch.long),\n            torch.tensor(attn, dtype=torch.long),\n            torch.tensor(loss, dtype=torch.long))",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "turns = [\n    ('system', [1, 2]),\n    ('user', [3, 4]),\n    ('assistant', [10, 11, 12]),   # calls a tool\n    ('tool', [20, 21, 22, 23]),    # tool output\n    ('assistant', [13, 14]),       # final answer\n]\nfor max_len in [16, 10]:\n    ids, attn, loss = agent_rollout_tensors(turns, max_len, pad_id=0)\n    print(f'max_len={max_len}')\n    print('  input_ids     ', ids.tolist())\n    print('  attention_mask', attn.tolist())\n    print('  loss_mask     ', loss.tolist())",
+        "role": "demo"
+      }
+    ]
+  },
+  "answer_voting": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def select_answer(answers, scores=None, method=\"majority\"):\n    if method not in (\"majority\", \"best_of_n\", \"weighted\"):\n        raise ValueError(f\"unknown method: {method}\")\n    if method != \"majority\" and scores is None:\n        raise ValueError(f\"{method} needs scores\")\n    if scores is not None and len(scores) != len(answers):\n        raise ValueError(\"scores and answers must have the same length\")\n\n    # Failed extractions take no part in the vote, and neither do their scores\n    keep = [i for i, a in enumerate(answers) if a is not None]\n    if not keep:\n        return None\n\n    if method == \"best_of_n\":\n        best = keep[0]\n        for i in keep[1:]:\n            if scores[i] > scores[best]:  # strict: ties keep the earlier sample\n                best = i\n        return answers[best]\n\n    first_seen = {}\n    total = {}\n    for i in keep:\n        a = answers[i]\n        first_seen.setdefault(a, i)\n        total[a] = total.get(a, 0) + (1 if method == \"majority\" else scores[i])\n    # Largest total wins; on a tie the answer seen first wins\n    return max(total, key=lambda a: (total[a], -first_seen[a]))",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "# 8 sampled solutions; one failed to produce an answer (None)\nanswers = ['12', '15', '12', None, '15', '7', '12', '7']\nscores = [0.30, 0.91, 0.25, 0.99, 0.88, 0.97, 0.20, 0.10]\n# majority -> 12 (3 votes); best_of_n -> 7 (0.97, the None's 0.99 is ignored);\n# weighted -> 15 (0.91 + 0.88 = 1.79 beats 7: 1.07 and 12: 0.75)\n\nfor method in ('majority', 'best_of_n', 'weighted'):\n    print(f'{method:>9}:', select_answer(answers, scores, method))",
+        "role": "demo"
+      }
+    ]
+  },
   "attention": {
     "cells": [
       {
@@ -129,6 +157,20 @@
       }
     ]
   },
+  "kl_estimators": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def kl_estimate(logps, ref_logps, kind=\"k3\"):\n    # log(pi_ref / pi) of the sampled token; the reference model is a constant\n    r = ref_logps.detach() - logps\n    if kind == \"k1\":\n        return -r\n    if kind == \"k2\":\n        return 0.5 * r ** 2\n    if kind == \"k3\":\n        # e^r - 1 - r >= 0 for every r, and E_pi[e^r] = 1 keeps it unbiased\n        return torch.exp(r) - 1 - r\n    raise ValueError(f\"unknown kind: {kind}\")",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\np = torch.softmax(torch.randn(6), 0)   # policy\nq = torch.softmax(torch.randn(6), 0)   # reference\ntrue_kl = (p * (p.log() - q.log())).sum().item()\n\nx = torch.multinomial(p, 100000, replacement=True)\nfor kind in ['k1', 'k2', 'k3']:\n    est = kl_estimate(p.log()[x], q.log()[x], kind=kind)\n    print(f'{kind}: mean {est.mean().item():.4f}  std {est.std().item():.4f}  min {est.min().item():+.3f}')\nprint('true KL:', round(true_kl, 4))",
+        "role": "demo"
+      }
+    ]
+  },
   "label_smoothing": {
     "cells": [
       {
@@ -139,6 +181,20 @@
       {
         "type": "code",
         "source": "torch.manual_seed(0)\nlogits = torch.randn(4, 10)\ntargets = torch.randint(0, 10, (4,))\n\nloss_smoothed = label_smoothing(logits, targets, smoothing=0.1)\nloss_ce = torch.nn.functional.cross_entropy(logits, targets)\n\nprint(f\"Label smoothing loss (eps=0.1): {loss_smoothed.item():.4f}\")\nprint(f\"Standard CE loss (eps=0.0):    {loss_ce.item():.4f}\")\n\nloss_no_smooth = label_smoothing(logits, targets, smoothing=0.0)\nprint(f\"Label smoothing loss (eps=0.0): {loss_no_smooth.item():.4f}  (matches CE: {torch.allclose(loss_no_smooth, loss_ce)})\")",
+        "role": "demo"
+      }
+    ]
+  },
+  "loss_aggregation": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def aggregate_loss(token_loss, mask, mode, norm_len=None):\n    m = mask.to(token_loss.dtype)\n    # Sum each sequence's valid tokens; padding is zeroed out by the mask\n    per_seq = (token_loss * m).sum(dim=1)                 # (B,)\n    if mode == \"token-mean\":\n        # Every token in the batch weighs the same\n        return per_seq.sum() / m.sum()\n    if mode == \"seq-mean-token-mean\":\n        # Every sequence weighs the same; its tokens share that weight\n        return (per_seq / m.sum(dim=1)).mean()\n    if mode == \"seq-mean-token-sum\":\n        return per_seq.mean()\n    if mode == \"seq-mean-token-sum-norm\":\n        # Dr. GRPO: divide by a constant, so per-token weight does not depend on length\n        L = token_loss.shape[1] if norm_len is None else norm_len\n        return per_seq.mean() / L\n    raise ValueError(f\"unknown mode: {mode}\")",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\n# Two responses with the same per-token loss 1.0: one long (8 tokens), one short (2 tokens)\nB, T = 2, 8\nloss = torch.ones(B, T, requires_grad=True)\nmask = torch.zeros(B, T)\nmask[0, :8] = 1\nmask[1, :2] = 1\n\nfor mode in ['token-mean', 'seq-mean-token-mean', 'seq-mean-token-sum', 'seq-mean-token-sum-norm']:\n    loss.grad = None\n    out = aggregate_loss(loss, mask, mode)\n    out.backward()\n    w_long, w_short = loss.grad[0, 0].item(), loss.grad[1, 0].item()\n    print(f'{mode:26s} value={out.item():.4f}  weight per token: long={w_long:.4f} short={w_short:.4f}')",
         "role": "demo"
       }
     ]
@@ -181,6 +237,20 @@
       {
         "type": "code",
         "source": "B, S, D = 1, 8, 16\nq = torch.randn(B, S, D)\nk = torch.randn(B, S, D)\n\nq1, k1 = ntk_rope(q, k, scale=1.0)\nq4, k4 = ntk_rope(q, k, scale=4.0)\n\nprint(\"scale=1 base:\", 10000.0 * (1.0 ** (D / (D - 2))))\nprint(\"scale=4 base:\", 10000.0 * (4.0 ** (D / (D - 2))))\nprint()\nprint(\"Norm preservation (scale=1):\")\nprint(\"  q input norm:\", q.norm(dim=-1).mean().item())\nprint(\"  q output norm:\", q1.norm(dim=-1).mean().item())\nprint()\nprint(\"Norm preservation (scale=4):\")\nprint(\"  q input norm:\", q.norm(dim=-1).mean().item())\nprint(\"  q output norm:\", q4.norm(dim=-1).mean().item())",
+        "role": "demo"
+      }
+    ]
+  },
+  "pass_at_k": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def pass_at_k(num_samples, num_correct, k):\n    if len(num_samples) != len(num_correct):\n        raise ValueError(\"num_samples and num_correct must have the same length\")\n    total = 0.0\n    for n, c in zip(num_samples, num_correct):\n        if k > n:\n            raise ValueError(f\"k={k} is larger than n={n}\")\n        if n - c < k:\n            total += 1.0\n            continue\n        # C(n-c, k) / C(n, k) as a product, so nothing overflows for large n\n        prob_all_wrong = 1.0\n        for i in range(n - c + 1, n + 1):\n            prob_all_wrong *= 1.0 - k / i\n        total += 1.0 - prob_all_wrong\n    return total / len(num_samples)",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "# 200 samples per problem, as in the Codex paper\nns = [200, 200, 200, 200]\ncs = [0, 3, 60, 190]\nfor k in [1, 5, 10, 50, 100]:\n    print(f'pass@{k:<3} = {pass_at_k(ns, cs, k):.4f}')\n# The naive estimate 1 - (1 - c/n)^k treats the k draws as with replacement and comes out lower\nk = 10\nnaive = sum(1 - (1 - c / n) ** k for n, c in zip(ns, cs)) / len(ns)\nprint(f'naive pass@{k} = {naive:.4f}  vs unbiased {pass_at_k(ns, cs, k):.4f}')",
         "role": "demo"
       }
     ]
@@ -451,6 +521,20 @@
       }
     ]
   },
+  "distill_loss": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def distill_loss(student_logits, teacher_logits, mask, mode=\"forward\", temperature=1.0, beta=0.5):\n    if mode not in (\"forward\", \"reverse\", \"jsd\"):\n        raise ValueError(f\"unknown mode: {mode}\")\n    if mode == \"jsd\" and not 0.0 < beta < 1.0:\n        raise ValueError(\"beta must be in (0, 1)\")\n    log_ps = torch.log_softmax(student_logits / temperature, dim=-1)\n    # The teacher is a constant: cut it out of the graph\n    log_pt = torch.log_softmax(teacher_logits.detach() / temperature, dim=-1)\n    if mode == \"forward\":\n        div = (log_pt.exp() * (log_pt - log_ps)).sum(-1)              # KL(p_T || p_S)\n    elif mode == \"reverse\":\n        div = (log_ps.exp() * (log_ps - log_pt)).sum(-1)              # KL(p_S || p_T)\n    else:\n        # log M = log(beta * p_T + (1 - beta) * p_S), computed in log space\n        log_m = torch.logsumexp(torch.stack([log_pt + math.log(beta), log_ps + math.log(1 - beta)]), dim=0)\n        div = (beta * (log_pt.exp() * (log_pt - log_m)).sum(-1)\n               + (1 - beta) * (log_ps.exp() * (log_ps - log_m)).sum(-1))\n    m = mask.to(div.dtype)\n    return temperature ** 2 * (div * m).sum() / m.sum()",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\n# A bimodal teacher over 4 tokens, and two students: one spreads over both modes, one picks a single mode\nteacher = torch.log(torch.tensor([[[0.48, 0.48, 0.02, 0.02]]]))\nspread = torch.log(torch.tensor([[[0.30, 0.30, 0.20, 0.20]]]))\none_mode = torch.log(torch.tensor([[[0.94, 0.02, 0.02, 0.02]]]))\nmask = torch.ones(1, 1)\n\nfor name, student in [('spread  ', spread), ('one-mode', one_mode)]:\n    fwd = distill_loss(student, teacher, mask, mode='forward').item()\n    rev = distill_loss(student, teacher, mask, mode='reverse').item()\n    jsd = distill_loss(student, teacher, mask, mode='jsd', beta=0.5).item()\n    print(f'{name}  forward KL {fwd:.3f}   reverse KL {rev:.3f}   JSD {jsd:.3f}')\nprint('Forward KL prefers the spread student, reverse KL the one that commits to a mode.')",
+        "role": "demo"
+      }
+    ]
+  },
   "dpo_loss": {
     "cells": [
       {
@@ -493,6 +577,20 @@
       }
     ]
   },
+  "gae_advantage": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def gae_advantage(scores, kl, values, mask, kl_coef=0.05, gamma=1.0, lam=0.95):\n    with torch.no_grad():\n        m = mask.to(values.dtype)\n        B, T = values.shape\n        lengths = m.sum(dim=1).long()\n        # Per-token reward: KL penalty everywhere, sequence score on the last response token\n        rewards = -kl_coef * kl * m\n        rewards[torch.arange(B), lengths - 1] += scores\n        # V_{t+1}, with 0 after the last response token (terminal state, never read padding)\n        next_values = torch.zeros_like(values)\n        next_values[:, :-1] = values[:, 1:] * m[:, 1:]\n        deltas = rewards + gamma * next_values - values * m\n        advantages = torch.zeros_like(values)\n        running = torch.zeros(B, dtype=values.dtype)\n        for t in reversed(range(T)):\n            # Padding has delta = 0 and comes after the response, so running stays 0 there\n            running = deltas[:, t] + gamma * lam * running\n            advantages[:, t] = running\n        advantages = advantages * m\n        returns = (advantages + values) * m\n    return advantages, returns",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nmask = torch.tensor([[1., 1., 1., 1., 1.],\n                     [1., 1., 1., 0., 0.]])\nscores = torch.tensor([1.0, -0.5])\nkl = torch.rand(2, 5) * 0.2 * mask\nvalues = torch.randn(2, 5) * 0.3 * mask\n\nadv, ret = gae_advantage(scores, kl, values, mask, kl_coef=0.05, gamma=1.0, lam=0.95)\nprint('advantages:\\n', adv.round(decimals=3))\nprint('returns:\\n', ret.round(decimals=3))",
+        "role": "demo"
+      }
+    ]
+  },
   "gat_layer": {
     "cells": [
       {
@@ -511,6 +609,34 @@
       }
     ]
   },
+  "group_advantages": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def group_advantages(rewards, group_size, method, eps=1e-6):\n    if group_size < 2:\n        raise ValueError(\"group_size must be at least 2\")\n    if rewards.numel() % group_size != 0:\n        raise ValueError(\"the batch size must be a multiple of group_size\")\n    G = group_size\n    r = rewards.detach().float().view(-1, G)            # (P, G), one row per prompt\n    mean = r.mean(dim=1, keepdim=True)\n\n    if method == \"grpo\":\n        adv = (r - mean) / (r.std(dim=1, keepdim=True) + eps)\n    elif method == \"dr_grpo\":\n        adv = r - mean\n    elif method == \"rloo\":\n        # Baseline for response i: mean of the other G - 1 responses to the same prompt\n        adv = r - (r.sum(dim=1, keepdim=True) - r) / (G - 1)\n    elif method == \"reinforce_pp\":\n        # Group mean as the baseline, then one global scale for the whole batch\n        x = (r - mean).view(-1)\n        return (x - x.mean()) / (x.std() + eps)\n    else:\n        raise ValueError(f\"unknown method: {method}\")\n    return adv.view(-1)",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\nG = 4\n# Two prompts: an easy one (3/4 correct) and a hard one (1/4 correct), plus a third with partial credit\nrewards = torch.tensor([1.0, 1.0, 1.0, 0.0,\n                        0.0, 0.0, 1.0, 0.0,\n                        0.2, 0.3, 0.1, 0.2])\nfor method in ['grpo', 'dr_grpo', 'rloo', 'reinforce_pp']:\n    adv = group_advantages(rewards, G, method)\n    print(f'{method:13s}', [round(a, 3) for a in adv.tolist()])\nprint('grpo scales the low-variance third group up to the size of the others; dr_grpo, rloo and reinforce_pp keep it small')",
+        "role": "demo"
+      }
+    ]
+  },
+  "gspo_loss": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def gspo_loss(logps, old_logps, advantages, mask, clip_low=3e-4, clip_high=4e-4):\n    m = mask.to(logps.dtype)\n    adv = advantages.detach().to(logps.dtype)\n\n    # One ratio per response: exp of the mean token log-ratio (geometric mean of token ratios)\n    log_ratio = (logps - old_logps.detach()) * m\n    seq_ratio = torch.exp(log_ratio.sum(dim=1) / m.sum(dim=1))        # (B,)\n\n    # PPO-style pessimistic clipping, but on whole responses\n    clipped = torch.clamp(seq_ratio, 1 - clip_low, 1 + clip_high)\n    surr = torch.minimum(seq_ratio * adv, clipped * adv)\n    return -surr.mean()",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nB, T = 4, 6\nlengths = torch.tensor([6, 2, 4, 5])\nmask = (torch.arange(T)[None, :] < lengths[:, None]).float()\nold_logps = torch.randn(B, T) * 0.3 - 1.0\n# Rows 0 and 1 drift past the clip range in the direction their advantage pushes; rows 2 and 3 stay inside\ndrift = torch.tensor([6e-4, -6e-4, 1e-4, -1e-4])[:, None]\nlogps = (old_logps + drift + torch.randn(B, T) * 2e-5).requires_grad_(True)\nadvantages = torch.tensor([1.0, -1.0, 0.5, -0.5])\n\nloss = gspo_loss(logps, old_logps, advantages, mask)\nloss.backward()\nm = mask\ns = torch.exp(((logps.detach() - old_logps) * m).sum(1) / m.sum(1))\nprint('loss:', round(loss.item(), 6))\nprint('sequence ratios s_i:', [round(v, 6) for v in s.tolist()])\nprint('clip range: [1 - 3e-4, 1 + 4e-4]; whole response clipped (zero grad):',\n      [bool(logps.grad[i].abs().max() == 0) for i in range(B)])",
+        "role": "demo"
+      }
+    ]
+  },
   "inference_roofline": {
     "cells": [
       {
@@ -521,6 +647,20 @@
       {
         "type": "code",
         "source": "P, L, d, heads, s = 6738415616, 32, 4096, 32, 2048\npeak, bw = 312e12, 2.0e12  # A100-like: 312 TFLOP/s bf16, 2 TB/s HBM\nprint(f\"ridge point = {peak / bw:.0f} FLOP/byte\")\nprint(f\"{'batch':>6} {'AI':>8} {'bound':>8} {'step ms':>8} {'tok/s':>9} {'mfu':>7}\")\nfor batch in [1, 8, 32, 64, 128, 256]:\n    out = inference_roofline(P, L, d, heads, heads, s, batch, peak, bw)\n    print(f\"{batch:>6} {out['arithmetic_intensity']:>8.1f} {out['bound']:>8} \"\n          f\"{out['step_time'] * 1e3:>8.2f} {out['tokens_per_sec']:>9.1f} {out['mfu']:>7.3f}\")\n\ngqa = inference_roofline(P, L, d, heads, 8, s, 64, peak, bw)\nmha = inference_roofline(P, L, d, heads, heads, s, 64, peak, bw)\nprint(f\"batch 64 KV cache: MHA {mha['kv_cache_bytes'] / 2**30:.1f} GiB vs GQA-8 {gqa['kv_cache_bytes'] / 2**30:.1f} GiB\")",
+        "role": "demo"
+      }
+    ]
+  },
+  "kto_loss": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def kto_loss(policy_logps, ref_logps, desirable, kl_policy_logps, kl_ref_logps,\n             beta=0.1, desirable_weight=1.0, undesirable_weight=1.0):\n    # Reference point: a batch estimate of KL(policy || ref), clamped at 0 and not trained through\n    z0 = (kl_policy_logps - kl_ref_logps).mean().clamp(min=0).detach()\n    r = policy_logps - ref_logps.detach()          # implicit reward\n    # Desirable: push r above z0; undesirable: push r below z0\n    good = desirable_weight * (1 - torch.sigmoid(beta * (r - z0)))\n    bad = undesirable_weight * (1 - torch.sigmoid(beta * (z0 - r)))\n    return torch.where(desirable.bool(), good, bad).mean()",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nB = 6\nref_logps = torch.randn(B) * 3 - 30\npolicy_logps = ref_logps + torch.tensor([2.0, 1.0, 0.0, -1.0, -2.0, 0.5])\ndesirable = torch.tensor([True, True, True, False, False, False])\nkl_ref = torch.randn(B) * 3 - 40\nkl_policy = kl_ref + 0.3\n\nloss = kto_loss(policy_logps, ref_logps, desirable, kl_policy, kl_ref, beta=0.5)\nprint('z0 (KL estimate):', round((kl_policy - kl_ref).mean().clamp(min=0).item(), 4))\nprint('implicit rewards:', (policy_logps - ref_logps).tolist())\nprint('KTO loss:', round(loss.item(), 4))",
         "role": "demo"
       }
     ]
@@ -605,6 +745,20 @@
       {
         "type": "code",
         "source": "layer = LoRALinear(16, 8, rank=4)\nx = torch.randn(2, 16)\nprint('Output:', layer(x).shape)\ntrainable = sum(p.numel() for p in layer.parameters() if p.requires_grad)\ntotal = sum(p.numel() for p in layer.parameters())\nprint(f'Trainable: {trainable}/{total} ({100*trainable/total:.1f}%)')",
+        "role": "demo"
+      }
+    ]
+  },
+  "math_reward": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "import re\n\n\ndef _last_boxed(text):\n    start = text.rfind(\"\\\\boxed{\")\n    if start == -1:\n        return None\n    i = start + len(\"\\\\boxed{\")\n    depth = 1\n    for j in range(i, len(text)):\n        if text[j] == \"{\":\n            depth += 1\n        elif text[j] == \"}\":\n            depth -= 1\n            if depth == 0:\n                return text[i:j]\n    return None  # the last box is never closed\n\n\ndef _normalize(s):\n    s = re.sub(r\"\\s+\", \"\", s)\n    for tok in (\"$\", \"\\\\left\", \"\\\\right\", \"\\\\!\"):\n        s = s.replace(tok, \"\")\n    s = s.replace(\"\\\\dfrac\", \"\\\\frac\").replace(\"\\\\tfrac\", \"\\\\frac\")\n    if s.endswith(\".\"):\n        s = s[:-1]\n    if re.fullmatch(r\"[+-]?\\d{1,3}(,\\d{3})+\", s):\n        s = s.replace(\",\", \"\")\n    return s\n\n\ndef _to_number(s):\n    m = re.fullmatch(r\"([+-]?)\\\\frac\\{(\\d+)\\}\\{(\\d+)\\}\", s) or re.fullmatch(r\"([+-]?)(\\d+)/(\\d+)\", s)\n    if m is not None:\n        sign, a, b = m.groups()\n        if int(b) == 0:\n            return None\n        value = int(a) / int(b)\n        return -value if sign == \"-\" else value\n    if re.fullmatch(r\"[+-]?(\\d+\\.?\\d*|\\.\\d+)\", s):\n        return float(s)\n    return None\n\n\ndef math_reward(response, answer):\n    # Format: exactly one think block, at the start, followed by a boxed answer\n    if response.count(\"<think>\") != 1 or response.count(\"</think>\") != 1:\n        return 0.0\n    open_at, close_at = response.find(\"<think>\"), response.find(\"</think>\")\n    if open_at > close_at or response[:open_at].strip():\n        return 0.0\n    pred = _last_boxed(response[close_at + len(\"</think>\"):])\n    if pred is None:\n        return 0.0\n\n    pred, gold = _normalize(pred), _normalize(answer)\n    if pred == gold:\n        return 1.0\n    p, q = _to_number(pred), _to_number(gold)\n    if p is not None and q is not None and abs(p - q) <= 1e-6 * max(1.0, abs(q)):\n        return 1.0\n    return 0.1",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "responses = [\n    (r'<think>2 + 2 = 4</think> The answer is \\boxed{4}.', '4'),\n    (r'<think>half of one</think> \\boxed{\\dfrac{1}{2}}', '0.5'),\n    (r'<think>hmm</think> First \\boxed{3}, no wait, \\boxed{5}.', '3'),\n    (r'The answer is \\boxed{4}.', '4'),\n    (r'<think>so \\boxed{4}</think> I am done.', '4'),\n]\nfor resp, ans in responses:\n    print(f'{math_reward(resp, ans):.1f}  answer={ans:<5} {resp}')",
         "role": "demo"
       }
     ]
@@ -702,6 +856,34 @@
       }
     ]
   },
+  "preference_variants": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def preference_loss(chosen_logps, rejected_logps, chosen_lens, rejected_lens, method,\n                    ref_chosen_logps=None, ref_rejected_logps=None,\n                    beta=0.1, label_smoothing=0.0, gamma=0.5):\n    if method in ('ipo', 'cdpo'):\n        if ref_chosen_logps is None or ref_rejected_logps is None:\n            raise ValueError(f'{method} needs both reference log-probs')\n        # Implicit reward margin, as in DPO; the reference model is a constant\n        h = ((chosen_logps - ref_chosen_logps.detach())\n             - (rejected_logps - ref_rejected_logps.detach()))\n        if method == 'ipo':\n            # Regress the margin to 1/(2*beta) instead of pushing it to infinity\n            return ((h - 1 / (2 * beta)) ** 2).mean()\n        z = beta * h\n        eps = label_smoothing\n        # The label is flipped with probability eps\n        return (-(1 - eps) * F.logsigmoid(z) - eps * F.logsigmoid(-z)).mean()\n    if method not in ('simpo', 'orpo'):\n        raise ValueError(f'unknown method: {method!r}')\n\n    # Reference-free methods use the average log-prob per token\n    a_c = chosen_logps / chosen_lens.to(chosen_logps.dtype)\n    a_r = rejected_logps / rejected_lens.to(rejected_logps.dtype)\n    if method == 'simpo':\n        return -F.logsigmoid(beta * (a_c - a_r) - gamma).mean()\n\n    def log_odds(a):\n        # log(p / (1 - p)) with p = exp(a); expm1 keeps 1 - p accurate when p is near 1\n        return a - torch.log(-torch.expm1(a))\n\n    nll = -a_c.mean()\n    return nll + beta * (-F.logsigmoid(log_odds(a_c) - log_odds(a_r))).mean()",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nB = 4\nchosen_lens = torch.tensor([12, 30, 8, 20])\nrejected_lens = torch.tensor([25, 10, 40, 20])\nchosen = -0.6 * chosen_lens + torch.randn(B)\nrejected = -0.9 * rejected_lens + torch.randn(B)\nref_chosen = chosen - 1.0\nref_rejected = rejected + 0.5\n\nprint('IPO  :', round(preference_loss(chosen, rejected, chosen_lens, rejected_lens, 'ipo', ref_chosen, ref_rejected, beta=0.1).item(), 4))\nprint('cDPO :', round(preference_loss(chosen, rejected, chosen_lens, rejected_lens, 'cdpo', ref_chosen, ref_rejected, beta=0.1, label_smoothing=0.1).item(), 4))\nprint('SimPO:', round(preference_loss(chosen, rejected, chosen_lens, rejected_lens, 'simpo', beta=2.0, gamma=0.5).item(), 4))\nprint('ORPO :', round(preference_loss(chosen, rejected, chosen_lens, rejected_lens, 'orpo', beta=0.1).item(), 4))",
+        "role": "demo"
+      }
+    ]
+  },
+  "prm_loss": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def prm_loss(step_logits, input_ids, step_tag_id, step_labels, agg=\"min\"):\n    if agg not in (\"min\", \"prod\", \"last\"):\n        raise ValueError(f\"unknown agg: {agg}\")\n    is_tag = input_ids == step_tag_id                  # (B, T)\n    # Boolean indexing walks row by row, left to right, so the k-th selected\n    # logit of a row lines up with that row's k-th real label\n    logits = step_logits[is_tag]                       # (num_steps,)\n    labels = step_labels[step_labels >= 0].to(logits.dtype)\n    # BCE with logits uses log-sigmoid internally: finite for any logit\n    loss = F.binary_cross_entropy_with_logits(logits, labels)\n\n    with torch.no_grad():\n        scores = []\n        for i in range(step_logits.shape[0]):\n            p = torch.sigmoid(step_logits[i][is_tag[i]])\n            if agg == \"min\":\n                scores.append(p.min())\n            elif agg == \"prod\":\n                scores.append(p.prod())\n            else:\n                scores.append(p[-1])\n        scores = torch.stack(scores)\n    return loss, scores",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nTAG = 99\n# Two solutions: 3 steps and 2 steps; the tag token closes each step\nids = torch.tensor([[5, 6, TAG, 7, 8, TAG, 9, TAG],\n                    [4, TAG, 3, 2, 1, TAG, 0, 0]])\nlabels = torch.tensor([[1.0, 1.0, 0.0],\n                       [1.0, 1.0, -1.0]])\nlogits = torch.randn(2, 8, requires_grad=True)\n\nloss, scores = prm_loss(logits, ids, TAG, labels)\nloss.backward()\nprint('loss:', round(loss.item(), 4))\nfor agg in ('min', 'prod', 'last'):\n    print(f'{agg:>4} scores:', prm_loss(logits, ids, TAG, labels, agg=agg)[1].tolist())\nprint('grad is zero off the tags:', bool((logits.grad[ids != TAG] == 0).all()))",
+        "role": "demo"
+      }
+    ]
+  },
   "reward_model": {
     "cells": [
       {
@@ -772,6 +954,20 @@
       }
     ]
   },
+  "sft_loss": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def sft_loss(logits, input_ids, assistant_mask, seq_ids, reduction=\"token\"):\n    if reduction not in (\"token\", \"sample\"):\n        raise ValueError(f\"unknown reduction: {reduction}\")\n    logits = logits[:, :-1]                                  # position t predicts token t+1\n    targets = input_ids[:, 1:]\n    nll = torch.logsumexp(logits, dim=-1) - logits.gather(-1, targets.unsqueeze(-1)).squeeze(-1)\n    cur, nxt = seq_ids[:, :-1], seq_ids[:, 1:]\n    # Target is an assistant token, in the same packed sample, and not padding\n    valid = assistant_mask[:, 1:].bool() & (nxt == cur) & (nxt != -1)\n    if not valid.any():\n        return logits.sum() * 0.0                            # keeps the graph alive\n    if reduction == \"token\":\n        return nll[valid].sum() / valid.sum()\n    # One key per (row, seq_id): the same seq_id in another row is another sample\n    rows = torch.arange(nll.shape[0], device=nll.device).unsqueeze(1).expand_as(nxt)\n    keys = rows[valid] * (int(seq_ids.max()) + 1) + nxt[valid]\n    uniq, inv = torch.unique(keys, return_inverse=True)\n    sums = nll.new_zeros(len(uniq)).index_add(0, inv, nll[valid])\n    counts = nll.new_zeros(len(uniq)).index_add(0, inv, torch.ones_like(nll[valid]))\n    return (sums / counts).mean()",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nV = 20\n# One row packing two chats: [user, assistant] [user, assistant], then padding\ninput_ids = torch.randint(0, V, (1, 12))\nassistant_mask = torch.tensor([[0, 0, 0, 1, 1, 1, 0, 0, 1, 1, 0, 0]])\nseq_ids = torch.tensor([[0, 0, 0, 0, 0, 0, 1, 1, 1, 1, -1, -1]])\nlogits = torch.randn(1, 12, V)\n\nprint('token-mean :', round(sft_loss(logits, input_ids, assistant_mask, seq_ids).item(), 4))\nprint('sample-mean:', round(sft_loss(logits, input_ids, assistant_mask, seq_ids, reduction='sample').item(), 4))",
+        "role": "demo"
+      }
+    ]
+  },
   "sliding_window": {
     "cells": [
       {
@@ -796,6 +992,20 @@
       {
         "type": "code",
         "source": "torch.manual_seed(0)\nB, D, H = 2, 8, 16\nx = torch.randn(B, D)\nW1 = torch.randn(D, H)\nW2 = torch.randn(H, D)\nWgate = torch.randn(D, H)\n\nout = swiglu(x, W1, W2, Wgate)\nprint(\"Output shape:\", out.shape)\n\ngate = x @ Wgate\nswish_gate = gate * torch.sigmoid(gate)\nprint(\"Gate (swish) sample values:\", swish_gate[0, :4])",
+        "role": "demo"
+      }
+    ]
+  },
+  "token_logprobs": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def token_logprobs(logits, input_ids, response_mask, temperature=1.0):\n    # Position t scores token t+1, so drop the last logits and the first ids\n    logits = logits[:, :-1] / temperature                    # (B, T-1, V)\n    targets = input_ids[:, 1:]                               # (B, T-1)\n    picked = logits.gather(-1, targets.unsqueeze(-1)).squeeze(-1)\n    # log softmax at the target = logit - logsumexp, stable for large logits\n    logps = picked - torch.logsumexp(logits, dim=-1)\n    # Keep a position only if its TARGET token belongs to the response\n    keep = response_mask[:, 1:].bool()\n    return logps.masked_fill(~keep, 0.0)",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nV = 10\n# One sequence: 3 prompt tokens, 4 response tokens, 1 padding token\ninput_ids = torch.tensor([[2, 7, 1, 4, 4, 9, 0, 0]])\nresponse_mask = torch.tensor([[0, 0, 0, 1, 1, 1, 1, 0]])\nlogits = torch.randn(1, 8, V)\n\nlogps = token_logprobs(logits, input_ids, response_mask)\nprint('Per-token log-probs:', logps.round(decimals=3))\nprint('Sequence log-prob (sum, as used by DPO):', round(logps.sum().item(), 4))",
         "role": "demo"
       }
     ]
@@ -894,6 +1104,20 @@
       {
         "type": "code",
         "source": "requests = [(0, 6, 3), (1, 4, 2), (2, 2, 1), (9, 3, 2)]  # (arrival, prompt_len, output_len)\nsteps = schedule_continuous_batching(requests, max_batch_tokens=10, max_num_seqs=3)\nfor t, ids in enumerate(steps):\n    print(f'step {t:2d}: running {ids}')",
+        "role": "demo"
+      }
+    ]
+  },
+  "dapo_loss": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def dapo_loss(logps, old_logps, rewards, lengths, mask, group_size, max_len, cache_len,\n              eps_low=0.2, eps_high=0.28, eps=1e-6):\n    G = group_size\n    old_logps = old_logps.detach()\n    r = rewards.detach().to(logps.dtype)\n\n    # 1. Dynamic sampling: a group whose raw rewards are all equal has zero advantage\n    raw = r.view(-1, G)\n    keep = raw.max(dim=1).values > raw.min(dim=1).values          # (P,)\n    if not keep.any():\n        return (logps * 0).sum()                                    # zero, still connected to logps\n\n    # 2. Overlong shaping: 0 up to S, linear down to -1 at max_len, -1 beyond\n    L = lengths.to(logps.dtype)\n    soft = max_len - cache_len\n    penalty = torch.where(L <= soft, torch.zeros_like(L),\n                          torch.where(L <= max_len, (soft - L) / cache_len, -torch.ones_like(L)))\n    shaped = (r + penalty).view(-1, G)\n\n    # 3. Group-relative advantage on the shaped rewards (dropped groups are masked out below)\n    adv = (shaped - shaped.mean(dim=1, keepdim=True)) / (shaped.std(dim=1, keepdim=True) + eps)\n    adv = adv.view(-1, 1)\n\n    # 4. Clip-higher: the upper bound 1 + eps_high is wider than the lower 1 - eps_low\n    ratio = torch.exp(logps - old_logps)\n    surr = torch.minimum(ratio * adv, torch.clamp(ratio, 1 - eps_low, 1 + eps_high) * adv)\n\n    # 5. Token-mean over every valid token of the kept rows\n    m = mask.to(logps.dtype) * keep.repeat_interleave(G).to(logps.dtype)[:, None]\n    return -(surr * m).sum() / m.sum()",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nG, P, T = 4, 3, 8\nB = G * P\nrewards = torch.tensor([1., 0., 1., 0.,   1., 1., 1., 1.,   0., 0., 1., 0.])\nlengths = torch.tensor([300, 900, 1500, 2100,  400, 500, 600, 700,  800, 1900, 1200, 2500])\nmask = torch.ones(B, T)\nold = torch.randn(B, T) * 0.3 - 1\nlogps = (old + 0.1 * torch.randn(B, T)).requires_grad_(True)\n\nloss = dapo_loss(logps, old, rewards, lengths, mask, G, max_len=2048, cache_len=512)\nloss.backward()\nprint('loss:', round(loss.item(), 6))\nprint('rows with gradient:', (logps.grad.abs().sum(1) > 0).int().tolist())\nprint('(group 2 is all correct and is dropped by dynamic sampling)')",
         "role": "demo"
       }
     ]
@@ -1024,6 +1248,20 @@
       {
         "type": "code",
         "source": "logps = torch.tensor([0.0, -0.5, -1.0, -1.5])\nrewards = torch.tensor([1.0, 0.8, 0.2, 0.0])\ngroup_ids = torch.tensor([0, 0, 1, 1])\nprint('Loss:', grpo_loss(logps, rewards, group_ids).item())",
+        "role": "demo"
+      }
+    ]
+  },
+  "grpo_token_loss": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def grpo_token_loss(logps, old_logps, ref_logps, rewards, mask, group_size,\n                    clip_ratio=0.2, kl_coef=0.04, eps=1e-6):\n    m = mask.to(logps.dtype)\n    old_logps, ref_logps = old_logps.detach(), ref_logps.detach()\n\n    # Group-relative advantage: standardize each reward within its own group (unbiased std)\n    r = rewards.detach().to(logps.dtype).view(-1, group_size)\n    adv = (r - r.mean(dim=1, keepdim=True)) / (r.std(dim=1, keepdim=True) + eps)\n    adv = adv.view(-1, 1)                                  # (B, 1), shared by all tokens\n\n    # PPO clipped surrogate, per token\n    ratio = torch.exp(logps - old_logps)\n    surr = torch.minimum(ratio * adv, torch.clamp(ratio, 1 - clip_ratio, 1 + clip_ratio) * adv)\n\n    # k3 estimate of KL(pi || pi_ref): non-negative, unbiased under samples from pi\n    log_r = ref_logps - logps\n    kl = torch.exp(log_r) - log_r - 1\n\n    token_loss = -(surr - kl_coef * kl)\n    # Mean over each response's own tokens, then over responses\n    seq_loss = (token_loss * m).sum(dim=1) / m.sum(dim=1)\n    return seq_loss.mean()",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nG, P, T = 4, 2, 6\nB = G * P\nlengths = torch.tensor([6, 3, 5, 2, 4, 6, 1, 3])\nmask = (torch.arange(T)[None, :] < lengths[:, None]).float()\nold_logps = torch.randn(B, T) * 0.3 - 1.0\nlogps = (old_logps + torch.randn(B, T) * 0.1).requires_grad_(True)\nref_logps = old_logps + torch.randn(B, T) * 0.1\nrewards = torch.tensor([1.0, 0.0, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0])  # second group: all correct\n\nloss = grpo_token_loss(logps, old_logps, ref_logps, rewards, mask, G)\nloss.backward()\nprint('loss:', round(loss.item(), 6))\nprint('grad norm per response:', [round(g, 4) for g in logps.grad.norm(dim=1).tolist()])\nprint('(the all-correct group only feels the KL term)')",
         "role": "demo"
       }
     ]
@@ -1173,6 +1411,20 @@
       {
         "type": "code",
         "source": "torch.manual_seed(0)\nB, S, D = 2, 8, 16\nblock_size = 4\nnum_blocks = S // block_size\n\nK_full = torch.randn(B, S, D)\nV_full = torch.randn(B, S, D)\nQ = torch.randn(B, 1, D)\n\nscale = D ** -0.5\nscores_ref = (Q @ K_full.transpose(-2, -1)) * scale\nref_out = torch.softmax(scores_ref, dim=-1) @ V_full\n\ntotal_pages = B * num_blocks\nk_pages = torch.zeros(total_pages, block_size, D)\nv_pages = torch.zeros(total_pages, block_size, D)\nblock_table = []\nfor b in range(B):\n    page_ids = []\n    for blk in range(num_blocks):\n        pid = b * num_blocks + blk\n        k_pages[pid] = K_full[b, blk*block_size:(blk+1)*block_size]\n        v_pages[pid] = V_full[b, blk*block_size:(blk+1)*block_size]\n        page_ids.append(pid)\n    block_table.append(page_ids)\n\npaged_out = paged_attention(Q, k_pages, v_pages, block_table, context_len=S, block_size=block_size)\n\nprint('Shape:', paged_out.shape)\nprint('Max diff vs reference:', (paged_out - ref_out).abs().max().item())\nprint('Match:', torch.allclose(paged_out, ref_out, atol=1e-5))",
+        "role": "demo"
+      }
+    ]
+  },
+  "ppo_token_loss": {
+    "cells": [
+      {
+        "type": "code",
+        "source": "def ppo_token_loss(logps, old_logps, advantages, values, old_values, returns, mask,\n                   clip_ratio=0.2, value_clip=0.2, vf_coef=0.5):\n    m = mask.to(logps.dtype)\n    n_tokens = m.sum()\n\n    def masked_mean(x):\n        # Token-mean over every response token in the batch\n        return (x * m).sum() / n_tokens\n\n    old_logps, advantages = old_logps.detach(), advantages.detach()\n    old_values, returns = old_values.detach(), returns.detach()\n\n    # Policy loss: negate the PPO objective, so min becomes max\n    ratio = torch.exp(logps - old_logps)\n    pg_unclipped = -advantages * ratio\n    pg_clipped = -advantages * torch.clamp(ratio, 1.0 - clip_ratio, 1.0 + clip_ratio)\n    pg_loss = masked_mean(torch.maximum(pg_unclipped, pg_clipped))\n\n    # Value loss: the new value may move at most value_clip away from the rollout value\n    v_clipped = old_values + torch.clamp(values - old_values, -value_clip, value_clip)\n    vf = 0.5 * torch.maximum((values - returns) ** 2, (v_clipped - returns) ** 2)\n    vf_loss = masked_mean(vf)\n\n    with torch.no_grad():\n        clipfrac = masked_mean((pg_clipped > pg_unclipped).to(logps.dtype))\n        approx_kl = masked_mean(old_logps - logps)\n\n    return {\n        \"loss\": pg_loss + vf_coef * vf_loss,\n        \"pg_loss\": pg_loss,\n        \"vf_loss\": vf_loss,\n        \"clipfrac\": clipfrac,\n        \"approx_kl\": approx_kl,\n    }",
+        "role": "solution"
+      },
+      {
+        "type": "code",
+        "source": "import torch\n\ntorch.manual_seed(0)\nB, T = 4, 6\nmask = torch.ones(B, T)\nmask[1, 4:] = 0\nmask[3, 2:] = 0\nold_logps = torch.randn(B, T) * 0.3 - 1.0\nlogps = (old_logps + torch.randn(B, T) * 0.3).requires_grad_(True)\nadvantages = torch.randn(B, T)\nold_values = torch.randn(B, T)\nvalues = (old_values + torch.randn(B, T) * 0.3).requires_grad_(True)\nreturns = old_values + advantages\n\nout = ppo_token_loss(logps, old_logps, advantages, values, old_values, returns, mask)\nfor key, val in out.items():\n    print(f'{key:>9}: {val.item():.4f}')\nout['loss'].backward()\nprint('logps grad on padding:', logps.grad[1, 4:].tolist())",
         "role": "demo"
       }
     ]
