@@ -8,6 +8,7 @@ from pathlib import Path
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
 import io
+import json
 import os
 import threading
 import time
@@ -86,6 +87,17 @@ def _get_db() -> sqlite3.Connection:
             updated_at INTEGER NOT NULL,
             FOREIGN KEY (user_id) REFERENCES users(id),
             PRIMARY KEY (user_id, task_id, mode)
+        )
+    """)
+    # The AI help conversation for each problem, as a JSON array of chat messages
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS ai_chats (
+            user_id INTEGER NOT NULL,
+            task_id TEXT NOT NULL,
+            messages TEXT NOT NULL,
+            updated_at TEXT DEFAULT (datetime('now')),
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            PRIMARY KEY (user_id, task_id)
         )
     """)
     conn.commit()
@@ -445,6 +457,51 @@ def save_draft(request: SaveDraftRequest) -> dict[str, str]:
             "WHERE excluded.updated_at > drafts.updated_at",
             (row[0], request.taskId, request.mode, request.code, request.updatedAt),
         )
+    return {"ok": "true"}
+
+
+MAX_AI_CHAT_CHARS = 1_000_000
+
+
+class AiChatMessage(BaseModel):
+    role: str
+    content: str
+    label: str | None = None
+
+
+class SaveAiChatRequest(BaseModel):
+    sessionToken: str
+    taskId: str
+    messages: list[AiChatMessage]
+
+
+@app.get("/ai-chats/{user_id}/{task_id}")
+def get_ai_chat(user_id: int, task_id: str) -> list[dict]:
+    with _get_db() as conn:
+        row = conn.execute(
+            "SELECT messages FROM ai_chats WHERE user_id = ? AND task_id = ?", (user_id, task_id)
+        ).fetchone()
+    return json.loads(row[0]) if row else []
+
+
+@app.put("/ai-chats")
+def save_ai_chat(request: SaveAiChatRequest) -> dict[str, str]:
+    messages = json.dumps([m.model_dump(exclude_none=True) for m in request.messages], ensure_ascii=False)
+    if len(messages) > MAX_AI_CHAT_CHARS:
+        raise HTTPException(status_code=400, detail=f"Chat is longer than {MAX_AI_CHAT_CHARS} characters")
+    with _get_db() as conn:
+        row = conn.execute("SELECT id FROM users WHERE session_token = ?", (request.sessionToken,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        # Clearing the chat deletes it rather than storing an empty one
+        if not request.messages:
+            conn.execute("DELETE FROM ai_chats WHERE user_id = ? AND task_id = ?", (row[0], request.taskId))
+        else:
+            conn.execute(
+                "INSERT INTO ai_chats (user_id, task_id, messages) VALUES (?, ?, ?) "
+                "ON CONFLICT (user_id, task_id) DO UPDATE SET messages = excluded.messages, updated_at = datetime('now')",
+                (row[0], request.taskId, messages),
+            )
     return {"ok": "true"}
 
 

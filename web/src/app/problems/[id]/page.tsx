@@ -21,6 +21,7 @@ import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory, CodeMode } from '@/lib/types';
 import { flushCodeDraft, loadCodeMode, resolveCodeDraft, saveCodeDraft, saveCodeMode } from '@/lib/codeDraft';
+import { loadAiChat } from '@/lib/aiChatHistory';
 import { cn } from '@/lib/utils';
 
 function FlameGlyph() {
@@ -53,7 +54,7 @@ function WorkspacePageNew() {
     isSubmitting, setIsSubmitting,
     drawerOpen, setDrawerOpen,
     isRunning, setIsRunning,
-    setRunResult, setBottomTab, resetTestPanel, resetAiHelp,
+    setRunResult, setBottomTab, resetTestPanel, resetAiHelp, setAiHelpMessages,
     submissionHistory, setSubmissionHistory,
     codeMode, setCodeMode,
   } = useProblemStore();
@@ -90,7 +91,6 @@ function WorkspacePageNew() {
         codeReadyRef.current = true;
         setSubmissionResult(null);
         resetTestPanel();
-        resetAiHelp();
       });
     fetch('/api/problems')
       .then((r) => r.json())
@@ -105,6 +105,13 @@ function WorkspacePageNew() {
       .then((r) => r.json())
       .then((d: SubmissionHistory[]) => { if (!isStale()) setSubmissionHistory(d); })
       .catch(() => {});
+    // Same for the AI chat: reset up front, then show this problem's saved conversation
+    resetAiHelp();
+    loadAiChat(id).then((messages) => {
+      // Skip if the learner already started chatting before the history arrived
+      const { aiHelpMessages, aiHelpLoading } = useProblemStore.getState();
+      if (!isStale() && aiHelpMessages.length === 0 && !aiHelpLoading) setAiHelpMessages(messages);
+    });
     if (pathId) {
       fetch(`/api/paths/${pathId}`)
         .then((r) => r.json())
@@ -113,7 +120,7 @@ function WorkspacePageNew() {
       setPathData(null);
     }
     return () => { loadSeqRef.current++; };
-  }, [id, pathId, setCurrentCode, setCodeMode, setSubmissionResult, resetTestPanel, resetAiHelp, setSubmissionHistory]);
+  }, [id, pathId, setCurrentCode, setCodeMode, setSubmissionResult, resetTestPanel, resetAiHelp, setAiHelpMessages, setSubmissionHistory]);
 
   // Keyboard shortcuts: [ / ] for prev/next problem, Esc to close drawer.
   useEffect(() => {

@@ -7,6 +7,7 @@ import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/context/LocaleContext';
 import { MarkdownContent } from '@/components/workspace/MarkdownContent';
 import { AI_HELP_QUICK_ACTIONS, HOT100_QUICK_ACTIONS } from '@/lib/aiHelpPrompts';
+import { saveAiChat } from '@/lib/aiChatHistory';
 import { getSampleTests } from '@/lib/problemContext';
 import { cn } from '@/lib/utils';
 import { useProblemStore } from '@/store/problemStore';
@@ -116,6 +117,7 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
     const { aiHelpConfig: config, currentCode } = useProblemStore.getState();
     if (!serverConfigured && (!config.baseUrl.trim() || !config.apiKey.trim() || !config.model.trim())) {
       setAiHelpMessages(history);
+      saveAiChat(problem.id, history);
       setAiHelpError(t('aiHelpMissingConfig'));
       setAiHelpConfigOpen(true);
       return;
@@ -127,6 +129,8 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
     setAiHelpLoading(true);
     setAiHelpError(null);
     setAiHelpMessages([...history, { role: 'assistant', content: '' }]);
+    // Saved now too, so the question survives leaving before the reply finishes
+    saveAiChat(problem.id, history);
     stickToBottom.current = true;
 
     try {
@@ -183,6 +187,7 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
           const last = prev.at(-1);
           return last?.role === 'assistant' && !last.content ? prev.slice(0, -1) : prev;
         });
+        saveAiChat(problem.id, useProblemStore.getState().aiHelpMessages);
         setAiHelpLoading(false);
         setAiHelpAbortController(null);
       }
@@ -227,7 +232,10 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
         </button>
         <button
           type="button"
-          onClick={resetAiHelp}
+          onClick={() => {
+            resetAiHelp();
+            saveAiChat(problem.id, []);
+          }}
           disabled={aiHelpMessages.length === 0 && !aiHelpError}
           className={iconButtonClass}
           title={t('aiHelpClear')}
