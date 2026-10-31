@@ -106,5 +106,11 @@
   "group_advantages": "def group_advantages(rewards: torch.Tensor, group_size: int, method: str, eps: float = 1e-6) -> torch.Tensor:\n    pass",
   "gspo_loss": "def gspo_loss(logps: torch.Tensor, old_logps: torch.Tensor, advantages: torch.Tensor, mask: torch.Tensor, clip_low: float = 3e-4, clip_high: float = 4e-4) -> torch.Tensor:\n    pass",
   "preference_variants": "def preference_loss(chosen_logps: torch.Tensor, rejected_logps: torch.Tensor, chosen_lens: torch.Tensor, rejected_lens: torch.Tensor, method: str, ref_chosen_logps: torch.Tensor | None = None, ref_rejected_logps: torch.Tensor | None = None, beta: float = 0.1, label_smoothing: float = 0.0, gamma: float = 0.5) -> torch.Tensor:\n    pass",
-  "kto_loss": "def kto_loss(policy_logps: torch.Tensor, ref_logps: torch.Tensor, desirable: torch.Tensor, kl_policy_logps: torch.Tensor, kl_ref_logps: torch.Tensor, beta: float = 0.1, desirable_weight: float = 1.0, undesirable_weight: float = 1.0) -> torch.Tensor:\n    pass"
+  "kto_loss": "def kto_loss(policy_logps: torch.Tensor, ref_logps: torch.Tensor, desirable: torch.Tensor, kl_policy_logps: torch.Tensor, kl_ref_logps: torch.Tensor, beta: float = 0.1, desirable_weight: float = 1.0, undesirable_weight: float = 1.0) -> torch.Tensor:\n    pass",
+  "math_reward": "def math_reward(response: str, answer: str) -> float:\n    pass",
+  "pass_at_k": "def pass_at_k(num_samples: list[int], num_correct: list[int], k: int) -> float:\n    pass",
+  "answer_voting": "def select_answer(answers: list[str | None], scores: list[float] | None = None, method: str = \"majority\") -> str | None:\n    pass",
+  "prm_loss": "def prm_loss(step_logits: torch.Tensor, input_ids: torch.Tensor, step_tag_id: int, step_labels: torch.Tensor, agg: str = \"min\") -> tuple[torch.Tensor, torch.Tensor]:\n    pass",
+  "distill_loss": "def distill_loss(student_logits: torch.Tensor, teacher_logits: torch.Tensor, mask: torch.Tensor, mode: str = \"forward\", temperature: float = 1.0, beta: float = 0.5) -> torch.Tensor:\n    pass",
+  "agent_rollout_tensors": "def agent_rollout_tensors(turns: list[tuple[str, list[int]]], max_len: int, pad_id: int) -> tuple[torch.Tensor, torch.Tensor, torch.Tensor]:\n    pass"
 }
