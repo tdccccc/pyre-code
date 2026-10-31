@@ -94,5 +94,11 @@
   "transformer_flops": "def transformer_flops(n_layers: int, d_model: int, d_ff: int, vocab_size: int, seq_len: int, batch_size: int, tied_embeddings: bool = True) -> dict:\n    pass",
   "ulysses_attention": "def ulysses_attention(q_shards: list[torch.Tensor], k_shards: list[torch.Tensor], v_shards: list[torch.Tensor], causal: bool = False) -> list[torch.Tensor]:\n    pass",
   "varlen_attention": "def varlen_attention(q: torch.Tensor, k: torch.Tensor, v: torch.Tensor, cu_seqlens: torch.Tensor, causal: bool = True) -> torch.Tensor:\n    pass",
-  "zero_optimizer": "def zero2_adam_step(flat_param: torch.Tensor, rank_grads: list[torch.Tensor], opt_states: list[dict], step: int, lr: float = 1e-3, betas: tuple = (0.9, 0.999), eps: float = 1e-8) -> tuple[torch.Tensor, list[dict]]:\n    pass"
+  "zero_optimizer": "def zero2_adam_step(flat_param: torch.Tensor, rank_grads: list[torch.Tensor], opt_states: list[dict], step: int, lr: float = 1e-3, betas: tuple = (0.9, 0.999), eps: float = 1e-8) -> tuple[torch.Tensor, list[dict]]:\n    pass",
+  "token_logprobs": "def token_logprobs(logits: torch.Tensor, input_ids: torch.Tensor, response_mask: torch.Tensor, temperature: float = 1.0) -> torch.Tensor:\n    pass",
+  "sft_loss": "def sft_loss(logits: torch.Tensor, input_ids: torch.Tensor, assistant_mask: torch.Tensor, seq_ids: torch.Tensor, reduction: str = \"token\") -> torch.Tensor:\n    pass",
+  "kl_estimators": "def kl_estimate(logps: torch.Tensor, ref_logps: torch.Tensor, kind: str = \"k3\") -> torch.Tensor:\n    pass",
+  "gae_advantage": "def gae_advantage(scores: torch.Tensor, kl: torch.Tensor, values: torch.Tensor, mask: torch.Tensor, kl_coef: float = 0.05, gamma: float = 1.0, lam: float = 0.95) -> tuple[torch.Tensor, torch.Tensor]:\n    pass",
+  "ppo_token_loss": "def ppo_token_loss(logps: torch.Tensor, old_logps: torch.Tensor, advantages: torch.Tensor, values: torch.Tensor, old_values: torch.Tensor, returns: torch.Tensor, mask: torch.Tensor, clip_ratio: float = 0.2, value_clip: float = 0.2, vf_coef: float = 0.5) -> dict[str, torch.Tensor]:\n    pass",
+  "grpo_token_loss": "def grpo_token_loss(logps: torch.Tensor, old_logps: torch.Tensor, ref_logps: torch.Tensor, rewards: torch.Tensor, mask: torch.Tensor, group_size: int, clip_ratio: float = 0.2, kl_coef: float = 0.04, eps: float = 1e-6) -> torch.Tensor:\n    pass"
 }
