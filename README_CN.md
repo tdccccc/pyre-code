@@ -221,6 +221,7 @@ AI_HELP_MODEL=gpt-4o-mini
 | ----------------------- | ------------------------- | ----------------- |
 | `GRADING_SERVICE_URL` | `http://localhost:8000` | 评测服务地址      |
 | `DB_PATH`             | `./data/pyre.db`        | SQLite 数据库路径 |
+| `PYRE_SESSION_TOKEN`  | 未设置                  | 单用户模式：所有浏览器和设备共用这个用户的进度和草稿 |
 
 在 `web/.env.local` 中设置即可覆盖。
 

@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { GRADING_SERVICE_URL } from '@/lib/constants';
+import { getSessionToken } from '@/lib/session';
 
 /** Save the learner's note on one of their own submissions. */
 export async function PUT(req: Request, { params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get('session_token')?.value;
+  const sessionToken = await getSessionToken();
   if (!sessionToken) return NextResponse.json({ error: 'No session' }, { status: 401 });
 
   const { note } = await req.json().catch(() => ({ note: undefined }));

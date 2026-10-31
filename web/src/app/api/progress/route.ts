@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { GRADING_SERVICE_URL } from '@/lib/constants';
+import { getSessionToken } from '@/lib/session';
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get('session_token')?.value;
+  const sessionToken = await getSessionToken();
 
   if (!sessionToken) {
     return NextResponse.json({ progress: {} });

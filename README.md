@@ -223,6 +223,7 @@ Fundamentals ──→ Transformer Internals ──→ Train a GPT from Scratch
 | ----------------------- | ------------------------- | ------------------------------------- |
 | `GRADING_SERVICE_URL` | `http://localhost:8000` | Grading service URL                   |
 | `DB_PATH`             | `./data/pyre.db`   | SQLite database for progress tracking |
+| `PYRE_SESSION_TOKEN`  | unset              | Single-user mode: every browser and device shares this learner's progress and drafts |
 
 Set in `web/.env.local` to override.
 

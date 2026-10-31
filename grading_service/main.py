@@ -75,6 +75,19 @@ def _get_db() -> sqlite3.Connection:
     # Free-text note the learner attaches to a submission
     if "note" not in columns:
         conn.execute("ALTER TABLE submissions ADD COLUMN note TEXT NOT NULL DEFAULT ''")
+    # Unsubmitted editor code, so a draft follows the learner across devices.
+    # updated_at is the client's edit time in epoch ms; the newest edit wins.
+    conn.execute("""
+        CREATE TABLE IF NOT EXISTS drafts (
+            user_id INTEGER NOT NULL,
+            task_id TEXT NOT NULL,
+            mode TEXT NOT NULL,
+            code TEXT NOT NULL,
+            updated_at INTEGER NOT NULL,
+            FOREIGN KEY (user_id) REFERENCES users(id),
+            PRIMARY KEY (user_id, task_id, mode)
+        )
+    """)
     conn.commit()
     return conn
 
@@ -394,6 +407,45 @@ def set_submission_note(submission_id: int, request: SubmissionNoteRequest) -> d
         if cur.rowcount == 0:
             raise HTTPException(status_code=404, detail="Submission not found")
     return {"note": note}
+
+
+MAX_DRAFT_CHARS = 200_000
+
+
+class SaveDraftRequest(BaseModel):
+    sessionToken: str
+    taskId: str
+    mode: str = "core"
+    code: str
+    updatedAt: int
+
+
+@app.get("/drafts/{user_id}/{task_id}")
+def get_draft(user_id: int, task_id: str, mode: str = "core") -> dict | None:
+    with _get_db() as conn:
+        row = conn.execute(
+            "SELECT code, updated_at FROM drafts WHERE user_id = ? AND task_id = ? AND mode = ?",
+            (user_id, task_id, mode),
+        ).fetchone()
+    return {"code": row[0], "updatedAt": row[1]} if row else None
+
+
+@app.put("/drafts")
+def save_draft(request: SaveDraftRequest) -> dict[str, str]:
+    if len(request.code) > MAX_DRAFT_CHARS:
+        raise HTTPException(status_code=400, detail=f"Draft is longer than {MAX_DRAFT_CHARS} characters")
+    with _get_db() as conn:
+        row = conn.execute("SELECT id FROM users WHERE session_token = ?", (request.sessionToken,)).fetchone()
+        if not row:
+            raise HTTPException(status_code=404, detail="User not found")
+        # A late-arriving older edit (e.g. from another device) never overwrites a newer one
+        conn.execute(
+            "INSERT INTO drafts (user_id, task_id, mode, code, updated_at) VALUES (?, ?, ?, ?, ?) "
+            "ON CONFLICT (user_id, task_id, mode) DO UPDATE SET code = excluded.code, updated_at = excluded.updated_at "
+            "WHERE excluded.updated_at > drafts.updated_at",
+            (row[0], request.taskId, request.mode, request.code, request.updatedAt),
+        )
+    return {"ok": "true"}
 
 
 @app.get("/health")
