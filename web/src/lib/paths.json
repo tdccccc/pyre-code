@@ -37,7 +37,7 @@
       "descriptionEn": "Speed up inference with KV cache, quantization, and decoding strategies. Scale training with tensor parallelism, FSDP, and ring attention.",
       "descriptionZh": "通过 KV Cache、量化和解码策略加速推理。用张量并行、FSDP 和环形注意力扩展训练规模。",
       "icon": "Zap",
-      "problems": ["kv_cache", "topk_sampling", "beam_search", "speculative_decoding", "int8_quantization", "mixed_precision", "tensor_parallel", "fsdp_step", "ring_attention"],
+      "problems": ["kv_cache", "topk_sampling", "beam_search", "speculative_decoding", "int8_quantization", "mixed_precision", "tensor_parallel", "fsdp_step", "flash_attention", "ring_attention"],
       "prerequisites": ["transformer-internals"]
     },
     {
