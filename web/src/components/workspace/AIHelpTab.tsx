@@ -7,13 +7,33 @@ import { Button } from '@/components/ui/Button';
 import { useLocale } from '@/context/LocaleContext';
 import { MarkdownContent } from '@/components/workspace/MarkdownContent';
 import { AI_HELP_QUICK_ACTIONS, HOT100_QUICK_ACTIONS } from '@/lib/aiHelpPrompts';
+import { saveAiChat } from '@/lib/aiChatHistory';
 import { getSampleTests } from '@/lib/problemContext';
 import { cn } from '@/lib/utils';
 import { useProblemStore } from '@/store/problemStore';
 import type { Problem, AiChatMessage, AiHelpRequest } from '@/lib/types';
 
 const STORAGE_KEY = 'ai_help_config';
+const INPUT_KEY_PREFIX = 'ai_help_input:';
 const INPUT_MAX_HEIGHT = 160;
+
+// The unsent message is kept per problem, since switching tabs or problems unmounts this panel
+function loadUnsentInput(problemId: string): string {
+  try {
+    return localStorage.getItem(INPUT_KEY_PREFIX + problemId) ?? '';
+  } catch {
+    return '';
+  }
+}
+
+function saveUnsentInput(problemId: string, value: string) {
+  try {
+    if (value) localStorage.setItem(INPUT_KEY_PREFIX + problemId, value);
+    else localStorage.removeItem(INPUT_KEY_PREFIX + problemId);
+  } catch {
+    // Ignore storage write failures.
+  }
+}
 
 const inputStyle = {
   background: 'var(--bg-elev)',
@@ -34,7 +54,11 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
   const scrollRef = useRef<HTMLDivElement>(null);
   const stickToBottom = useRef(true);
   const inputRef = useRef<HTMLTextAreaElement>(null);
-  const [input, setInput] = useState('');
+  const [input, setInputState] = useState(() => loadUnsentInput(problem.id));
+  const setInput = (value: string) => {
+    setInputState(value);
+    saveUnsentInput(problem.id, value);
+  };
   const [serverConfigured, setServerConfigured] = useState(false);
   const {
     aiHelpConfig, setAiHelpConfig,
@@ -93,6 +117,7 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
     const { aiHelpConfig: config, currentCode } = useProblemStore.getState();
     if (!serverConfigured && (!config.baseUrl.trim() || !config.apiKey.trim() || !config.model.trim())) {
       setAiHelpMessages(history);
+      saveAiChat(problem.id, history);
       setAiHelpError(t('aiHelpMissingConfig'));
       setAiHelpConfigOpen(true);
       return;
@@ -104,6 +129,8 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
     setAiHelpLoading(true);
     setAiHelpError(null);
     setAiHelpMessages([...history, { role: 'assistant', content: '' }]);
+    // Saved now too, so the question survives leaving before the reply finishes
+    saveAiChat(problem.id, history);
     stickToBottom.current = true;
 
     try {
@@ -160,6 +187,7 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
           const last = prev.at(-1);
           return last?.role === 'assistant' && !last.content ? prev.slice(0, -1) : prev;
         });
+        saveAiChat(problem.id, useProblemStore.getState().aiHelpMessages);
         setAiHelpLoading(false);
         setAiHelpAbortController(null);
       }
@@ -204,7 +232,10 @@ export function AIHelpTab({ problem }: AIHelpTabProps) {
         </button>
         <button
           type="button"
-          onClick={resetAiHelp}
+          onClick={() => {
+            resetAiHelp();
+            saveAiChat(problem.id, []);
+          }}
           disabled={aiHelpMessages.length === 0 && !aiHelpError}
           className={iconButtonClass}
           title={t('aiHelpClear')}

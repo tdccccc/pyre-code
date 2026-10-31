@@ -24,6 +24,7 @@ const en = {
   noMatch: 'No problems match your filters.',
   // workspace
   description: 'Description',
+  knowledge: 'Concepts',
   solution: 'Solution',
   aiHelp: 'AI Help',
   loading: 'Loading...',
@@ -95,6 +96,11 @@ const en = {
   // solutions
   loadingSolution: 'Loading solution...',
   noSolution: 'No solution available yet.',
+  loadingKnowledge: 'Loading concepts...',
+  noKnowledge: 'No concept notes for this problem yet.',
+  knowledgeThisProblem: 'This problem',
+  knowledgeTopic: 'Topic',
+  topicProblems: 'Problems in this topic',
   backToProblem: 'Back to problem',
   // home features
   feat1Title: 'Instant Feedback',
@@ -183,6 +189,7 @@ const zh: Translations = {
   searchPlaceholder: '搜索题目...',
   noMatch: '没有符合条件的题目。',
   description: '题目描述',
+  knowledge: '知识点',
   solution: '题解',
   aiHelp: 'AI 帮助',
   loading: '加载中...',
@@ -221,6 +228,11 @@ const zh: Translations = {
   passedCount: '{passed}/{total} 通过',
   loadingSolution: '加载题解中...',
   noSolution: '暂无题解。',
+  loadingKnowledge: '加载知识点中...',
+  noKnowledge: '这道题还没有知识点讲解。',
+  knowledgeThisProblem: '本题',
+  knowledgeTopic: '专题',
+  topicProblems: '本专题的题',
   backToProblem: '返回题目',
   // test panel
   testCasesTab: '测试用例',

@@ -1,11 +1,10 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { GRADING_SERVICE_URL } from '@/lib/constants';
+import { getSessionToken } from '@/lib/session';
 
 export async function GET(_req: Request, { params }: { params: Promise<{ taskId: string }> }) {
   const { taskId } = await params;
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get('session_token')?.value;
+  const sessionToken = await getSessionToken();
   if (!sessionToken) return NextResponse.json([]);
 
   const userRes = await fetch(`${GRADING_SERVICE_URL}/users`, {

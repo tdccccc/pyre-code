@@ -1,0 +1,116 @@
+[
+  {
+    "id": "basic_layers",
+    "titleZh": "基础层与激活",
+    "titleEn": "Basic Layers & Activations",
+    "problems": ["linear_regression", "linear", "relu", "gelu", "swiglu", "mlp", "embedding", "dropout", "weight_init"]
+  },
+  {
+    "id": "normalization",
+    "titleZh": "归一化",
+    "titleEn": "Normalization",
+    "problems": ["layernorm", "rmsnorm", "batchnorm"]
+  },
+  {
+    "id": "attention",
+    "titleZh": "注意力",
+    "titleEn": "Attention",
+    "problems": ["softmax", "attention", "causal_attention", "mha", "cross_attention", "gqa", "mla", "sliding_window", "varlen_attention", "diff_attention", "linear_attention"]
+  },
+  {
+    "id": "position_encoding",
+    "titleZh": "位置编码",
+    "titleEn": "Position Encoding",
+    "problems": ["sinusoidal_pe", "rope", "alibi", "ntk_rope"]
+  },
+  {
+    "id": "vision",
+    "titleZh": "卷积与视觉",
+    "titleEn": "Convolution & Vision",
+    "problems": ["conv2d", "max_pool2d", "depthwise_conv", "vit_patch", "vit_block"]
+  },
+  {
+    "id": "architecture",
+    "titleZh": "模型架构",
+    "titleEn": "Model Architecture",
+    "problems": ["gpt2_block", "moe", "moe_load_balance", "multi_token_prediction", "mamba_ssm"]
+  },
+  {
+    "id": "losses",
+    "titleZh": "损失函数",
+    "titleEn": "Loss Functions",
+    "problems": ["cross_entropy", "label_smoothing", "focal_loss", "contrastive_loss", "chunked_cross_entropy"]
+  },
+  {
+    "id": "optimization",
+    "titleZh": "优化与训练技巧",
+    "titleEn": "Optimization & Training",
+    "problems": ["adam", "cosine_lr", "gradient_clipping", "gradient_accumulation", "mixed_precision", "activation_checkpointing"]
+  },
+  {
+    "id": "backprop",
+    "titleZh": "手写反向传播",
+    "titleEn": "Manual Backpropagation",
+    "problems": ["softmax_backward", "layernorm_backward"]
+  },
+  {
+    "id": "alignment",
+    "titleZh": "对齐与 RL",
+    "titleEn": "Alignment & RL",
+    "problems": ["reward_model", "ppo_loss", "dpo_loss", "grpo_loss", "mcts_search"]
+  },
+  {
+    "id": "estimation",
+    "titleZh": "性能估算",
+    "titleEn": "Performance Estimation",
+    "problems": ["transformer_flops", "training_memory", "inference_roofline"]
+  },
+  {
+    "id": "io_kernels",
+    "titleZh": "IO 感知 kernel",
+    "titleEn": "IO-aware Kernels",
+    "problems": ["flash_attention", "flash_decoding"]
+  },
+  {
+    "id": "serving",
+    "titleZh": "推理服务",
+    "titleEn": "Inference Serving",
+    "problems": ["kv_cache", "kv_block_allocator", "paged_attention", "prefix_caching", "continuous_batching"]
+  },
+  {
+    "id": "decoding",
+    "titleZh": "解码与采样",
+    "titleEn": "Decoding & Sampling",
+    "problems": ["topk_sampling", "sampling_penalties", "beam_search", "speculative_decoding"]
+  },
+  {
+    "id": "quantization",
+    "titleZh": "量化与高效微调",
+    "titleEn": "Quantization & Efficient Fine-tuning",
+    "problems": ["int8_quantization", "int4_group_quant", "fp8_scaling", "lora", "qlora"]
+  },
+  {
+    "id": "distributed",
+    "titleZh": "分布式训练",
+    "titleEn": "Distributed Training",
+    "problems": ["ring_allreduce", "zero_optimizer", "fsdp_step", "tensor_parallel", "pipeline_1f1b", "ring_attention", "ulysses_attention", "expert_dispatch"]
+  },
+  {
+    "id": "diffusion",
+    "titleZh": "扩散与流匹配",
+    "titleEn": "Diffusion & Flow Matching",
+    "problems": ["noise_schedule", "ddim_step", "flow_matching", "adaln_zero"]
+  },
+  {
+    "id": "gnn",
+    "titleZh": "图神经网络",
+    "titleEn": "Graph Neural Networks",
+    "problems": ["gcn_layer", "graphsage_layer", "gat_layer", "gin_layer", "mpnn_layer", "graph_readout", "link_prediction", "gae"]
+  },
+  {
+    "id": "tokenization",
+    "titleZh": "分词",
+    "titleEn": "Tokenization",
+    "problems": ["bpe"]
+  }
+]

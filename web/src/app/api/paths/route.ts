@@ -1,12 +1,11 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import pathsData from '@/lib/paths.json';
 import { GRADING_SERVICE_URL } from '@/lib/constants';
+import { getSessionToken } from '@/lib/session';
 import type { LearningPath } from '@/lib/types';
 
 export async function GET() {
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get('session_token')?.value;
+  const sessionToken = await getSessionToken();
 
   let progressMap: Record<string, { status: string }> = {};
   if (sessionToken) {

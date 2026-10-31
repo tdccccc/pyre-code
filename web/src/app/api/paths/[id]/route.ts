@@ -1,8 +1,8 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import pathsData from '@/lib/paths.json';
 import problemsData from '@/lib/problems.json';
 import { GRADING_SERVICE_URL } from '@/lib/constants';
+import { getSessionToken } from '@/lib/session';
 import type { LearningPath } from '@/lib/types';
 
 export async function GET(_request: Request, { params }: { params: Promise<{ id: string }> }) {
@@ -10,8 +10,7 @@ export async function GET(_request: Request, { params }: { params: Promise<{ id:
   const path = (pathsData.paths as LearningPath[]).find((p) => p.id === id);
   if (!path) return NextResponse.json({ error: 'Not found' }, { status: 404 });
 
-  const cookieStore = await cookies();
-  const sessionToken = cookieStore.get('session_token')?.value;
+  const sessionToken = await getSessionToken();
 
   let progressMap: Record<string, { status: string }> = {};
   if (sessionToken) {

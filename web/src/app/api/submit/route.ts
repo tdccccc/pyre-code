@@ -1,13 +1,12 @@
 import { NextResponse } from 'next/server';
-import { cookies } from 'next/headers';
 import { GRADING_SERVICE_URL } from '@/lib/constants';
+import { getSessionToken } from '@/lib/session';
 import { SubmissionResult } from '@/lib/types';
 
 export async function POST(request: Request) {
   const { taskId, code, mode } = await request.json();
 
-  const cookieStore = await cookies();
-  let sessionToken = cookieStore.get('session_token')?.value;
+  let sessionToken = await getSessionToken();
   if (!sessionToken) {
     sessionToken = crypto.randomUUID();
   }

@@ -9,6 +9,7 @@ import { SplitPane, VerticalSplitPane } from '@/components/ui/SplitPane';
 import { ProblemDrawer } from '@/components/layout/ProblemDrawer';
 import { FeedbackModal } from '@/components/workspace/FeedbackModal';
 import { DescriptionTab } from '@/components/workspace/DescriptionTab';
+import { KnowledgeTab } from '@/components/workspace/KnowledgeTab';
 import { SolutionTab } from '@/components/workspace/SolutionTab';
 import { AIHelpTab } from '@/components/workspace/AIHelpTab';
 import { SubmissionHistory as SubmissionHistoryTab } from '@/components/workspace/SubmissionHistory';
@@ -19,7 +20,8 @@ import { useProblemStore } from '@/store/problemStore';
 import { useLocale } from '@/context/LocaleContext';
 import { useTheme } from '@/context/ThemeContext';
 import type { Problem, ProgressMap, SubmissionResult, LearningPath, LearningPathProblemSummary, SubmissionHistory, CodeMode } from '@/lib/types';
-import { loadCodeDraft, loadCodeMode, saveCodeDraft, saveCodeMode } from '@/lib/codeDraft';
+import { flushCodeDraft, loadCodeMode, resolveCodeDraft, saveCodeDraft, saveCodeMode } from '@/lib/codeDraft';
+import { loadAiChat } from '@/lib/aiChatHistory';
 import { cn } from '@/lib/utils';
 
 function FlameGlyph() {
@@ -52,7 +54,7 @@ function WorkspacePageNew() {
     isSubmitting, setIsSubmitting,
     drawerOpen, setDrawerOpen,
     isRunning, setIsRunning,
-    setRunResult, setBottomTab, resetTestPanel, resetAiHelp,
+    setRunResult, setBottomTab, resetTestPanel, resetAiHelp, setAiHelpMessages,
     submissionHistory, setSubmissionHistory,
     codeMode, setCodeMode,
   } = useProblemStore();
@@ -63,22 +65,32 @@ function WorkspacePageNew() {
   const [pathData, setPathData] = useState<(Omit<LearningPath, 'problems'> & { problems: LearningPathProblemSummary[] }) | null>(null);
   const [feedbackResult, setFeedbackResult] = useState<SubmissionResult | null>(null);
   const codeReadyRef = useRef(false);
+  // The code last loaded or saved, so only real edits get saved
+  const savedCodeRef = useRef<string | null>(null);
+  // Bumped on every code load and on leaving the problem; a load that finishes after it
+  // changed is stale and must not put its code into the editor (which would save it)
+  const loadSeqRef = useRef(0);
 
   useEffect(() => {
+    const seq = ++loadSeqRef.current;
+    const isStale = () => seq !== loadSeqRef.current;
     codeReadyRef.current = false;
     fetch(`/api/problems/${id}`)
       .then((r) => r.json())
-      .then((data: Problem & { starterCode?: string }) => {
-        setProblem(data);
+      .then(async (data: Problem & { starterCode?: string }) => {
+        if (isStale()) return;
         // Hot 100 remembers the learner's answer mode; AI problems are always core
         const mode: CodeMode = data.starters ? loadCodeMode() : 'core';
+        const cachedCode = await resolveCodeDraft(id, mode);
+        if (isStale()) return;
+        setProblem(data);
         setCodeMode(mode);
-        const cachedCode = loadCodeDraft(id, mode);
-        setCurrentCode(cachedCode ?? data.starters?.[mode] ?? data.starterCode ?? '');
+        const code = cachedCode ?? data.starters?.[mode] ?? data.starterCode ?? '';
+        savedCodeRef.current = code;
+        setCurrentCode(code);
         codeReadyRef.current = true;
         setSubmissionResult(null);
         resetTestPanel();
-        resetAiHelp();
       });
     fetch('/api/problems')
       .then((r) => r.json())
@@ -88,12 +100,18 @@ function WorkspacePageNew() {
       .then((d) => setProgress(d.progress || {}));
     // Cleared up front (not in resetTestPanel after the problem loads), so a history
     // response that beats the problem response isn't wiped
-    let cancelled = false;
     setSubmissionHistory([]);
     fetch(`/api/submissions/${id}`)
       .then((r) => r.json())
-      .then((d: SubmissionHistory[]) => { if (!cancelled) setSubmissionHistory(d); })
+      .then((d: SubmissionHistory[]) => { if (!isStale()) setSubmissionHistory(d); })
       .catch(() => {});
+    // Same for the AI chat: reset up front, then show this problem's saved conversation
+    resetAiHelp();
+    loadAiChat(id).then((messages) => {
+      // Skip if the learner already started chatting before the history arrived
+      const { aiHelpMessages, aiHelpLoading } = useProblemStore.getState();
+      if (!isStale() && aiHelpMessages.length === 0 && !aiHelpLoading) setAiHelpMessages(messages);
+    });
     if (pathId) {
       fetch(`/api/paths/${pathId}`)
         .then((r) => r.json())
@@ -101,8 +119,8 @@ function WorkspacePageNew() {
     } else {
       setPathData(null);
     }
-    return () => { cancelled = true; };
-  }, [id, pathId, setCurrentCode, setCodeMode, setSubmissionResult, resetTestPanel, resetAiHelp, setSubmissionHistory]);
+    return () => { loadSeqRef.current++; };
+  }, [id, pathId, setCurrentCode, setCodeMode, setSubmissionResult, resetTestPanel, resetAiHelp, setAiHelpMessages, setSubmissionHistory]);
 
   // Keyboard shortcuts: [ / ] for prev/next problem, Esc to close drawer.
   useEffect(() => {
@@ -143,21 +161,45 @@ function WorkspacePageNew() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [pathData, id, pathId, router, drawerOpen, setDrawerOpen]);
 
-  // Also follows mode changes, so restoring an ACM submission saves into the ACM draft
+  // Also follows mode changes, so restoring an ACM submission saves into the ACM draft.
+  // Freshly loaded code isn't saved back: that would stamp it as the newest edit and
+  // could overwrite a newer draft written on another device.
   useEffect(() => {
-    if (!codeReadyRef.current) return;
+    if (!codeReadyRef.current || currentCode === savedCodeRef.current) return;
+    savedCodeRef.current = currentCode;
     saveCodeDraft(id, currentCode, codeMode);
   }, [id, currentCode, codeMode]);
+
+  // Push the last edit to the server when leaving the problem or hiding/closing the tab
+  useEffect(() => {
+    const onVisibilityChange = () => {
+      if (document.visibilityState === 'hidden') flushCodeDraft();
+    };
+    document.addEventListener('visibilitychange', onVisibilityChange);
+    window.addEventListener('pagehide', flushCodeDraft);
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibilityChange);
+      window.removeEventListener('pagehide', flushCodeDraft);
+      flushCodeDraft();
+    };
+  }, []);
 
   const isHot100 = problem?.track === 'hot100';
   const mode = isHot100 ? codeMode : undefined;
 
-  const switchCodeMode = (next: CodeMode) => {
+  const switchCodeMode = async (next: CodeMode) => {
     if (!problem?.starters || next === codeMode) return;
+    const starters = problem.starters;
+    const seq = ++loadSeqRef.current;
+    codeReadyRef.current = false;
     saveCodeMode(next);
     setCodeMode(next);
-    setCurrentCode(loadCodeDraft(id, next) ?? problem.starters[next]);
     setRunResult(null);
+    const code = (await resolveCodeDraft(id, next)) ?? starters[next];
+    if (seq !== loadSeqRef.current) return;
+    savedCodeRef.current = code;
+    setCurrentCode(code);
+    codeReadyRef.current = true;
   };
 
   const handleRun = async () => {
@@ -245,7 +287,8 @@ function WorkspacePageNew() {
           style={{ borderBottom: '1px solid var(--line)', background: 'var(--bg)' }}
         >
           <Tabs.List className="flex gap-0.5">
-            {(['description', 'solution', 'aiHelp', 'submissionsTab'] as const).map((tab) => (
+            {/* Concept notes are written for the AI problems only */}
+            {(['description', ...(isHot100 ? [] : ['knowledge'] as const), 'solution', 'aiHelp', 'submissionsTab'] as const).map((tab) => (
               <Tabs.Trigger
                 key={tab}
                 value={tab}
@@ -263,11 +306,15 @@ function WorkspacePageNew() {
         <Tabs.Content value="description" className="flex-1 overflow-y-auto">
           <DescriptionTab problem={problem} />
         </Tabs.Content>
+        <Tabs.Content value="knowledge" className="flex-1 overflow-y-auto">
+          <KnowledgeTab problemId={id} />
+        </Tabs.Content>
         <Tabs.Content value="solution" className="flex-1 overflow-y-auto">
           <SolutionTab problemId={id} />
         </Tabs.Content>
         <Tabs.Content value="aiHelp" className="flex-1 min-h-0">
-          <AIHelpTab problem={problem} />
+          {/* Keyed so the unsent message reloads for the new problem */}
+          <AIHelpTab key={problem.id} problem={problem} />
         </Tabs.Content>
         <Tabs.Content value="submissionsTab" className="flex-1 min-h-0">
           <SubmissionHistoryTab showMode={isHot100} />
